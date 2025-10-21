@@ -101,7 +101,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    
+    // Check if this is a new user
+    const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+    
+    if (!userDoc.exists()) {
+      // Prompt for username
+      const username = prompt('Choose a username:') || result.user.email!.split('@')[0];
+      
+      const newUser: Partial<User> = {
+        id: result.user.uid,
+        email: result.user.email!,
+        username,
+        displayName: result.user.displayName || undefined,
+        avatar: result.user.photoURL || undefined,
+        plan: 'free',
+        aiUsage: {
+          current: 0,
+          limit: 100,
+          resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      await setDoc(doc(db, 'users', result.user.uid), newUser);
+    }
   };
 
   const signInWithGithub = async () => {
