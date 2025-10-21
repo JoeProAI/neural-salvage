@@ -2,14 +2,14 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { MediaAsset, LayoutType } from '@/types';
 import Link from 'next/link';
 
-export default function GalleryPage() {
+function GalleryContent() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -363,5 +363,13 @@ export default function GalleryPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function GalleryPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-salvage-dark flex items-center justify-center"><p className="text-neon-cyan">Loading gallery...</p></div>}>
+      <GalleryContent />
+    </Suspense>
   );
 }
