@@ -2,15 +2,14 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-export default function SettingsPage() {
+function SettingsContent() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [stripeStatus, setStripeStatus] = useState<any>(null);
   const [loadingStripe, setLoadingStripe] = useState(false);
 
   useEffect(() => {
@@ -234,5 +233,13 @@ export default function SettingsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-salvage-dark flex items-center justify-center"><p className="text-neon-cyan">Loading...</p></div>}>
+      <SettingsContent />
+    </Suspense>
   );
 }
