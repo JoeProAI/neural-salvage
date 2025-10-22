@@ -113,20 +113,26 @@ export async function POST(request: NextRequest) {
 
     await assetRef.set(assetData);
 
-    // Create AI job for analysis
-    const jobRef = adminDb().collection('jobs').doc();
-    await jobRef.set({
-      userId,
-      assetId,
-      type: mediaType === 'image' ? 'analyze_image' : 
-            mediaType === 'video' ? 'analyze_video' : 
-            mediaType === 'audio' ? 'transcribe_audio' : 'analyze_image',
-      status: 'pending',
-      progress: 0,
-      retryCount: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    // Trigger AI analysis immediately
+    try {
+      const analysisResponse = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/ai/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assetId,
+          userId,
+          imageUrl: url,
+          type: mediaType,
+        }),
+      });
+
+      if (!analysisResponse.ok) {
+        console.error('AI analysis failed:', await analysisResponse.text());
+      }
+    } catch (error) {
+      console.error('Failed to trigger AI analysis:', error);
+      // Don't fail the upload if AI analysis fails
+    }
 
     return NextResponse.json({
       success: true,
@@ -134,7 +140,6 @@ export async function POST(request: NextRequest) {
         id: assetId,
         ...assetData,
       },
-      jobId: jobRef.id,
     });
   } catch (error: any) {
     console.error('Upload error:', error);
