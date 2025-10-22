@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { daytonaService } from '@/lib/daytona/service';
 import { qdrantService } from '@/lib/vector/qdrant';
+import { checkAIUsageLimit } from '@/lib/access/checkAccess';
 import admin from 'firebase-admin';
 
 export async function POST(request: NextRequest) {
@@ -12,6 +13,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
+      );
+    }
+
+    // Check AI usage limit (beta users bypass this)
+    const usageCheck = await checkAIUsageLimit(userId);
+    
+    if (!usageCheck.canUseAI) {
+      return NextResponse.json(
+        { 
+          error: 'AI analysis limit reached',
+          current: usageCheck.current,
+          limit: usageCheck.limit,
+          message: 'Upgrade to Pro for unlimited AI analyses or contact us about beta access'
+        },
+        { status: 402 } // 402 = Payment Required
       );
     }
 
@@ -84,7 +100,7 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     });
 
-    // Update AI usage for user
+    // Update AI usage for user (track for all, but beta users have no limits)
     const userRef = adminDb().collection('users').doc(userId);
     await userRef.update({
       'aiUsage.current': admin.firestore.FieldValue.increment(1),
@@ -94,6 +110,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       analysis,
+      usageInfo: {
+        current: usageCheck.current + 1,
+        limit: usageCheck.limit,
+        isBetaUser: usageCheck.isBetaUser
+      }
     });
   } catch (error: any) {
     console.error('AI analysis error:', error);

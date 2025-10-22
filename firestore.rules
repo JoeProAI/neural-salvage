@@ -15,7 +15,21 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update, delete: if isOwner(userId);
+      
+      // Users can update their own document BUT cannot modify beta fields
+      // Only Admin SDK (server-side) can modify beta fields
+      allow update: if isOwner(userId) 
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'betaAccess',
+          'betaGrantedAt',
+          'betaGrantedBy',
+          'betaReason',
+          'betaNotes',
+          'betaRevokedAt',
+          'betaRevokedBy'
+        ]);
+      
+      allow delete: if isOwner(userId);
     }
     
     // Assets collection
