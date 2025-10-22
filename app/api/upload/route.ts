@@ -113,32 +113,33 @@ export async function POST(request: NextRequest) {
 
     await assetRef.set(assetData);
 
-    // Trigger AI analysis immediately
-    try {
-      const analysisResponse = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/ai/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          assetId,
-          userId,
-          imageUrl: url,
-          type: mediaType,
-        }),
-      });
-
-      if (!analysisResponse.ok) {
-        console.error('AI analysis failed:', await analysisResponse.text());
-      }
-    } catch (error) {
+    // Trigger AI analysis immediately in background
+    // Use absolute URL for Vercel
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+    
+    // Don't await - run in background
+    fetch(`${baseUrl}/api/ai/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assetId,
+        userId,
+        imageUrl: url,
+        type: mediaType,
+      }),
+    }).catch(error => {
       console.error('Failed to trigger AI analysis:', error);
-      // Don't fail the upload if AI analysis fails
-    }
+    });
 
     return NextResponse.json({
       success: true,
       asset: {
         id: assetId,
         ...assetData,
+        uploadedAt: assetData.uploadedAt.toISOString(),
+        updatedAt: assetData.updatedAt.toISOString(),
       },
     });
   } catch (error: any) {
