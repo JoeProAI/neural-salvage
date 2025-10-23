@@ -72,6 +72,10 @@ export interface MediaAsset {
     location?: string;
     customFields?: Record<string, any>;
   };
+  
+  // NFT - Link to blockchain NFT if minted
+  nftId?: string;                 // Reference to NFT document
+  isNFT: boolean;                 // True if minted as NFT
 }
 
 // Collection Types
@@ -176,4 +180,119 @@ export interface Notification {
   read: boolean;
   actionUrl?: string;
   createdAt: Date;
+}
+
+// NFT Types - Real Blockchain NFTs
+export type BlockchainType = 'arweave' | 'ethereum' | 'polygon' | 'solana';
+export type NFTStatus = 'pending' | 'uploading' | 'minting' | 'confirmed' | 'failed';
+
+export interface ArweaveNFT {
+  // Arweave-specific fields
+  arweaveId: string;              // Transaction ID on Arweave
+  arweaveUrl: string;             // https://arweave.net/{txId}
+  manifestId?: string;            // Manifest transaction ID (for collections)
+  bundlrId?: string;              // Bundlr upload ID
+  uploadCost: number;             // Cost in AR tokens
+  uploadedAt: Date;
+  confirmedAt?: Date;
+}
+
+export interface EthereumNFT {
+  // Ethereum/Polygon-specific fields
+  contractAddress: string;
+  tokenId: string;
+  chain: 'ethereum' | 'polygon';
+  transactionHash: string;
+  blockNumber?: number;
+  gasUsed?: string;
+  mintedAt: Date;
+  confirmedAt?: Date;
+}
+
+export interface SolanaNFT {
+  // Solana-specific fields
+  mintAddress: string;
+  metadataAddress: string;
+  masterEditionAddress?: string;
+  transactionSignature: string;
+  slot?: number;
+  mintedAt: Date;
+  confirmedAt?: Date;
+}
+
+export interface NFTMetadata {
+  name: string;
+  description: string;
+  image: string;                  // URI to asset
+  external_url?: string;          // Link to Neural Salvage page
+  attributes: Array<{
+    trait_type: string;
+    value: string | number;
+  }>;
+  properties?: {
+    files: Array<{
+      uri: string;
+      type: string;
+    }>;
+    category: 'image' | 'video' | 'audio';
+    creators?: Array<{
+      address: string;
+      share: number;
+    }>;
+  };
+}
+
+export interface NFT {
+  id: string;                     // Internal NFT ID
+  assetId: string;                // Link to MediaAsset
+  userId: string;                 // Owner
+  blockchain: BlockchainType;
+  status: NFTStatus;
+  
+  // Blockchain-specific data
+  arweave?: ArweaveNFT;
+  ethereum?: EthereumNFT;
+  solana?: SolanaNFT;
+  
+  // Metadata
+  metadata: NFTMetadata;
+  metadataUri: string;            // URI to metadata JSON
+  
+  // Ownership & Trading
+  currentOwner: string;           // Wallet address
+  originalMinter: string;         // Creator wallet
+  royaltyPercentage: number;      // Creator royalty (0-100)
+  
+  // Transfer history
+  transfers: Array<{
+    from: string;
+    to: string;
+    price?: number;
+    currency?: string;
+    transactionHash: string;
+    timestamp: Date;
+  }>;
+  
+  // Verification
+  isVerified: boolean;
+  verifiedAt?: Date;
+  
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// NFT Minting Request
+export interface MintNFTRequest {
+  assetId: string;
+  blockchain: BlockchainType;
+  metadata: {
+    name: string;
+    description: string;
+    attributes?: Array<{
+      trait_type: string;
+      value: string | number;
+    }>;
+  };
+  royaltyPercentage?: number;     // Default 10%
+  walletAddress: string;          // User's wallet
 }

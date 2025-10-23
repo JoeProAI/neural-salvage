@@ -1,0 +1,116 @@
+---
+title: 'Quickstart'
+description: 'Mint your first NFT in 5 minutes'
+---
+
+## Get Started in 5 Minutes
+
+This guide will walk you through minting your first permanent NFT on Neural Salvage.
+
+<Steps>
+  <Step title="Create Your Account">
+    Visit [Neural Salvage](https://neural-salvage.vercel.app) and sign in with Google.
+    
+    ```bash
+    # No installation required - it's all web-based!
+    ```
+    
+    ✅ Your account is created instantly
+  </Step>
+
+  <Step title="Upload Your Asset">
+    Navigate to your dashboard and click **Upload Asset**.
+    
+    <Info>
+      Supported formats:
+      - Images: JPG, PNG, GIF, SVG
+      - Videos: MP4, MOV, WEBM
+      - Audio: MP3, WAV, OGG
+    </Info>
+    
+    Drag and drop your file or click to browse.
+  </Step>
+
+  <Step title="Mint as NFT">
+    Once uploaded, click **Mint as NFT** on your asset.
+    
+    You'll see:
+    - Estimated cost (~$0.50 for typical image)
+    - Storage size
+    - Blockchain confirmation time
+    
+    Click **Confirm Mint** to proceed.
+  </Step>
+
+  <Step title="Verify on Blockchain">
+    After minting completes (usually 30-60 seconds), you'll receive:
+    
+    - Arweave transaction ID
+    - Permanent URL to your NFT
+    - Metadata link
+    
+    View your NFT on [Arweave Explorer](https://viewblock.io/arweave) to verify!
+  </Step>
+</Steps>
+
+## What Happens During Minting?
+
+<AccordionGroup>
+  <Accordion title="Asset Upload to Arweave">
+    Your file is uploaded to Arweave's permanent storage network via Bundlr.
+    
+    - **Instant**: Upload completes in seconds
+    - **Permanent**: Stored for 200+ years
+    - **Decentralized**: Replicated across global nodes
+  </Accordion>
+
+  <Accordion title="Metadata Creation">
+    NFT metadata is created following standard formats:
+    
+    ```json
+    {
+      "name": "Your Asset Name",
+      "description": "Your description",
+      "image": "https://arweave.net/your-asset-id",
+      "attributes": [
+        {
+          "trait_type": "Creator",
+          "value": "your-username"
+        }
+      ]
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Blockchain Confirmation">
+    Your NFT is registered on Arweave blockchain:
+    
+    - Transaction is bundled
+    - Submitted to Arweave network
+    - Confirmed in ~30-60 seconds
+    - Permanent record created
+  </Accordion>
+</AccordionGroup>
+
+## Pricing Example
+
+**Small Image (5 MB):**
+- Arweave cost: ~$0.50
+- Platform fee: $0 (beta)
+- **Total: $0.50**
+
+**Video (100 MB):**
+- Arweave cost: ~$10.00
+- Platform fee: $0 (beta)
+- **Total: $10.00**
+
+## Next Steps
+
+- **Explore Marketplace**: List your NFT for sale
+- **Create Collections**: Organize your NFTs
+- **Use the API**: Integrate minting into your app
+- **Advanced Features**: Discover AI tools
+
+## Support
+
+**Need help?** Join our Discord or email support@neural-salvage.com

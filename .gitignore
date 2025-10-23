@@ -39,3 +39,24 @@ next-env.d.ts
 *.swp
 *.swo
 *~
+
+# ⚠️ SECURITY: Never commit these!
+# Wallet keys and sensitive data
+Pass keys/
+"Pass keys"/
+**/Pass keys/
+**/Pass\ keys/
+
+# Environment variable backups (contains secrets)
+VERCEL_ENV_VARS.txt
+*_ENV_VARS.txt
+*.env.txt
+
+# Arweave wallet files
+arweave-wallet*.json
+arweave-keyfile*.json
+*.jwk
+
+# Any backup files with keys
+*-backup.json
+*-keys.json

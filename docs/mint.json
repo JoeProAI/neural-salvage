@@ -1,0 +1,126 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Neural Salvage",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.png",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373",
+    "anchors": {
+      "from": "#0D9373",
+      "to": "#07C983"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Launch App",
+      "url": "https://neural-salvage.vercel.app"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://neural-salvage.vercel.app/dashboard"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    },
+    {
+      "name": "Guides",
+      "url": "guides"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/yourusername/neural-salvage"
+    },
+    {
+      "name": "Discord",
+      "icon": "discord",
+      "url": "https://discord.gg/your-server"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "features"
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "concepts/nft-minting",
+        "concepts/arweave",
+        "concepts/permanent-storage",
+        "concepts/pricing"
+      ]
+    },
+    {
+      "group": "User Guides",
+      "pages": [
+        "guides/creating-account",
+        "guides/uploading-assets",
+        "guides/minting-nfts",
+        "guides/marketplace",
+        "guides/collections"
+      ]
+    },
+    {
+      "group": "API Documentation",
+      "pages": [
+        "api-reference/introduction",
+        "api-reference/authentication"
+      ]
+    },
+    {
+      "group": "NFT Endpoints",
+      "pages": [
+        "api-reference/nft/mint",
+        "api-reference/nft/estimate",
+        "api-reference/nft/get",
+        "api-reference/nft/verify"
+      ]
+    },
+    {
+      "group": "Asset Endpoints",
+      "pages": [
+        "api-reference/assets/upload",
+        "api-reference/assets/get",
+        "api-reference/assets/list",
+        "api-reference/assets/delete"
+      ]
+    },
+    {
+      "group": "Marketplace Endpoints",
+      "pages": [
+        "api-reference/marketplace/list",
+        "api-reference/marketplace/buy",
+        "api-reference/marketplace/listings"
+      ]
+    },
+    {
+      "group": "Developer Resources",
+      "pages": [
+        "developers/setup",
+        "developers/local-development",
+        "developers/deployment",
+        "developers/best-practices"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/yourusername/neural-salvage",
+    "twitter": "https://twitter.com/neuralsalvage",
+    "discord": "https://discord.gg/your-server"
+  }
+}
