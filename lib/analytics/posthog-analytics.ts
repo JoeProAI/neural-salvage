@@ -3,7 +3,7 @@
  * Product analytics and feature tracking
  */
 
-import posthog from 'posthog-js';
+import { posthog } from '@/instrumentation-client';
 
 // Identify user
 export function identifyUser(userId: string, properties?: Record<string, any>) {
