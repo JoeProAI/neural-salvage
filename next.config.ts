@@ -20,7 +20,7 @@ export default withSentryConfig(nextConfig, {
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
   org: "neural-salvage",
-  project: "javascript-nextjs",
+  project: "neural-salvage-nft",
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
