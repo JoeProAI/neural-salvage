@@ -43,18 +43,26 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // AI Scrapyard theme colors
-        neon: {
-          cyan: "#00ffff",
-          pink: "#ff00ff",
-          green: "#00ff00",
-          orange: "#ff6600",
-        },
-        salvage: {
-          dark: "#0a0a0a",
-          metal: "#1a1a1a",
-          rust: "#2a2a2a",
-          glow: "#3a3a3a",
+        // Neural Salvage Design System
+        neural: {
+          black: "#0a0a0a",
+          dark: "#111111",
+          medium: "#1a1a1a",
+          blue: "#0070f3",
+          cyan: "#00d9ff",
+          purple: "#7928ca",
+          white: "#ffffff",
+          gray: {
+            100: "#fafafa",
+            200: "#eaeaea",
+            400: "#999999",
+            600: "#666666",
+            800: "#333333",
+          },
+          success: "#00e676",
+          warning: "#ffab00",
+          error: "#ff5252",
+          info: "#00b8d4",
         },
       },
       borderRadius: {
@@ -71,24 +79,31 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        glow: {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.5" },
+        // Neural theme animations
+        "neural-pulse": {
+          "0%, 100%": { opacity: "0.6" },
+          "50%": { opacity: "1" },
         },
-        "pulse-glow": {
-          "0%, 100%": {
-            boxShadow: "0 0 5px rgba(0, 255, 255, 0.5)",
-          },
-          "50%": {
-            boxShadow: "0 0 20px rgba(0, 255, 255, 0.8)",
-          },
+        "neural-glow": {
+          "0%, 100%": { boxShadow: "0 0 10px rgba(0, 112, 243, 0.2)" },
+          "50%": { boxShadow: "0 0 20px rgba(0, 112, 243, 0.4)" },
+        },
+        "neural-flow": {
+          "0%": { transform: "translateY(0)" },
+          "100%": { transform: "translateY(-100%)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-1000px 0" },
+          "100%": { backgroundPosition: "1000px 0" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        glow: "glow 2s ease-in-out infinite",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "neural-pulse": "neural-pulse 3s ease-in-out infinite",
+        "neural-glow": "neural-glow 2s ease-in-out infinite",
+        "neural-flow": "neural-flow 20s linear infinite",
+        shimmer: "shimmer 2s infinite linear",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

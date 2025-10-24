@@ -27,25 +27,26 @@
   }
 
   .dark {
+    /* Neural Salvage Dark Theme - DEFAULT */
     --background: 0 0% 4%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 6%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 6.7%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 6%;
+    --popover: 0 0% 6.7%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
+    --primary: 210 100% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 10.2%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --muted: 0 0% 10.2%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 210 100% 48%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 0 0% 20%;
+    --input: 0 0% 10.2%;
+    --ring: 210 100% 48%;
   }
 }
 
@@ -59,93 +60,76 @@
   }
 }
 
-/* AI Scrapyard Custom Styles */
+/* Neural Salvage Custom Components */
 @layer components {
-  .salvage-container {
-    @apply bg-salvage-dark bg-grid-pattern;
-    background-size: 50px 50px;
+  /* Neural Card - Professional elevated surface */
+  .neural-card {
+    @apply bg-neural-dark border border-neural-gray-800 rounded-lg;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .neon-border {
-    @apply border-2 border-neon-cyan;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  .neural-card:hover {
+    @apply border-neural-blue/50;
+    transform: translateY(-4px);
+    box-shadow: 0 0 20px rgba(0, 112, 243, 0.3);
   }
 
-  .neon-text {
-    @apply text-neon-cyan;
-    text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+  /* Glass morphism effect */
+  .neural-glass {
+    background: rgba(17, 17, 17, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    @apply border border-neural-gray-800/50;
   }
 
-  .metal-card {
-    @apply bg-salvage-metal border border-salvage-glow;
+  /* Button base styles */
+  .neural-button {
+    @apply bg-neural-blue text-white font-medium px-6 py-3 rounded-lg;
+    @apply transition-all duration-200;
+    @apply hover:bg-neural-cyan active:scale-95;
+  }
+
+  /* Skeleton loading with shimmer */
+  .neural-skeleton {
+    @apply bg-neural-medium rounded;
     background-image: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.02) 0%,
-      rgba(255, 255, 255, 0) 100%
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.05),
+      transparent
     );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
   }
 
-  .glow-hover {
-    @apply transition-all duration-300;
+  /* Neural network connection line */
+  .neural-connection {
+    stroke: rgba(0, 217, 255, 0.15);
+    stroke-width: 1;
+    transition: stroke 0.3s ease;
   }
 
-  .glow-hover:hover {
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
-  }
-
-  .grid-bg {
-    background-image: 
-      linear-gradient(to right, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
-
-  .scanline {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .scanline::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      to bottom,
-      transparent 50%,
-      rgba(0, 255, 255, 0.05) 50%
-    );
-    background-size: 100% 4px;
-    pointer-events: none;
-    animation: scanline 8s linear infinite;
-  }
-
-  @keyframes scanline {
-    0% {
-      transform: translateY(0);
-    }
-    100% {
-      transform: translateY(100%);
-    }
+  .neural-connection.active {
+    stroke: rgba(255, 255, 255, 0.8);
   }
 }
 
-/* Scrollbar Styling */
+/* Scrollbar Styling - Neural theme */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-salvage-metal;
+  @apply bg-neural-black;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-salvage-glow border border-neon-cyan/30;
+  @apply bg-neural-gray-800 rounded;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-neon-cyan/20;
+  @apply bg-neural-blue/50;
 }
