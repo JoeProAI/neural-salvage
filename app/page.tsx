@@ -1,8 +1,28 @@
 'use client';
 
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import Link from 'next/link';
 
 export default function Home() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-gray-400 text-lg">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -15,7 +35,7 @@ export default function Home() {
             </Link>
             <Link 
               href="/auth/signup" 
-              className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
             >
               Get Started
             </Link>
@@ -24,7 +44,9 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 pt-24 pb-16">
+      <section className="relative max-w-7xl mx-auto px-6 pt-24 pb-16">
+        {/* Subtle gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-white -z-10" />
         <div className="max-w-3xl">
           <h1 className="text-6xl font-bold text-black mb-6">
             Organize your media assets. The professional way.
@@ -36,7 +58,7 @@ export default function Home() {
           <div className="flex gap-4">
             <Link 
               href="/auth/signup"
-              className="bg-black text-white px-6 py-3 rounded-md font-medium hover:bg-gray-800"
+              className="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
             >
               Start for free
             </Link>
@@ -102,7 +124,7 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="max-w-7xl mx-auto px-6 py-24">
-        <div className="bg-black text-white rounded-2xl p-16 text-center">
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl p-16 text-center shadow-xl">
           <h2 className="text-4xl font-bold mb-6">
             Ready to get started?
           </h2>
@@ -111,7 +133,7 @@ export default function Home() {
           </p>
           <Link 
             href="/auth/signup"
-            className="inline-block bg-white text-black px-8 py-4 rounded-md font-semibold hover:bg-gray-100"
+            className="inline-block bg-white text-blue-600 px-8 py-4 rounded-md font-semibold hover:bg-blue-50 transition-colors"
           >
             Create your account
           </Link>
