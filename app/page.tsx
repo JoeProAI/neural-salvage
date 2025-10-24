@@ -1,136 +1,138 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function Home() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && user) {
-      router.push('/dashboard');
-    }
-  }, [user, loading, router]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-salvage-dark">
-        <div className="text-neon-cyan text-xl animate-pulse">Loading...</div>
-      </div>
-    );
-  }
-
   return (
-    <main className="min-h-screen bg-salvage-dark grid-bg">
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="text-2xl font-semibold text-black">Neural Salvage</div>
+          <div className="flex gap-6">
+            <Link href="/auth/login" className="text-gray-600 hover:text-black">
+              Sign in
+            </Link>
+            <Link 
+              href="/auth/signup" 
+              className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800"
+            >
+              Get Started
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-20">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Logo/Title */}
-          <div className="space-y-4">
-            <h1 className="text-6xl md:text-8xl font-bold neon-text animate-pulse-glow">
-              NEURAL SALVAGE
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-400">
-              AI-Powered Media Salvage Yard
-            </p>
-          </div>
-
-          {/* Description */}
-          <div className="metal-card p-8 rounded-lg space-y-4">
-            <p className="text-lg text-gray-300">
-              Upload, organize, explore, and sell your digital creations with
-              cutting-edge AI understanding and semantic search.
-            </p>
-            <div className="grid md:grid-cols-3 gap-4 mt-8">
-              <div className="p-4 bg-salvage-rust rounded border border-neon-cyan/30">
-                <div className="text-neon-cyan text-2xl mb-2">🤖</div>
-                <h3 className="font-bold text-white mb-2">AI Analysis</h3>
-                <p className="text-sm text-gray-400">
-                  Automatic tagging, captioning, and content understanding
-                </p>
-              </div>
-              <div className="p-4 bg-salvage-rust rounded border border-neon-pink/30">
-                <div className="text-neon-pink text-2xl mb-2">🔍</div>
-                <h3 className="font-bold text-white mb-2">Smart Search</h3>
-                <p className="text-sm text-gray-400">
-                  Natural language semantic search across all your media
-                </p>
-              </div>
-              <div className="p-4 bg-salvage-rust rounded border border-neon-green/30">
-                <div className="text-neon-green text-2xl mb-2">💰</div>
-                <h3 className="font-bold text-white mb-2">Marketplace</h3>
-                <p className="text-sm text-gray-400">
-                  Sell your creations with integrated Stripe payments
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="flex gap-4 justify-center">
-            <Link href="/auth/signup">
-              <Button variant="neon" size="lg" className="text-lg">
-                Get Started
-              </Button>
+      <section className="max-w-7xl mx-auto px-6 pt-24 pb-16">
+        <div className="max-w-3xl">
+          <h1 className="text-6xl font-bold text-black mb-6">
+            Organize your media assets. The professional way.
+          </h1>
+          <p className="text-xl text-gray-600 mb-8">
+            Upload, search, and manage your digital assets with intelligent tagging 
+            and semantic search. Turn your media into permanent NFTs on Arweave.
+          </p>
+          <div className="flex gap-4">
+            <Link 
+              href="/auth/signup"
+              className="bg-black text-white px-6 py-3 rounded-md font-medium hover:bg-gray-800"
+            >
+              Start for free
             </Link>
-            <Link href="/auth/login">
-              <Button variant="outline" size="lg" className="text-lg">
-                Sign In
-              </Button>
+            <Link 
+              href="/dashboard"
+              className="border border-gray-300 text-black px-6 py-3 rounded-md font-medium hover:border-gray-400"
+            >
+              View demo
             </Link>
           </div>
+        </div>
+      </section>
 
-          {/* Features Grid */}
-          <div className="mt-16 grid md:grid-cols-2 gap-6 text-left">
-            <div className="metal-card p-6 rounded-lg glow-hover">
-              <h3 className="text-xl font-bold text-neon-cyan mb-3">
-                📸 Multi-Format Support
-              </h3>
-              <p className="text-gray-400">
-                Images, videos, audio, and documents - all analyzed and
-                searchable with AI
-              </p>
+      {/* Feature Grid */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <div className="grid md:grid-cols-3 gap-12">
+          <div>
+            <h3 className="text-xl font-semibold text-black mb-3">
+              Instant Search
+            </h3>
+            <p className="text-gray-600">
+              Find any asset with natural language search. Powered by semantic understanding.
+            </p>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-black mb-3">
+              Blockchain NFTs
+            </h3>
+            <p className="text-gray-600">
+              Mint your assets as permanent NFTs on Arweave. Truly own your digital creations.
+            </p>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-black mb-3">
+              Secure Storage
+            </h3>
+            <p className="text-gray-600">
+              Enterprise-grade security with Firebase. Your assets are encrypted and backed up.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="border-t border-gray-200 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 py-24">
+          <div className="grid md:grid-cols-3 gap-12 text-center">
+            <div>
+              <div className="text-4xl font-bold text-black mb-2">Fast</div>
+              <div className="text-gray-600">Lightning-quick asset retrieval</div>
             </div>
-            <div className="metal-card p-6 rounded-lg glow-hover">
-              <h3 className="text-xl font-bold text-neon-cyan mb-3">
-                🎨 Beautiful Layouts
-              </h3>
-              <p className="text-gray-400">
-                Grid, Masonry, and Filmstrip views with lightbox modal for
-                immersive browsing
-              </p>
+            <div>
+              <div className="text-4xl font-bold text-black mb-2">Permanent</div>
+              <div className="text-gray-600">NFTs stored forever on Arweave</div>
             </div>
-            <div className="metal-card p-6 rounded-lg glow-hover">
-              <h3 className="text-xl font-bold text-neon-cyan mb-3">
-                📁 Smart Organization
-              </h3>
-              <p className="text-gray-400">
-                Collections, AI auto-grouping, and drag-and-drop organization
-              </p>
-            </div>
-            <div className="metal-card p-6 rounded-lg glow-hover">
-              <h3 className="text-xl font-bold text-neon-cyan mb-3">
-                🔒 Secure & Private
-              </h3>
-              <p className="text-gray-400">
-                Firebase-powered authentication and storage with granular
-                privacy controls
-              </p>
+            <div>
+              <div className="text-4xl font-bold text-black mb-2">Simple</div>
+              <div className="text-gray-600">Intuitive interface, powerful features</div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <div className="bg-black text-white rounded-2xl p-16 text-center">
+          <h2 className="text-4xl font-bold mb-6">
+            Ready to get started?
+          </h2>
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Join professionals who trust Neural Salvage for their media asset management.
+          </p>
+          <Link 
+            href="/auth/signup"
+            className="inline-block bg-white text-black px-8 py-4 rounded-md font-semibold hover:bg-gray-100"
+          >
+            Create your account
+          </Link>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="border-t border-salvage-glow py-8 mt-20">
-        <div className="container mx-auto px-4 text-center text-gray-500">
-          <p>© 2025 Neural Salvage. Built with Next.js, Firebase, and AI.</p>
+      <footer className="border-t border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="flex justify-between items-center">
+            <div className="text-gray-600">
+              © 2025 Neural Salvage. All rights reserved.
+            </div>
+            <div className="flex gap-8 text-gray-600">
+              <Link href="/privacy" className="hover:text-black">Privacy</Link>
+              <Link href="/terms" className="hover:text-black">Terms</Link>
+              <Link href="/contact" className="hover:text-black">Contact</Link>
+            </div>
+          </div>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }
