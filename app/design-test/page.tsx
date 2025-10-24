@@ -1,7 +1,5 @@
 'use client';
 
-import { cn } from '@/lib/utils';
-
 export default function DesignTestPage() {
   return (
     <div className="min-h-screen bg-neural-black text-neural-white p-8">
