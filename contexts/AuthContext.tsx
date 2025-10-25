@@ -34,35 +34,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Set a timeout to stop loading even if Firebase hangs
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 3000); // 3 second timeout
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(timeout);
       setFirebaseUser(firebaseUser);
       
       if (firebaseUser) {
-        // Fetch user data from Firestore
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        
-        if (userDoc.exists()) {
-          setUser({ id: userDoc.id, ...userDoc.data() } as User);
-        } else {
-          // Create user document if it doesn't exist
-          const newUser: Partial<User> = {
-            id: firebaseUser.uid,
-            email: firebaseUser.email!,
-            username: firebaseUser.email!.split('@')[0],
-            displayName: firebaseUser.displayName || undefined,
-            avatar: firebaseUser.photoURL || undefined,
-            plan: 'free',
-            aiUsage: {
-              current: 0,
-              limit: 100,
-              resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            },
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
+        try {
+          // Fetch user data from Firestore
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           
-          await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
-          setUser(newUser as User);
+          if (userDoc.exists()) {
+            setUser({ id: userDoc.id, ...userDoc.data() } as User);
+          } else {
+            // Create user document if it doesn't exist
+            const newUser: Partial<User> = {
+              id: firebaseUser.uid,
+              email: firebaseUser.email!,
+              username: firebaseUser.email!.split('@')[0],
+              displayName: firebaseUser.displayName || undefined,
+              avatar: firebaseUser.photoURL || undefined,
+              plan: 'free',
+              aiUsage: {
+                current: 0,
+                limit: 100,
+                resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              },
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+            
+            await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+            setUser(newUser as User);
+          }
+        } catch (error) {
+          console.error('Error loading user:', error);
         }
       } else {
         setUser(null);
@@ -71,7 +81,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      clearTimeout(timeout);
+      unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

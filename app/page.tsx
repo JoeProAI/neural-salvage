@@ -10,19 +10,13 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
+    // Only redirect if we're sure they're logged in
     if (!loading && user) {
       router.push('/dashboard');
     }
   }, [user, loading, router]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-gray-400 text-lg">Loading...</div>
-      </div>
-    );
-  }
-
+  // Don't block rendering on auth loading - show page immediately
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
