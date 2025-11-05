@@ -85,14 +85,19 @@ export async function POST(request: NextRequest) {
     const embedding = await daytonaService.generateEmbedding(embeddingText);
     analysis.embedding = embedding;
 
-    // Store in Qdrant for vector search
-    await qdrantService.upsertVector(assetId, embedding, {
-      userId,
-      type: asset?.type || type,
-      tags: analysis.tags,
-      caption: analysis.caption,
-      forSale: asset?.forSale || false,
-    });
+    // Store in Qdrant for vector search (optional - skip if not configured)
+    try {
+      await qdrantService.upsertVector(assetId, embedding, {
+        userId,
+        type: asset?.type || type,
+        tags: analysis.tags,
+        caption: analysis.caption,
+        forSale: asset?.forSale || false,
+      });
+    } catch (qdrantError) {
+      console.warn('Qdrant vector storage skipped (not configured):', qdrantError);
+      // Continue without Qdrant - it's only for similarity search
+    }
 
     // Update asset in Firestore
     await assetRef.update({
