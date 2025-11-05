@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       case 'ai_analysis':
         productName = 'AI Analysis';
         productDescription = 'Generate AI description and tags for your asset';
-        amount = price || 0.10;
+        amount = price || 0.50;
         successUrl = `${appUrl}/api/payment/success?type=ai_analysis&assetId=${assetId}&session_id={CHECKOUT_SESSION_ID}`;
         cancelUrl = `${appUrl}/gallery/${assetId}`;
         break;

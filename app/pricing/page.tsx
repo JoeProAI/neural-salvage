@@ -139,7 +139,7 @@ export default function PricingPage() {
               </li>
               <li className="flex items-start gap-2 text-gray-300">
                 <Check className="w-5 h-5 text-retro-orange flex-shrink-0 mt-0.5" />
-                <span>$0.10 per AI analysis</span>
+                <span>$0.50 per AI analysis</span>
               </li>
               <li className="flex items-start gap-2 text-gray-300">
                 <Check className="w-5 h-5 text-retro-orange flex-shrink-0 mt-0.5" />

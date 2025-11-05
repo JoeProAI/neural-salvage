@@ -112,7 +112,7 @@ export default function AssetDetailPage() {
           type: 'ai_analysis',
           assetId: asset.id,
           userId: user.id,
-          price: 0.10,
+          price: 0.50,
         }),
       });
 
