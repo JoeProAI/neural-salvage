@@ -8,6 +8,7 @@ import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { MediaAsset } from '@/types';
 import Link from 'next/link';
+import { MintNFTModal } from '@/components/nft/MintNFTModal';
 
 export default function AssetDetailPage() {
   const { user, loading } = useAuth();
@@ -21,6 +22,7 @@ export default function AssetDetailPage() {
   const [newTags, setNewTags] = useState('');
   const [forSale, setForSale] = useState(false);
   const [price, setPrice] = useState('');
+  const [showMintModal, setShowMintModal] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -297,6 +299,20 @@ export default function AssetDetailPage() {
               <div className="border-t border-salvage-glow pt-4 mt-4 space-y-2">
                 {!editing ? (
                   <>
+                    {!asset.isNFT && (
+                      <Button
+                        variant="neon"
+                        className="w-full bg-gradient-to-r from-retro-purple to-retro-teal hover:opacity-90 text-white font-bold"
+                        onClick={() => setShowMintModal(true)}
+                      >
+                        ⛓️ Mint as NFT on Arweave
+                      </Button>
+                    )}
+                    {asset.isNFT && (
+                      <div className="w-full bg-retro-purple/20 border-2 border-retro-purple text-retro-purple px-4 py-3 rounded-lg text-center font-bold">
+                        ✅ Already Minted as NFT
+                      </div>
+                    )}
                     <Button
                       variant="neon"
                       className="w-full"
@@ -347,6 +363,20 @@ export default function AssetDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* Mint NFT Modal */}
+      {showMintModal && (
+        <MintNFTModal
+          assetId={assetId}
+          assetName={asset.filename}
+          onClose={() => setShowMintModal(false)}
+          onSuccess={(nftId) => {
+            setShowMintModal(false);
+            loadAsset(); // Reload to show NFT status
+            alert(`NFT minted successfully! NFT ID: ${nftId}`);
+          }}
+        />
+      )}
     </div>
   );
 }
