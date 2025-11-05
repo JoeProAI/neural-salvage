@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -14,6 +14,7 @@ export default function AssetDetailPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const assetId = params.id as string;
   
   const [asset, setAsset] = useState<MediaAsset | null>(null);
@@ -38,6 +39,20 @@ export default function AssetDetailPage() {
       loadAsset();
     }
   }, [assetId]);
+
+  // Check for payment success and auto-trigger AI analysis
+  useEffect(() => {
+    const payment = searchParams.get('payment');
+    const action = searchParams.get('action');
+
+    if (payment === 'success' && action === 'analyze' && asset && user) {
+      // Clean up URL
+      router.replace(`/gallery/${assetId}`);
+      
+      // Auto-trigger AI analysis
+      triggerAIAnalysis();
+    }
+  }, [searchParams, asset, user, assetId]);
 
   const loadAsset = async () => {
     try {
@@ -95,6 +110,47 @@ export default function AssetDetailPage() {
     } catch (error) {
       console.error('Error deleting asset:', error);
       alert('Failed to delete asset');
+    }
+  };
+
+  // Trigger AI analysis after payment (no payment check needed)
+  const triggerAIAnalysis = async () => {
+    if (!asset || !user) return;
+
+    try {
+      setGeneratingAI(true);
+
+      // Call AI analysis API directly (payment already completed)
+      const response = await fetch('/api/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assetId: asset.id,
+          userId: user.id,
+          imageUrl: asset.url,
+          type: asset.type,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'AI generation failed');
+      }
+
+      // Update local state with AI results
+      const aiAnalysis = data.analysis;
+      setDescription(aiAnalysis.caption || description);
+      setNewTags(aiAnalysis.tags?.join(', ') || newTags);
+
+      await loadAsset();
+
+      alert('✨ AI analysis complete! Your payment was processed successfully.');
+    } catch (error: any) {
+      console.error('AI generation error:', error);
+      alert(`AI generation failed: ${error.message}`);
+    } finally {
+      setGeneratingAI(false);
     }
   };
 
