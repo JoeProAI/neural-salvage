@@ -104,32 +104,57 @@ export default function AssetDetailPage() {
     try {
       setGeneratingAI(true);
 
-      const response = await fetch('/api/ai/analyze', {
+      // Check if payment is required
+      const paymentResponse = await fetch('/api/payment/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          type: 'ai_analysis',
           assetId: asset.id,
           userId: user.id,
-          imageUrl: asset.url,
-          type: asset.type,
+          price: 0.10,
         }),
       });
 
-      const data = await response.json();
+      const paymentData = await paymentResponse.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'AI generation failed');
+      // Beta users and Pro users get free AI
+      if (paymentData.isBetaUser || paymentData.isPro) {
+        // Proceed directly to AI analysis
+        const response = await fetch('/api/ai/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            assetId: asset.id,
+            userId: user.id,
+            imageUrl: asset.url,
+            type: asset.type,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'AI generation failed');
+        }
+
+        // Update local state with AI results
+        const aiAnalysis = data.analysis;
+        setDescription(aiAnalysis.caption || description);
+        setNewTags(aiAnalysis.tags?.join(', ') || newTags);
+
+        await loadAsset();
+
+        const message = paymentData.isBetaUser 
+          ? '✨ AI analysis complete! (Beta user - free)' 
+          : '✨ AI analysis complete! (Pro plan - included)';
+        alert(message);
+      } else if (paymentData.checkoutUrl) {
+        // Redirect to payment
+        window.location.href = paymentData.checkoutUrl;
+      } else {
+        throw new Error('Payment setup failed');
       }
-
-      // Update local state with AI results
-      const aiAnalysis = data.analysis;
-      setDescription(aiAnalysis.caption || description);
-      setNewTags(aiAnalysis.tags?.join(', ') || newTags);
-
-      // Reload asset to get fresh data
-      await loadAsset();
-
-      alert('✨ AI analysis complete! Description and tags generated.');
     } catch (error: any) {
       console.error('AI generation error:', error);
       alert(`AI generation failed: ${error.message}`);

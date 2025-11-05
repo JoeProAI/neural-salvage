@@ -81,29 +81,56 @@ export function MintNFTModal({ assetId, assetName, onClose, onSuccess }: MintNFT
       setMinting(true);
       setError(null);
 
-      const response = await fetch('/api/nft/mint', {
+      // TODO: Get userId from auth context
+      // For now, we'll need to pass it from parent component
+      const userId = 'current-user-id'; // Replace with actual user ID
+
+      // Check if payment is required
+      const paymentResponse = await fetch('/api/payment/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          type: 'nft_mint',
           assetId,
-          blockchain: 'arweave',
-          metadata: {
-            name: nftName,
-            description: nftDescription,
-          },
-          royaltyPercentage: 10,
-          walletAddress: wallet.address,
+          userId,
+          price: estimate?.costs?.total?.usd ? parseFloat(estimate.costs.total.usd) : 1.00,
         }),
       });
 
-      const data = await response.json();
+      const paymentData = await paymentResponse.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to mint NFT');
+      // Beta users and Pro users (with free mints left) get free minting
+      if (paymentData.isBetaUser || paymentData.isPro || paymentData.freeMintUsed) {
+        // Proceed directly to mint
+        const response = await fetch('/api/nft/mint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            assetId,
+            blockchain: 'arweave',
+            metadata: {
+              name: nftName,
+              description: nftDescription,
+            },
+            royaltyPercentage: 10,
+            walletAddress: wallet.address,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to mint NFT');
+        }
+
+        // Success!
+        onSuccess(data.nft.id);
+      } else if (paymentData.checkoutUrl) {
+        // Redirect to payment
+        window.location.href = paymentData.checkoutUrl;
+      } else {
+        throw new Error('Payment setup failed');
       }
-
-      // Success!
-      onSuccess(data.nft.id);
     } catch (err: any) {
       console.error('Minting error:', err);
       setError(err.message);

@@ -11,8 +11,14 @@ export interface User {
     github?: string;
     website?: string;
   };
-  stripeAccountId?: string;
+  stripeAccountId?: string; // For marketplace (selling)
+  stripeCustomerId?: string; // For subscriptions (buying)
+  stripeSubscriptionId?: string;
+  stripeSubscriptionStatus?: 'active' | 'canceled' | 'past_due' | 'trialing';
   plan: 'free' | 'pro';
+  isBetaUser?: boolean; // Beta users get everything free!
+  betaAccessGrantedBy?: string; // Admin who granted access
+  betaAccessGrantedAt?: Date;
   aiUsage: {
     current: number;
     limit: number;
