@@ -13,6 +13,7 @@ import { X, Wallet, Check, AlertCircle, ExternalLink } from 'lucide-react';
 interface MintNFTModalProps {
   assetId: string;
   assetName: string;
+  assetDescription?: string;
   onClose: () => void;
   onSuccess: (nftId: string) => void;
 }
@@ -32,14 +33,14 @@ interface CostEstimate {
   notes: string[];
 }
 
-export function MintNFTModal({ assetId, assetName, onClose, onSuccess }: MintNFTModalProps) {
+export function MintNFTModal({ assetId, assetName, assetDescription, onClose, onSuccess }: MintNFTModalProps) {
   const wallet = useArweaveWallet();
   const [loading, setLoading] = useState(true);
   const [minting, setMinting] = useState(false);
   const [estimate, setEstimate] = useState<CostEstimate | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nftName, setNftName] = useState(assetName);
-  const [nftDescription, setNftDescription] = useState('');
+  const [nftDescription, setNftDescription] = useState(assetDescription || '');
 
   useEffect(() => {
     fetchEstimate();
