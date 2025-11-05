@@ -30,6 +30,8 @@ export interface MediaAsset {
   userId: string;
   filename: string;
   originalFilename: string;
+  title?: string; // User-editable title
+  description?: string; // User-editable description
   type: MediaType;
   mimeType: string;
   size: number;

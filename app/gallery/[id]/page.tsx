@@ -19,10 +19,13 @@ export default function AssetDetailPage() {
   const [asset, setAsset] = useState<MediaAsset | null>(null);
   const [loadingAsset, setLoadingAsset] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [newTags, setNewTags] = useState('');
   const [forSale, setForSale] = useState(false);
   const [price, setPrice] = useState('');
   const [showMintModal, setShowMintModal] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -43,6 +46,8 @@ export default function AssetDetailPage() {
       if (assetDoc.exists()) {
         const assetData = { id: assetDoc.id, ...assetDoc.data() } as MediaAsset;
         setAsset(assetData);
+        setTitle(assetData.title || assetData.filename);
+        setDescription(assetData.description || assetData.aiAnalysis?.caption || '');
         setForSale(assetData.forSale);
         setPrice(assetData.price?.toString() || '');
         setNewTags(assetData.aiAnalysis?.tags?.join(', ') || '');
@@ -64,6 +69,8 @@ export default function AssetDetailPage() {
       const tags = newTags.split(',').map((t) => t.trim()).filter(Boolean);
       
       await updateDoc(doc(db, 'assets', assetId), {
+        title,
+        description,
         'aiAnalysis.tags': tags,
         forSale,
         price: forSale ? parseFloat(price) : null,
@@ -149,9 +156,40 @@ export default function AssetDetailPage() {
           {/* Metadata */}
           <div className="space-y-6">
             <div className="metal-card p-6 rounded-lg">
-              <h2 className="text-2xl font-bold text-white mb-4">
-                {asset.filename}
-              </h2>
+              {/* Title */}
+              <div className="mb-6">
+                {editing ? (
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full text-2xl font-bold bg-salvage-rust border-2 border-salvage-glow rounded px-4 py-2 text-white focus:border-retro-teal focus:outline-none"
+                    placeholder="Asset title"
+                  />
+                ) : (
+                  <h2 className="text-2xl font-bold text-white">
+                    {title || asset.filename}
+                  </h2>
+                )}
+              </div>
+
+              {/* Description */}
+              <div className="mb-6">
+                <h3 className="text-sm font-bold text-retro-teal mb-2">Description</h3>
+                {editing ? (
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    className="w-full bg-salvage-rust border-2 border-salvage-glow rounded px-4 py-2 text-white focus:border-retro-teal focus:outline-none resize-none"
+                    placeholder="Describe this asset..."
+                  />
+                ) : description ? (
+                  <p className="text-gray-300">{description}</p>
+                ) : (
+                  <p className="text-gray-500 italic">No description yet</p>
+                )}
+              </div>
 
               {/* AI Analysis */}
               {asset.aiAnalysis && (
@@ -314,11 +352,18 @@ export default function AssetDetailPage() {
                       </div>
                     )}
                     <Button
+                      className="w-full bg-retro-orange hover:bg-retro-orange/90 text-white font-semibold"
+                      onClick={() => alert('AI generation coming soon! For now, edit manually.')}
+                      disabled={generatingAI}
+                    >
+                      {generatingAI ? '🤖 Generating...' : '✨ Generate AI Description & Tags'}
+                    </Button>
+                    <Button
                       variant="neon"
                       className="w-full"
                       onClick={() => setEditing(true)}
                     >
-                      Edit Asset
+                      ✏️ Edit Asset
                     </Button>
                     <Button
                       variant="outline"
@@ -349,6 +394,8 @@ export default function AssetDetailPage() {
                       className="w-full"
                       onClick={() => {
                         setEditing(false);
+                        setTitle(asset.title || asset.filename);
+                        setDescription(asset.description || asset.aiAnalysis?.caption || '');
                         setNewTags(asset.aiAnalysis?.tags?.join(', ') || '');
                         setForSale(asset.forSale);
                         setPrice(asset.price?.toString() || '');
