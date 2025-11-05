@@ -7,7 +7,7 @@ export interface User {
   avatar?: string;
   bio?: string;
   socialLinks?: {
-    twitter?: string;
+    x?: string;
     github?: string;
     website?: string;
   };

@@ -391,7 +391,7 @@ In dashboard/profile:
 **How many:** 10-20 is perfect for beta
 
 **Where to find them:**
-- Twitter (post about it)
+- X (post about it)
 - Reddit (r/photography, r/digitalart)
 - Product Hunt (launch in beta mode)
 - Your network (email friends)

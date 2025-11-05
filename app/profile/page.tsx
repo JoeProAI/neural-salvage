@@ -14,7 +14,7 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
-  const [twitter, setTwitter] = useState('');
+  const [x, setX] = useState('');
   const [github, setGithub] = useState('');
   const [website, setWebsite] = useState('');
   const [saving, setSaving] = useState(false);
@@ -29,7 +29,7 @@ export default function ProfilePage() {
     if (user) {
       setDisplayName(user.displayName || '');
       setBio(user.bio || '');
-      setTwitter(user.socialLinks?.twitter || '');
+      setX(user.socialLinks?.x || '');
       setGithub(user.socialLinks?.github || '');
       setWebsite(user.socialLinks?.website || '');
     }
@@ -44,7 +44,7 @@ export default function ProfilePage() {
         displayName,
         bio,
         socialLinks: {
-          twitter,
+          x,
           github,
           website,
         },
@@ -178,15 +178,15 @@ export default function ProfilePage() {
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Twitter
+                    X (Twitter)
                   </label>
                   <input
                     type="text"
-                    value={twitter}
-                    onChange={(e) => setTwitter(e.target.value)}
+                    value={x}
+                    onChange={(e) => setX(e.target.value)}
                     disabled={!editing}
                     className="w-full px-4 py-2 bg-salvage-rust border border-salvage-glow rounded focus:border-neon-cyan focus:outline-none text-white disabled:opacity-50"
-                    placeholder="https://twitter.com/username"
+                    placeholder="https://x.com/username"
                   />
                 </div>
 

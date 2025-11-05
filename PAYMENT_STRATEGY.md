@@ -251,7 +251,7 @@ STRIPE_WEBHOOK_SECRET (different from Connect webhook)
 - Add NFT mint payment
 - Add AI payment
 - Free tier still available
-- Announce on Twitter/Reddit
+- Announce on X/Reddit
 
 **Week 3: Pro Plan**
 - Launch subscription
