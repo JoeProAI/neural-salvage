@@ -56,6 +56,8 @@ VERCEL_ENV_VARS.txt
 arweave-wallet*.json
 arweave-keyfile*.json
 *.jwk
+platform-wallet.json
+scripts/platform-wallet.json
 
 # Any backup files with keys
 *-backup.json
