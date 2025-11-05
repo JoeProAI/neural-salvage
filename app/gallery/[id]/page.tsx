@@ -98,6 +98,46 @@ export default function AssetDetailPage() {
     }
   };
 
+  const handleGenerateAI = async () => {
+    if (!asset || !user) return;
+
+    try {
+      setGeneratingAI(true);
+
+      const response = await fetch('/api/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assetId: asset.id,
+          userId: user.id,
+          imageUrl: asset.url,
+          type: asset.type,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'AI generation failed');
+      }
+
+      // Update local state with AI results
+      const aiAnalysis = data.analysis;
+      setDescription(aiAnalysis.caption || description);
+      setNewTags(aiAnalysis.tags?.join(', ') || newTags);
+
+      // Reload asset to get fresh data
+      await loadAsset();
+
+      alert('✨ AI analysis complete! Description and tags generated.');
+    } catch (error: any) {
+      console.error('AI generation error:', error);
+      alert(`AI generation failed: ${error.message}`);
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
+
   if (loading || loadingAsset || !asset) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-salvage-dark">
@@ -353,7 +393,7 @@ export default function AssetDetailPage() {
                     )}
                     <Button
                       className="w-full bg-retro-orange hover:bg-retro-orange/90 text-white font-semibold"
-                      onClick={() => alert('AI generation coming soon! For now, edit manually.')}
+                      onClick={handleGenerateAI}
                       disabled={generatingAI}
                     >
                       {generatingAI ? '🤖 Generating...' : '✨ Generate AI Description & Tags'}
