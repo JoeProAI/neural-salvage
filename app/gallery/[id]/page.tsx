@@ -140,6 +140,17 @@ export default function AssetDetailPage() {
 
       // Update local state with AI results
       const aiAnalysis = data.analysis;
+      
+      // Generate smart title from caption (first sentence or first 50 chars)
+      let smartTitle = title;
+      if (aiAnalysis.caption && (!title || title === asset.filename)) {
+        const firstSentence = aiAnalysis.caption.split('.')[0];
+        smartTitle = firstSentence.length > 50 
+          ? firstSentence.substring(0, 47) + '...'
+          : firstSentence;
+      }
+      
+      setTitle(smartTitle);
       setDescription(aiAnalysis.caption || description);
       setNewTags(aiAnalysis.tags?.join(', ') || newTags);
 
@@ -196,6 +207,17 @@ export default function AssetDetailPage() {
 
         // Update local state with AI results
         const aiAnalysis = data.analysis;
+        
+        // Generate smart title from caption (first sentence or first 50 chars)
+        let smartTitle = title;
+        if (aiAnalysis.caption && (!title || title === asset.filename)) {
+          const firstSentence = aiAnalysis.caption.split('.')[0];
+          smartTitle = firstSentence.length > 50 
+            ? firstSentence.substring(0, 47) + '...'
+            : firstSentence;
+        }
+        
+        setTitle(smartTitle);
         setDescription(aiAnalysis.caption || description);
         setNewTags(aiAnalysis.tags?.join(', ') || newTags);
 

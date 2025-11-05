@@ -72,8 +72,18 @@ export function MintNFTModal({ assetId, assetName, onClose, onSuccess }: MintNFT
   };
 
   const handleMint = async () => {
+    console.log('🎨 [NFT MINT] Starting mint process...', {
+      assetId,
+      assetName,
+      nftName,
+      walletConnected: wallet.connected,
+      walletAddress: wallet.address,
+      estimatedCost: estimate?.costs?.total?.usd
+    });
+
     try {
       if (!wallet.connected) {
+        console.log('⚠️ [NFT MINT] Wallet not connected, requesting connection...');
         await wallet.connect();
         return;
       }
@@ -84,8 +94,20 @@ export function MintNFTModal({ assetId, assetName, onClose, onSuccess }: MintNFT
       // TODO: Get userId from auth context
       // For now, we'll need to pass it from parent component
       const userId = 'current-user-id'; // Replace with actual user ID
+      console.warn('⚠️ [NFT MINT] Using placeholder userId - needs real auth integration');
+
+      // Enforce Stripe minimum of $0.50
+      const estimatedPrice = estimate?.costs?.total?.usd ? parseFloat(estimate.costs.total.usd) : 1.00;
+      const mintPrice = Math.max(estimatedPrice, 0.50);
+      
+      console.log('💰 [NFT MINT] Price calculation:', {
+        estimatedPrice,
+        finalPrice: mintPrice,
+        enforceMinimum: mintPrice !== estimatedPrice
+      });
 
       // Check if payment is required
+      console.log('💳 [NFT MINT] Checking payment requirements...');
       const paymentResponse = await fetch('/api/payment/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,14 +115,22 @@ export function MintNFTModal({ assetId, assetName, onClose, onSuccess }: MintNFT
           type: 'nft_mint',
           assetId,
           userId,
-          price: estimate?.costs?.total?.usd ? parseFloat(estimate.costs.total.usd) : 1.00,
+          price: mintPrice,
         }),
       });
 
       const paymentData = await paymentResponse.json();
+      console.log('💳 [NFT MINT] Payment check response:', {
+        isBetaUser: paymentData.isBetaUser,
+        isPro: paymentData.isPro,
+        freeMintUsed: paymentData.freeMintUsed,
+        hasCheckoutUrl: !!paymentData.checkoutUrl
+      });
 
       // Beta users and Pro users (with free mints left) get free minting
       if (paymentData.isBetaUser || paymentData.isPro || paymentData.freeMintUsed) {
+        console.log('✅ [NFT MINT] Free mint approved, proceeding to blockchain...');
+        
         // Proceed directly to mint
         const response = await fetch('/api/nft/mint', {
           method: 'POST',
@@ -118,24 +148,40 @@ export function MintNFTModal({ assetId, assetName, onClose, onSuccess }: MintNFT
         });
 
         const data = await response.json();
+        console.log('🎯 [NFT MINT] Mint API response:', {
+          success: response.ok,
+          status: response.status,
+          hasNFT: !!data.nft
+        });
 
         if (!response.ok) {
+          console.error('❌ [NFT MINT] Mint failed:', data.error);
           throw new Error(data.error || 'Failed to mint NFT');
         }
 
         // Success!
+        console.log('🎉 [NFT MINT] SUCCESS! NFT minted:', {
+          nftId: data.nft.id,
+          txId: data.nft.txId,
+          viewUrl: data.nft.viewUrl
+        });
         onSuccess(data.nft.id);
       } else if (paymentData.checkoutUrl) {
         // Redirect to payment
+        console.log('💰 [NFT MINT] Payment required, redirecting to Stripe...', {
+          checkoutUrl: paymentData.checkoutUrl
+        });
         window.location.href = paymentData.checkoutUrl;
       } else {
+        console.error('❌ [NFT MINT] Payment setup failed - no checkout URL and not free');
         throw new Error('Payment setup failed');
       }
     } catch (err: any) {
-      console.error('Minting error:', err);
+      console.error('❌ [NFT MINT] Error:', err);
       setError(err.message);
     } finally {
       setMinting(false);
+      console.log('🏁 [NFT MINT] Process completed');
     }
   };
 
@@ -289,7 +335,7 @@ export function MintNFTModal({ assetId, assetName, onClose, onSuccess }: MintNFT
                         Minting NFT...
                       </>
                     ) : (
-                      <>Mint NFT for ${estimate.costs.total.usd}</>
+                      <>Mint NFT for ${Math.max(parseFloat(estimate.costs.total.usd), 0.50).toFixed(2)}</>
                     )}
                   </Button>
                 </div>
