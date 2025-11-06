@@ -307,14 +307,14 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
 
               {/* Wallet Connection */}
               {!wallet.connected ? (
-                <Button
+                <button
                   onClick={wallet.connect}
                   disabled={wallet.connecting}
-                  className="w-full bg-neon-cyan text-salvage-dark hover:bg-neon-cyan/80 font-semibold py-6"
+                  className="w-full bg-neon-cyan text-black hover:bg-neon-cyan/90 font-bold py-6 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   <Wallet className="w-5 h-5 mr-2" />
                   {wallet.connecting ? 'Connecting...' : 'Connect ArConnect Wallet'}
-                </Button>
+                </button>
               ) : (
                 <div className="space-y-3">
                   <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 flex items-center gap-3">
@@ -325,20 +325,20 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
                     </div>
                   </div>
 
-                  <Button
+                  <button
                     onClick={handleMint}
                     disabled={minting || !nftName}
-                    className="w-full bg-neon-cyan text-salvage-dark hover:bg-neon-cyan/80 font-semibold py-6"
+                    className="w-full bg-neon-cyan text-black hover:bg-neon-cyan/90 font-bold py-6 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {minting ? (
                       <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-salvage-dark mr-2"></div>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black mr-2"></div>
                         Minting NFT...
                       </>
                     ) : (
                       <>Mint NFT for ${Math.max(parseFloat(estimate.costs.total.usd), 0.50).toFixed(2)}</>
                     )}
-                  </Button>
+                  </button>
                 </div>
               )}
 
