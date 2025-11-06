@@ -82,8 +82,8 @@ export async function POST(request: NextRequest) {
       case 'nft_mint':
         productName = 'NFT Mint on Arweave';
         productDescription = 'Mint your asset as a permanent blockchain NFT';
-        // Enforce Stripe minimum of $0.50, default to $1.00
-        amount = Math.max(price || 1.00, 0.50);
+        // Enforce Stripe minimum of $0.50, default to $2.99
+        amount = Math.max(price || 2.99, 0.50);
         successUrl = `${appUrl}/api/payment/success?type=nft_mint&assetId=${assetId}&session_id={CHECKOUT_SESSION_ID}`;
         cancelUrl = `${appUrl}/gallery/${assetId}`;
         break;
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       case 'ai_analysis':
         productName = 'AI Analysis';
         productDescription = 'Generate AI description and tags for your asset';
-        amount = price || 0.50;
+        amount = price || 1.99;
         successUrl = `${appUrl}/api/payment/success?type=ai_analysis&assetId=${assetId}&session_id={CHECKOUT_SESSION_ID}`;
         cancelUrl = `${appUrl}/gallery/${assetId}`;
         break;

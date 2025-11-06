@@ -179,7 +179,7 @@ export default function AssetDetailPage() {
           type: 'ai_analysis',
           assetId: asset.id,
           userId: user.id,
-          price: 0.50,
+          price: 1.99,
         }),
       });
 

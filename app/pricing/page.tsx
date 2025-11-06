@@ -139,11 +139,11 @@ export default function PricingPage() {
               </li>
               <li className="flex items-start gap-2 text-gray-300">
                 <Check className="w-5 h-5 text-retro-orange flex-shrink-0 mt-0.5" />
-                <span>$0.50 per AI analysis</span>
+                <span>$1.99 per AI analysis</span>
               </li>
               <li className="flex items-start gap-2 text-gray-300">
                 <Check className="w-5 h-5 text-retro-orange flex-shrink-0 mt-0.5" />
-                <span>$1.00 per NFT mint</span>
+                <span>$2.99 per NFT mint</span>
               </li>
               <li className="flex items-start gap-2 text-gray-300">
                 <Check className="w-5 h-5 text-retro-orange flex-shrink-0 mt-0.5" />
@@ -171,8 +171,9 @@ export default function PricingPage() {
             </div>
             
             <h3 className="text-2xl font-bold text-retro-purple mb-2">Pro</h3>
-            <div className="text-4xl font-bold text-white mb-6">
-              $9.99<span className="text-lg text-gray-400">/month</span>
+            <div className="text-4xl font-bold text-neon-cyan mb-2">
+              $19.99
+              <span className="text-lg text-gray-400 font-normal">/month</span>
             </div>
             
             <ul className="space-y-3 mb-8">
@@ -186,11 +187,11 @@ export default function PricingPage() {
               </li>
               <li className="flex items-start gap-2 text-gray-300">
                 <Check className="w-5 h-5 text-retro-purple flex-shrink-0 mt-0.5" />
-                <span><strong>10 free</strong> NFT mints/month</span>
+                <span><strong>30 free</strong> NFT mints/month</span>
               </li>
               <li className="flex items-start gap-2 text-gray-300">
                 <Check className="w-5 h-5 text-retro-purple flex-shrink-0 mt-0.5" />
-                <span>$0.50 per additional mint</span>
+                <span>$1.49 per additional mint (50% off)</span>
               </li>
               <li className="flex items-start gap-2 text-gray-300">
                 <Check className="w-5 h-5 text-retro-purple flex-shrink-0 mt-0.5" />

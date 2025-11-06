@@ -97,9 +97,9 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
       const userId = 'current-user-id'; // Replace with actual user ID
       console.warn('⚠️ [NFT MINT] Using placeholder userId - needs real auth integration');
 
-      // Enforce Stripe minimum of $0.50
-      const estimatedPrice = estimate?.costs?.total?.usd ? parseFloat(estimate.costs.total.usd) : 1.00;
-      const mintPrice = Math.max(estimatedPrice, 0.50);
+      // Enforce Stripe minimum of $0.50, default to $2.99
+      const estimatedPrice = estimate?.costs?.total?.usd ? parseFloat(estimate.costs.total.usd) : 2.99;
+      const mintPrice = Math.max(estimatedPrice, 2.99);
       
       console.log('💰 [NFT MINT] Price calculation:', {
         estimatedPrice,
@@ -336,7 +336,7 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
                         Minting NFT...
                       </>
                     ) : (
-                      <>Mint NFT for ${Math.max(parseFloat(estimate.costs.total.usd), 0.50).toFixed(2)}</>
+                      <>Mint NFT for ${Math.max(parseFloat(estimate.costs.total.usd), 2.99).toFixed(2)}</>
                     )}
                   </button>
                 </div>
