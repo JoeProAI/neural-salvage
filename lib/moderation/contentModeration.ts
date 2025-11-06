@@ -63,22 +63,27 @@ export async function moderateImage(imageBuffer: Buffer): Promise<ModerationResu
 
     console.log('[MODERATION] Safe search results:', safeSearch);
 
-    // Check confidence levels (VERY_LIKELY, LIKELY = block)
+    // Only block EXTREMELY severe content (VERY_LIKELY only)
+    // We're not the morality police - just prevent illegal stuff
     const blocked = [];
     const reasons = [];
 
-    if (safeSearch.adult === 'VERY_LIKELY' || safeSearch.adult === 'LIKELY') {
-      blocked.push('adult');
-      reasons.push('Adult content detected');
+    // Only block if VERY_LIKELY (not just LIKELY)
+    // This catches illegal content but allows art/creative stuff
+    if (safeSearch.adult === 'VERY_LIKELY') {
+      // Only if it's extreme - artistic nudity is fine
+      blocked.push('extreme_adult');
+      reasons.push('Extreme adult content detected');
     }
 
-    if (safeSearch.violence === 'VERY_LIKELY' || safeSearch.violence === 'LIKELY') {
-      blocked.push('violence');
-      reasons.push('Violent content detected');
+    if (safeSearch.violence === 'VERY_LIKELY') {
+      // Only extreme violence - horror/art is fine
+      blocked.push('extreme_violence');
+      reasons.push('Extreme violent content detected');
     }
 
-    // CSAM is handled by Google's own detection
-    // We block anything flagged at LIKELY or higher
+    // Google's CSAM detection is automatic - we trust it
+    // If VERY_LIKELY on anything, probably illegal
     if (blocked.length > 0) {
       return {
         safe: false,
@@ -99,28 +104,69 @@ export async function moderateImage(imageBuffer: Buffer): Promise<ModerationResu
 }
 
 /**
- * Simple keyword-based text moderation
- * Checks titles, descriptions for prohibited content
+ * Detect spam and illegal keywords
+ * More focused on abuse than content morality
  */
 export function moderateText(text: string): ModerationResult {
   const lowerText = text.toLowerCase();
 
-  // Prohibited keywords (add more as needed)
-  const prohibitedKeywords = [
+  // Illegal content keywords
+  const illegalKeywords = [
     'child porn',
     'cp',
     'csam',
     'underage',
-    // Add other problematic keywords
+    'preteen',
   ];
 
-  for (const keyword of prohibitedKeywords) {
+  // Spam indicators
+  const spamPatterns = [
+    /free\s*money/i,
+    /click\s*here/i,
+    /buy\s*now/i,
+    /limited\s*time/i,
+    /earn\s*\$\d+/i,
+    /http[s]?:\/\/.*bit\.ly/i, // Shortened links
+    /http[s]?:\/\/.*goo\.gl/i,
+    /crypto.*free/i,
+    /nft.*giveaway/i,
+  ];
+
+  // Check illegal content
+  for (const keyword of illegalKeywords) {
     if (lowerText.includes(keyword)) {
       return {
         safe: false,
-        reason: 'Prohibited content in text',
+        reason: 'Illegal content keyword detected',
       };
     }
+  }
+
+  // Check spam patterns
+  let spamScore = 0;
+  for (const pattern of spamPatterns) {
+    if (pattern.test(text)) {
+      spamScore++;
+    }
+  }
+
+  // Multiple spam indicators = likely spam
+  if (spamScore >= 2) {
+    return {
+      safe: false,
+      reason: 'Spam detected',
+      categories: ['spam'],
+    };
+  }
+
+  // Check for excessive URLs (3+ links = spam)
+  const urlCount = (text.match(/http[s]?:\/\//g) || []).length;
+  if (urlCount >= 3) {
+    return {
+      safe: false,
+      reason: 'Excessive links (spam)',
+      categories: ['spam'],
+    };
   }
 
   return { safe: true };

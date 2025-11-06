@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
 import { moderateFile, logModerationViolation } from '@/lib/moderation/contentModeration';
+import { checkRateLimit } from '@/lib/moderation/rateLimiting';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +16,22 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // ANTI-SPAM: Rate limiting (20 uploads per hour)
+    const rateLimit = checkRateLimit(userId);
+    if (!rateLimit.allowed) {
+      const resetDate = new Date(rateLimit.resetAt);
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: 'Too many uploads. Please wait before uploading again.',
+          resetAt: resetDate.toISOString(),
+        },
+        { status: 429 }
+      );
+    }
+
+    console.log(`[UPLOAD] Rate limit OK - ${rateLimit.remaining} uploads remaining`);
 
     // Validate file size (max 100MB)
     const maxSize = 100 * 1024 * 1024;

@@ -94,16 +94,18 @@ export function PermanenceWarningModal({ onAccept, onCancel }: PermanenceWarning
                 ⛔ Prohibited Content
               </h3>
               <p className="text-gray-300 text-sm">
-                Absolutely NO:
+                Absolutely NO illegal content:
               </p>
               <ul className="list-disc list-inside text-gray-300 text-sm space-y-1 ml-4">
                 <li>Child sexual abuse material (CSAM)</li>
-                <li>Extreme violence or gore</li>
-                <li>Non-consensual intimate imagery</li>
-                <li>Terroristic content</li>
+                <li>Non-consensual intimate imagery (revenge porn)</li>
                 <li>Content that violates laws</li>
+                <li>Spam or bot-generated junk</li>
               </ul>
-              <p className="text-red-400 text-xs mt-2 font-bold">
+              <p className="text-gray-400 text-xs mt-2">
+                We're chill about art/creative content. Just no illegal stuff or spam.
+              </p>
+              <p className="text-red-400 text-xs mt-1 font-bold">
                 ⚠️ Violators will be banned and reported to authorities.
               </p>
             </div>
