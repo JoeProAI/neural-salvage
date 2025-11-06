@@ -59,6 +59,30 @@ export async function initBundlr(walletPrivateKey?: string) {
       await bundlr.ready();
       console.log('✅ [BUNDLR] Connected successfully');
       
+      // Check Bundlr balance and auto-fund if needed
+      const balance = await bundlr.getLoadedBalance();
+      const balanceInAR = bundlr.utils.fromAtomic(balance).toString();
+      console.log(`💰 [BUNDLR] Current balance: ${balanceInAR} AR`);
+      
+      // If balance is too low, fund it with 0.5 AR
+      const minimumBalance = 0.1; // AR
+      if (parseFloat(balanceInAR) < minimumBalance) {
+        console.log(`⚠️ [BUNDLR] Balance below minimum (${minimumBalance} AR), funding...`);
+        
+        const fundAmount = bundlr.utils.toAtomic('0.5'); // Fund with 0.5 AR
+        console.log(`💸 [BUNDLR] Funding with 0.5 AR...`);
+        
+        const fundTx = await bundlr.fund(fundAmount);
+        console.log(`✅ [BUNDLR] Funded successfully! TX: ${fundTx.id}`);
+        
+        // Verify new balance
+        const newBalance = await bundlr.getLoadedBalance();
+        const newBalanceInAR = bundlr.utils.fromAtomic(newBalance).toString();
+        console.log(`💰 [BUNDLR] New balance: ${newBalanceInAR} AR`);
+      } else {
+        console.log(`✅ [BUNDLR] Balance sufficient for minting`);
+      }
+      
       return bundlr;
     }
     
