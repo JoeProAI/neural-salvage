@@ -445,7 +445,17 @@ export default function AssetDetailPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Uploaded</span>
                   <span className="text-white">
-                    {new Date(asset.uploadedAt).toLocaleDateString()}
+                    {asset.uploadedAt 
+                      ? (() => {
+                          try {
+                            const timestamp = asset.uploadedAt as any;
+                            const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+                            return date.toLocaleDateString();
+                          } catch {
+                            return 'Unknown';
+                          }
+                        })()
+                      : 'Unknown'}
                   </span>
                 </div>
               </div>

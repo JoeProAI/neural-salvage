@@ -5,7 +5,7 @@
  * This is NOT fake - these are real, permanent NFTs
  */
 
-import Bundlr from '@bundlr-network/client';
+import { default as Bundlr } from '@bundlr-network/client';
 import type { NFTMetadata } from '@/types';
 
 // Bundlr configuration
@@ -20,7 +20,7 @@ export async function initBundlr(walletPrivateKey?: string) {
   try {
     // For server-side uploads, use platform wallet
     if (walletPrivateKey) {
-      const bundlr = new Bundlr.default(
+      const bundlr = new Bundlr(
         BUNDLR_NODE,
         BUNDLR_CURRENCY,
         walletPrivateKey
