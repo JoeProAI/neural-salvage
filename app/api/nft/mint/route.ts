@@ -67,8 +67,37 @@ export async function POST(request: NextRequest) {
 
     // Download asset from Firebase Storage
     const bucket = adminStorage().bucket();
-    const file = bucket.file(asset.url.split('.com/')[1]); // Extract path from URL
     
+    // Parse the storage path from the signed URL
+    // URL format: https://storage.googleapis.com/BUCKET_NAME/PATH?params
+    // We need just the PATH part
+    let storagePath = asset.url;
+    
+    // Remove query parameters first
+    if (storagePath.includes('?')) {
+      storagePath = storagePath.split('?')[0];
+    }
+    
+    // Extract path after bucket name
+    // Format: https://storage.googleapis.com/nueral-salvage.firebasestorage.app/users/...
+    const pathMatch = storagePath.match(/firebasestorage\.app\/(.+)$/);
+    if (pathMatch) {
+      storagePath = pathMatch[1];
+    } else {
+      // Fallback: try splitting on last occurrence of bucket name
+      const parts = storagePath.split('/');
+      const bucketIndex = parts.findIndex((p: string) => p.includes('firebasestorage.app'));
+      if (bucketIndex >= 0 && bucketIndex < parts.length - 1) {
+        storagePath = parts.slice(bucketIndex + 1).join('/');
+      }
+    }
+    
+    console.log('📦 [NFT MINT] Storage path extracted:', {
+      originalUrl: asset.url,
+      extractedPath: storagePath
+    });
+    
+    const file = bucket.file(storagePath);
     const [fileBuffer] = await file.download();
     
     console.log('Asset downloaded:', {
