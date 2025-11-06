@@ -75,10 +75,26 @@ export async function initBundlr(walletPrivateKey?: string) {
         const fundTx = await bundlr.fund(fundAmount);
         console.log(`✅ [BUNDLR] Funded successfully! TX: ${fundTx.id}`);
         
-        // Verify new balance
-        const newBalance = await bundlr.getLoadedBalance();
-        const newBalanceInAR = bundlr.utils.fromAtomic(newBalance).toString();
-        console.log(`💰 [BUNDLR] New balance: ${newBalanceInAR} AR`);
+        // Wait for balance to update (Bundlr needs time to confirm)
+        console.log(`⏳ [BUNDLR] Waiting for balance confirmation...`);
+        
+        let newBalanceInAR = '0';
+        let retries = 0;
+        const maxRetries = 10;
+        
+        while (parseFloat(newBalanceInAR) < minimumBalance && retries < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+          const newBalance = await bundlr.getLoadedBalance();
+          newBalanceInAR = bundlr.utils.fromAtomic(newBalance).toString();
+          retries++;
+          console.log(`💰 [BUNDLR] Balance check ${retries}/${maxRetries}: ${newBalanceInAR} AR`);
+        }
+        
+        if (parseFloat(newBalanceInAR) < minimumBalance) {
+          throw new Error(`Bundlr funding failed to confirm after ${maxRetries} attempts. Balance: ${newBalanceInAR} AR`);
+        }
+        
+        console.log(`✅ [BUNDLR] Balance confirmed: ${newBalanceInAR} AR`);
       } else {
         console.log(`✅ [BUNDLR] Balance sufficient for minting`);
       }
