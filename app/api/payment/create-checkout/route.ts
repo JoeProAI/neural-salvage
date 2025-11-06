@@ -12,11 +12,34 @@ export async function POST(request: NextRequest) {
     const { type, assetId, userId } = body;
     let price = body.price;
 
-    if (!type || !userId) {
+    if (!type || !assetId || !userId) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: type, assetId, userId' },
         { status: 400 }
       );
+    }
+
+    // Check if payment was already made (pending mint/analysis exists)
+    if (type === 'nft_mint') {
+      const pendingMint = await adminDb().collection('pending_mints').doc(assetId).get();
+      if (pendingMint.exists && pendingMint.data()?.status === 'paid') {
+        console.log(' [PAYMENT] NFT already paid for, allowing free mint');
+        return NextResponse.json({
+          success: true,
+          freeMintUsed: true,
+          message: 'Payment already processed - proceed to mint',
+        });
+      }
+    } else if (type === 'ai_analysis') {
+      const pendingAnalysis = await adminDb().collection('pending_analyses').doc(assetId).get();
+      if (pendingAnalysis.exists && pendingAnalysis.data()?.status === 'paid') {
+        console.log(' [PAYMENT] AI analysis already paid for, allowing free analysis');
+        return NextResponse.json({
+          success: true,
+          freeMintUsed: true,
+          message: 'Payment already processed - proceed to analysis',
+        });
+      }
     }
 
     // Check if user is beta user (beta users get everything free)

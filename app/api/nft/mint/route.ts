@@ -182,6 +182,15 @@ export async function POST(request: NextRequest) {
       updatedAt: now,
     });
 
+    // Clean up pending mint record (if exists)
+    try {
+      await adminDb().collection('pending_mints').doc(assetId).delete();
+      console.log('✅ Cleaned up pending mint record for:', assetId);
+    } catch (cleanupError) {
+      console.warn('⚠️ Could not clean up pending mint record:', cleanupError);
+      // Don't fail the whole mint if cleanup fails
+    }
+
     console.log('NFT minted successfully:', {
       nftId,
       arweaveId: mintResult.manifestId,

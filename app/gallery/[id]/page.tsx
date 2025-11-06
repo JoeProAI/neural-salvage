@@ -40,17 +40,23 @@ export default function AssetDetailPage() {
     }
   }, [assetId]);
 
-  // Check for payment success and auto-trigger AI analysis
+  // Check for payment success and auto-trigger actions
   useEffect(() => {
     const payment = searchParams.get('payment');
     const action = searchParams.get('action');
 
-    if (payment === 'success' && action === 'analyze' && asset && user) {
+    if (payment === 'success' && asset && user) {
       // Clean up URL
       router.replace(`/gallery/${assetId}`);
       
-      // Auto-trigger AI analysis
-      triggerAIAnalysis();
+      if (action === 'analyze') {
+        // Auto-trigger AI analysis
+        triggerAIAnalysis();
+      } else if (action === 'mint') {
+        // Auto-open NFT mint modal (payment already complete)
+        setShowMintModal(true);
+        alert('✅ Payment successful! Complete the mint process to finalize your NFT.');
+      }
     }
   }, [searchParams, asset, user, assetId]);
 
