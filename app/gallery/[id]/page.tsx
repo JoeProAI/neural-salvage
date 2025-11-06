@@ -523,8 +523,8 @@ export default function AssetDetailPage() {
                         <div className="w-full bg-retro-purple/20 border-2 border-retro-purple text-retro-purple px-4 py-3 rounded-lg text-center font-bold">
                           ✅ Minted as NFT on Arweave
                         </div>
-                        {nftData?.arweave?.arweaveUrl && (
-                          <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          {nftData?.arweave?.arweaveUrl ? (
                             <Button
                               variant="neon"
                               className="w-full bg-gradient-to-r from-neon-cyan to-retro-purple hover:opacity-90 text-white font-bold"
@@ -532,6 +532,18 @@ export default function AssetDetailPage() {
                             >
                               🔗 View on Arweave
                             </Button>
+                          ) : (
+                            <Button
+                              variant="neon"
+                              className="w-full bg-gradient-to-r from-neon-cyan to-retro-purple hover:opacity-90 text-white font-bold"
+                              onClick={() => {
+                                alert(`NFT ID: ${asset.nftId}\n\nView in Firebase Console:\nFirestore → nfts → ${asset.nftId}\n\nLook for 'arweave.arweaveUrl'`);
+                              }}
+                            >
+                              🔗 View NFT Details
+                            </Button>
+                          )}
+                          {nftData?.arweave?.manifestId ? (
                             <Button
                               variant="outline"
                               className="w-full border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10"
@@ -539,8 +551,18 @@ export default function AssetDetailPage() {
                             >
                               🔍 Block Explorer
                             </Button>
-                          </div>
-                        )}
+                          ) : (
+                            <Button
+                              variant="outline"
+                              className="w-full border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10"
+                              onClick={() => {
+                                alert(`To view on blockchain:\n1. Go to Firebase Console\n2. Find nfts/${asset.nftId}\n3. Copy 'arweave.manifestId'\n4. Open: https://viewblock.io/arweave/tx/[ID]`);
+                              }}
+                            >
+                              🔍 View Info
+                            </Button>
+                          )}
+                        </div>
                         {nftData?.metadataUri && (
                           <Button
                             variant="ghost"
@@ -548,6 +570,15 @@ export default function AssetDetailPage() {
                             onClick={() => window.open(nftData.metadataUri, '_blank')}
                           >
                             📄 View Metadata (JSON)
+                          </Button>
+                        )}
+                        {!nftData && (
+                          <Button
+                            variant="ghost"
+                            className="w-full text-sm text-yellow-400 hover:text-yellow-300"
+                            onClick={() => window.location.reload()}
+                          >
+                            ⚠️ NFT data loading... Click to refresh
                           </Button>
                         )}
                       </div>
