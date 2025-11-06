@@ -20,20 +20,58 @@ export async function initBundlr(walletPrivateKey?: string) {
   try {
     // For server-side uploads, use platform wallet
     if (walletPrivateKey) {
+      console.log('🔑 [BUNDLR] Initializing with wallet key...');
+      
+      // Validate key format
+      if (!walletPrivateKey || walletPrivateKey.trim().length === 0) {
+        throw new Error('ARWEAVE_PRIVATE_KEY is empty');
+      }
+      
+      // Try to parse as JSON to validate JWK format
+      let jwk;
+      try {
+        jwk = typeof walletPrivateKey === 'string' 
+          ? JSON.parse(walletPrivateKey) 
+          : walletPrivateKey;
+          
+        console.log('✅ [BUNDLR] JWK parsed successfully');
+      } catch (parseError) {
+        console.error('❌ [BUNDLR] Failed to parse JWK:', parseError);
+        throw new Error('ARWEAVE_PRIVATE_KEY is not valid JSON. Expected JWK format.');
+      }
+      
+      // Validate required JWK fields
+      const requiredFields = ['kty', 'n', 'e', 'd', 'p', 'q', 'dp', 'dq', 'qi'];
+      const missingFields = requiredFields.filter(field => !jwk[field]);
+      if (missingFields.length > 0) {
+        throw new Error(`Invalid JWK: missing fields: ${missingFields.join(', ')}`);
+      }
+      
+      console.log('✅ [BUNDLR] JWK validation passed');
+      
       const bundlr = new Bundlr(
         BUNDLR_NODE,
         BUNDLR_CURRENCY,
-        walletPrivateKey
+        jwk
       );
+      
+      console.log('⏳ [BUNDLR] Connecting to network...');
       await bundlr.ready();
+      console.log('✅ [BUNDLR] Connected successfully');
+      
       return bundlr;
     }
     
     // For client-side, user connects their wallet
     // This will be handled in the frontend with ArConnect
     throw new Error('Wallet required for client-side minting');
-  } catch (error) {
-    console.error('Failed to initialize Bundlr:', error);
+  } catch (error: any) {
+    console.error('❌ [BUNDLR] Initialization failed:', {
+      error: error.message,
+      stack: error.stack,
+      keyProvided: !!walletPrivateKey,
+      keyLength: walletPrivateKey?.length
+    });
     throw error;
   }
 }
