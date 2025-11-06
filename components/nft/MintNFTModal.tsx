@@ -234,7 +234,7 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
                     type="text"
                     value={nftName}
                     onChange={(e) => setNftName(e.target.value)}
-                    className="w-full bg-salvage-darker border border-neon-cyan/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-neon-cyan"
+                    className="w-full bg-salvage-metal border-2 border-neon-cyan/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan"
                     placeholder="Enter NFT name"
                   />
                 </div>
@@ -247,14 +247,14 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
                     value={nftDescription}
                     onChange={(e) => setNftDescription(e.target.value)}
                     rows={3}
-                    className="w-full bg-salvage-darker border border-neon-cyan/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-neon-cyan resize-none"
+                    className="w-full bg-salvage-metal border-2 border-neon-cyan/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan resize-none"
                     placeholder="Describe your NFT"
                   />
                 </div>
               </div>
 
               {/* Cost Breakdown */}
-              <div className="bg-salvage-darker border border-neon-cyan/30 rounded-lg p-4">
+              <div className="bg-salvage-metal border border-neon-cyan/30 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-white mb-3">Cost Breakdown</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
