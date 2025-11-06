@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== GOOGLE FONTS ===== */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Rajdhani:wght@300;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -24,29 +27,32 @@
     --input: 240 5.9% 90%;
     --ring: 240 5.9% 10%;
     --radius: 0.5rem;
+    
+    /* ===== CYBERPUNK 3D VARS ===== */
+    --perspective: 1800px;
   }
 
   .dark {
-    /* Neural Salvage Dark Theme - DEFAULT */
-    --background: 0 0% 4%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 6.7%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 6.7%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 210 100% 48%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 10.2%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 10.2%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 210 100% 48%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 20%;
-    --input: 0 0% 10.2%;
-    --ring: 210 100% 48%;
+    /* Neural Salvage Cyberpunk Theme */
+    --background: 214 32% 7%;     /* #0A0E14 void-black */
+    --foreground: 0 0% 96%;        /* #F4F4F4 pure-white */
+    --card: 214 23% 11%;           /* #151B23 deep-space */
+    --card-foreground: 0 0% 96%;
+    --popover: 214 23% 11%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 190 64% 64%;        /* #6FCDDD data-cyan */
+    --primary-foreground: 214 32% 7%;
+    --secondary: 210 33% 37%;      /* #3D5A80 quantum-blue */
+    --secondary-foreground: 0 0% 96%;
+    --muted: 214 23% 11%;
+    --muted-foreground: 0 0% 75%;  /* #BFC0C0 ash-gray */
+    --accent: 37 68% 64%;          /* #E8A55C archive-amber */
+    --accent-foreground: 214 32% 7%;
+    --destructive: 14 68% 56%;     /* #D97742 warning-orange */
+    --destructive-foreground: 0 0% 96%;
+    --border: 210 25% 25%;         /* #2B3A42 steel */
+    --input: 214 23% 11%;
+    --ring: 190 64% 64%;
   }
 }
 
@@ -54,63 +60,174 @@
   * {
     @apply border-border;
   }
+  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Cyberpunk gradient background */
+    background: linear-gradient(165deg, #0a1015 0%, #0A0E14 40%, #151520 100%);
+    perspective: var(--perspective);
+    perspective-origin: 50% 50%;
+    position: relative;
+    overflow-x: hidden;
+  }
+  
+  /* Grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4"/><feColorMatrix values="0 0 0 0 0, 0 0 0 0 0, 0 0 0 0 0, 0 0 0 0.4 0"/></filter><rect width="300" height="300" filter="url(%23n)" opacity="0.4"/></svg>');
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.15;
   }
 }
 
-/* Neural Salvage Custom Components */
+/* ===== CYBERPUNK 3D COMPONENTS ===== */
 @layer components {
-  /* Neural Card - Professional elevated surface */
+  /* 3D Card with hover effects */
+  .cyberpunk-card {
+    background: linear-gradient(142deg, 
+      rgba(21, 27, 35, 0.94) 0%, 
+      rgba(15, 20, 30, 0.97) 45%,
+      rgba(18, 24, 32, 0.95) 100%);
+    border: 2px solid rgba(111, 205, 221, 0.28);
+    border-radius: 12px;
+    transform-style: preserve-3d;
+    transform: translateZ(75px);
+    box-shadow: 
+      0 35px 70px rgba(0, 0, 0, 0.75),
+      0 0 90px rgba(111, 205, 221, 0.12),
+      inset 0 2px 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    transition: all 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .cyberpunk-card:hover {
+    transform: translateZ(45px) translateY(-18px) rotateX(8deg) scale(1.05);
+    border-color: #E8A55C;
+    box-shadow: 
+      0 35px 70px rgba(0, 0, 0, 0.85),
+      0 0 80px rgba(232, 165, 92, 0.4),
+      inset 0 0 60px rgba(111, 205, 221, 0.15);
+  }
+  
+  /* Glass panel */
+  .cyberpunk-glass {
+    background: rgba(21, 27, 35, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(111, 205, 221, 0.25);
+  }
+
+  /* Neon button */
+  .cyberpunk-button {
+    background: linear-gradient(138deg, #E8A55C 0%, #D97742 100%);
+    color: #0A0E14;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    padding: 18px 42px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-style: preserve-3d;
+    box-shadow: 
+      0 12px 35px rgba(232, 165, 92, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  .cyberpunk-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(95deg, 
+      transparent, 
+      rgba(255, 255, 255, 0.4), 
+      transparent);
+    transition: left 0.6s ease;
+  }
+
+  .cyberpunk-button:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 
+      0 20px 50px rgba(232, 165, 92, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+
+  .cyberpunk-button:hover::before {
+    left: 150%;
+  }
+
+  /* Holographic corners */
+  .holo-corners {
+    position: relative;
+  }
+
+  .holo-corners::before,
+  .holo-corners::after {
+    content: '';
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border: 2px solid rgba(111, 205, 221, 0.4);
+    pointer-events: none;
+    animation: bracket-glow 6.5s ease-in-out infinite;
+  }
+
+  .holo-corners::before {
+    top: -10px;
+    left: -10px;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 8px 0 0 0;
+  }
+
+  .holo-corners::after {
+    bottom: -10px;
+    right: -10px;
+    border-left: none;
+    border-top: none;
+    border-radius: 0 0 8px 0;
+  }
+
+  /* Shimmer effect */
+  .cyberpunk-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 5%;
+    right: 15%;
+    height: 2px;
+    background: linear-gradient(95deg, 
+      transparent, 
+      #6FCDDD 30%, 
+      #E8A55C 70%,
+      transparent);
+    animation: slide-shimmer 4s ease-in-out infinite;
+  }
+
+  /* Neural Card - Legacy support */
   .neural-card {
-    @apply bg-neural-dark border border-neural-gray-800 rounded-lg;
+    @apply bg-salvage-medium border border-salvage-steel rounded-lg;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .neural-card:hover {
-    @apply border-neural-blue/50;
+    @apply border-neon-cyan/50;
     transform: translateY(-4px);
-    box-shadow: 0 0 20px rgba(0, 112, 243, 0.3);
-  }
-
-  /* Glass morphism effect */
-  .neural-glass {
-    background: rgba(17, 17, 17, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    @apply border border-neural-gray-800/50;
-  }
-
-  /* Button base styles */
-  .neural-button {
-    @apply bg-neural-blue text-white font-medium px-6 py-3 rounded-lg;
-    @apply transition-all duration-200;
-    @apply hover:bg-neural-cyan active:scale-95;
-  }
-
-  /* Skeleton loading with shimmer */
-  .neural-skeleton {
-    @apply bg-neural-medium rounded;
-    background-image: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.05),
-      transparent
-    );
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite;
-  }
-
-  /* Neural network connection line */
-  .neural-connection {
-    stroke: rgba(0, 217, 255, 0.15);
-    stroke-width: 1;
-    transition: stroke 0.3s ease;
-  }
-
-  .neural-connection.active {
-    stroke: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 20px rgba(111, 205, 221, 0.3);
   }
 }
 
