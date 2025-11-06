@@ -27,6 +27,7 @@ export default function AssetDetailPage() {
   const [price, setPrice] = useState('');
   const [showMintModal, setShowMintModal] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
+  const [nftData, setNftData] = useState<any>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -72,6 +73,18 @@ export default function AssetDetailPage() {
         setForSale(assetData.forSale);
         setPrice(assetData.price?.toString() || '');
         setNewTags(assetData.aiAnalysis?.tags?.join(', ') || '');
+        
+        // Load NFT data if asset is minted
+        if (assetData.isNFT && assetData.nftId) {
+          try {
+            const nftDoc = await getDoc(doc(db, 'nfts', assetData.nftId));
+            if (nftDoc.exists()) {
+              setNftData(nftDoc.data());
+            }
+          } catch (nftError) {
+            console.error('Error loading NFT data:', nftError);
+          }
+        }
       } else {
         alert('Asset not found');
         router.push('/gallery');
@@ -506,8 +519,37 @@ export default function AssetDetailPage() {
                       </Button>
                     )}
                     {asset.isNFT && (
-                      <div className="w-full bg-retro-purple/20 border-2 border-retro-purple text-retro-purple px-4 py-3 rounded-lg text-center font-bold">
-                        ✅ Already Minted as NFT
+                      <div className="space-y-3">
+                        <div className="w-full bg-retro-purple/20 border-2 border-retro-purple text-retro-purple px-4 py-3 rounded-lg text-center font-bold">
+                          ✅ Minted as NFT on Arweave
+                        </div>
+                        {nftData?.arweave?.arweaveUrl && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              variant="neon"
+                              className="w-full bg-gradient-to-r from-neon-cyan to-retro-purple hover:opacity-90 text-white font-bold"
+                              onClick={() => window.open(nftData.arweave.arweaveUrl, '_blank')}
+                            >
+                              🔗 View on Arweave
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="w-full border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10"
+                              onClick={() => window.open(`https://viewblock.io/arweave/tx/${nftData.arweave.manifestId}`, '_blank')}
+                            >
+                              🔍 Block Explorer
+                            </Button>
+                          </div>
+                        )}
+                        {nftData?.metadataUri && (
+                          <Button
+                            variant="ghost"
+                            className="w-full text-sm text-gray-400 hover:text-white"
+                            onClick={() => window.open(nftData.metadataUri, '_blank')}
+                          >
+                            📄 View Metadata (JSON)
+                          </Button>
+                        )}
                       </div>
                     )}
                     <Button
