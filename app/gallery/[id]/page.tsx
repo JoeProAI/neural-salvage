@@ -604,9 +604,15 @@ export default function AssetDetailPage() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => window.open(asset.url, '_blank')}
+                      onClick={() => {
+                        // Use Arweave URL if NFT is minted, otherwise Firebase
+                        const downloadUrl = asset.isNFT && nftData?.metadata?.image 
+                          ? nftData.metadata.image 
+                          : asset.url;
+                        window.open(downloadUrl, '_blank');
+                      }}
                     >
-                      Download
+                      {asset.isNFT ? '⬇️ Download from Blockchain' : 'Download'}
                     </Button>
                     <Button
                       variant="destructive"

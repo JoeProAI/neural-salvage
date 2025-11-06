@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
+import { moderateFile, logModerationViolation } from '@/lib/moderation/contentModeration';
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,6 +39,37 @@ export async function POST(request: NextRequest) {
       mediaType = 'document';
     }
 
+    // Convert File to Buffer (do once, reuse for moderation and upload)
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // AI CONTENT MODERATION - Check for inappropriate content
+    console.log('[UPLOAD] Running AI content moderation...');
+    const moderationResult = await moderateFile(buffer, mimeType);
+
+    if (!moderationResult.safe) {
+      console.error('[UPLOAD] Content moderation FAILED:', moderationResult);
+      
+      // Log violation for admin review
+      await logModerationViolation(
+        userId,
+        file.name,
+        moderationResult.reason || 'Content policy violation',
+        moderationResult.categories || []
+      );
+
+      return NextResponse.json(
+        { 
+          error: 'Content policy violation',
+          reason: 'This content has been flagged by our AI moderation system. If you believe this is an error, please contact support.',
+          details: process.env.NODE_ENV === 'development' ? moderationResult.reason : undefined
+        },
+        { status: 403 }
+      );
+    }
+
+    console.log('[UPLOAD] Content moderation passed ✅');
+
     // Create asset document in Firestore first
     const assetRef = adminDb().collection('assets').doc();
     const assetId = assetRef.id;
@@ -46,10 +78,6 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const storagePath = `users/${userId}/assets/${assetId}/${timestamp}_${sanitizedFilename}`;
-
-    // Convert File to Buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
     // Upload to Firebase Storage
     const bucket = adminStorage().bucket();

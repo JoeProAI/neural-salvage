@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useArweaveWallet } from '@/lib/hooks/useArweaveWallet';
 import { X, Wallet, Check, AlertCircle, ExternalLink } from 'lucide-react';
+import { PermanenceWarningModal } from './PermanenceWarningModal';
 
 interface MintNFTModalProps {
   assetId: string;
@@ -41,6 +42,8 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
   const [error, setError] = useState<string | null>(null);
   const [nftName, setNftName] = useState(assetName);
   const [nftDescription, setNftDescription] = useState(assetDescription || '');
+  const [showWarning, setShowWarning] = useState(false);
+  const [warningAccepted, setWarningAccepted] = useState(false);
 
   useEffect(() => {
     fetchEstimate();
@@ -73,6 +76,12 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
   };
 
   const handleMint = async () => {
+    // Show warning modal if not yet accepted
+    if (!warningAccepted) {
+      setShowWarning(true);
+      return;
+    }
+
     console.log('🎨 [NFT MINT] Starting mint process...', {
       assetId,
       assetName,
@@ -187,8 +196,24 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-salvage-dark border border-neon-cyan/30 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <>
+      {showWarning && (
+        <PermanenceWarningModal
+          onAccept={() => {
+            setWarningAccepted(true);
+            setShowWarning(false);
+            // Auto-trigger mint after accepting
+            setTimeout(() => handleMint(), 100);
+          }}
+          onCancel={() => {
+            setShowWarning(false);
+            onClose(); // Close the entire mint modal
+          }}
+        />
+      )}
+
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="bg-salvage-dark border border-neon-cyan/30 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-salvage-dark border-b border-neon-cyan/30 p-6 flex justify-between items-center">
           <div>
@@ -358,5 +383,6 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
         </div>
       </div>
     </div>
+    </>
   );
 }
