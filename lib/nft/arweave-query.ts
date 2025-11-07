@@ -258,6 +258,39 @@ export async function verifyNFTExists(txId: string): Promise<boolean> {
  * Checks for ownership signature in tags
  * Works with both old (pre-STAMP) and new (STAMP) NFTs
  */
+/**
+ * Fetch with retry logic for transient network errors
+ */
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3): Promise<Response> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🔄 [RETRY] Attempt ${attempt}/${maxRetries}...`);
+      const response = await fetch(url, options);
+      
+      // Check for server errors
+      if (response.status >= 500) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+      
+      return response;
+    } catch (error: any) {
+      lastError = error;
+      console.warn(`⚠️ [RETRY] Attempt ${attempt} failed:`, error.message);
+      
+      // Wait before retry (exponential backoff)
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+        console.log(`⏳ [RETRY] Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError || new Error('Max retries exceeded');
+}
+
 export async function queryNFTsBySignature(
   walletAddress: string
 ): Promise<ArweaveNFTResult[]> {
@@ -296,7 +329,7 @@ export async function queryNFTsBySignature(
       }
     `;
 
-    const response = await fetch('https://arweave.net/graphql', {
+    const response = await fetchWithRetry('https://arweave.net/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -307,7 +340,12 @@ export async function queryNFTsBySignature(
           creator: walletAddress,
         },
       }),
-    });
+    }, 3);
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType?.includes('application/json')) {
+      throw new Error(`Arweave gateway error: Received ${contentType} instead of JSON (likely 504)`);
+    }
 
     const result = await response.json();
     
