@@ -64,13 +64,13 @@ export async function initBundlr(walletPrivateKey?: string) {
       const balanceInAR = bundlr.utils.fromAtomic(balance).toString();
       console.log(`💰 [BUNDLR] Current balance: ${balanceInAR} AR`);
       
-      // If balance is too low, fund it with 0.5 AR
-      const minimumBalance = 0.1; // AR
+      // If balance is too low, fund it with a small amount
+      const minimumBalance = 0.01; // AR (lowered from 0.1)
       if (parseFloat(balanceInAR) < minimumBalance) {
         console.log(`⚠️ [BUNDLR] Balance below minimum (${minimumBalance} AR), funding...`);
         
-        const fundAmount = bundlr.utils.toAtomic('0.5'); // Fund with 0.5 AR
-        console.log(`💸 [BUNDLR] Funding with 0.5 AR...`);
+        const fundAmount = bundlr.utils.toAtomic('0.02'); // Fund with 0.02 AR (lowered from 0.5)
+        console.log(`💸 [BUNDLR] Funding with 0.02 AR...`);
         
         const fundTx = await bundlr.fund(fundAmount);
         console.log(`✅ [BUNDLR] Funded successfully! TX: ${fundTx.id}`);
