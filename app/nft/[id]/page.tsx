@@ -168,6 +168,58 @@ export default function NFTDetailPage() {
               )}
             </div>
 
+            {/* Pending Confirmation Notice */}
+            {nft.status === 'pending' && (
+              <div className="bg-archive-amber/10 border-2 border-archive-amber/40 rounded-lg p-6 animate-pulse">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-archive-amber/20 rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 border-3 border-archive-amber border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-archive-amber font-space-mono font-bold text-lg uppercase tracking-wider mb-2">
+                      ⏳ Transaction Processing
+                    </h3>
+                    <p className="text-pure-white/90 font-rajdhani text-sm leading-relaxed mb-3">
+                      Your NFT has been uploaded to Arweave and is waiting for blockchain confirmation. 
+                      This typically takes <strong className="text-archive-amber">5-20 minutes</strong> as the network 
+                      validates and permanently stores your data across the decentralized network.
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-ash-gray">
+                      <span>•</span>
+                      <span>The NFT is already minted and owned by you</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-ash-gray">
+                      <span>•</span>
+                      <span>Refresh this page to check confirmation status</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-ash-gray">
+                      <span>•</span>
+                      <span>You can close this page safely</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Confirmed Notice */}
+            {nft.status === 'confirmed' && (
+              <div className="bg-terminal-green/10 border-2 border-terminal-green/40 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-terminal-green/20 rounded-full flex items-center justify-center">
+                    <Check className="w-5 h-5 text-terminal-green" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-terminal-green font-space-mono font-bold text-sm uppercase tracking-wider">
+                      ✅ Permanently Stored
+                    </h3>
+                    <p className="text-pure-white/80 font-rajdhani text-sm mt-1">
+                      This NFT is confirmed on the Arweave blockchain and will be stored for 200+ years.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Owner Info */}
             <div className="bg-terminal-green/10 border-2 border-terminal-green/40 rounded-lg p-6">
               <h3 className="text-terminal-green font-space-mono font-bold text-sm uppercase tracking-wider mb-3">

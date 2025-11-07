@@ -30,6 +30,8 @@ export default function NFTGalleryPage() {
     
     try {
       setLoading(true);
+      console.log('🔍 [NFT GALLERY] Loading NFTs for user:', user.id);
+      
       const nftsQuery = query(
         collection(db, 'nfts'),
         where('userId', '==', user.id),
@@ -42,9 +44,12 @@ export default function NFTGalleryPage() {
         id: doc.id,
       })) as NFT[];
       
+      console.log('✅ [NFT GALLERY] Loaded', nftData.length, 'NFTs');
+      console.log('📊 [NFT GALLERY] NFT IDs:', nftData.map(n => n.id));
+      
       setNfts(nftData);
     } catch (error) {
-      console.error('Error loading NFTs:', error);
+      console.error('❌ [NFT GALLERY] Error loading NFTs:', error);
     } finally {
       setLoading(false);
     }
@@ -86,6 +91,35 @@ export default function NFTGalleryPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        {/* Pending Confirmation Banner */}
+        {nfts.some(nft => nft.status === 'pending') && (
+          <div className="mb-8 bg-archive-amber/10 border-2 border-archive-amber/40 rounded-xl p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-archive-amber/20 rounded-full flex items-center justify-center">
+                <div className="w-5 h-5 border-3 border-archive-amber border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-archive-amber font-space-mono font-bold text-lg uppercase tracking-wider mb-2">
+                  ⏳ Some NFTs Are Processing
+                </h3>
+                <p className="text-pure-white/90 font-rajdhani leading-relaxed mb-2">
+                  You have {nfts.filter(n => n.status === 'pending').length} NFT(s) waiting for Arweave blockchain confirmation. 
+                  This typically takes <strong className="text-archive-amber">5-20 minutes</strong> as the network validates 
+                  and permanently stores your data.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-ash-gray">
+                  <span>•</span>
+                  <span>Your NFTs are already minted and owned by you</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-ash-gray">
+                  <span>•</span>
+                  <span>Refresh this page to check the latest status</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         {nfts.length === 0 ? (
           /* Empty State */
