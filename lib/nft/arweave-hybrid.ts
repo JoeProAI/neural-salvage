@@ -7,11 +7,15 @@
  * - True ownership: User's signature proves on-chain ownership
  * - Low cost: Platform pays ~$0.05 AR per mint
  * - Profitability: $4.99 - $0.05 = $4.94 profit per mint
- * - Marketplace compatible: STAMP protocol ready (Phase 2)
+ * - STAMP Royalty Split: Platform 2% + Creator 3% = 5% total
  */
 
 import Bundlr from '@bundlr-network/client';
 import type { NFTMetadata } from '@/types';
+
+// Platform wallet for royalty collection
+// This will receive 2% on all resales
+const PLATFORM_WALLET = process.env.PLATFORM_ROYALTY_WALLET || '9fn66O7yFgzMKXimSxUSsKXtXaSgg9lAp7Y60W1Irc8';
 
 /**
  * Initialize Bundlr with platform wallet
@@ -358,12 +362,16 @@ export async function mintArweaveNFTHybridServer(
       [
         { name: 'App-Name', value: 'Neural-Salvage' },
         { name: 'Type', value: 'nft-asset' },
-        // STAMP Protocol Tags - Enable automatic royalties
+        // STAMP Protocol Tags - Split royalties (Platform 2% + Creator 3%)
         { name: 'Protocol-Name', value: 'STAMP' },
         { name: 'Protocol-Version', value: '0.2.0' },
         { name: 'Data-Protocol', value: 'STAMP' },
+        // Primary creator (gets 3%)
         { name: 'Creator', value: creatorAddress },
-        { name: 'Royalty', value: '5' }, // 5% royalty on all resales
+        { name: 'Royalty', value: '3' },
+        // Platform royalty (gets 2%)
+        { name: 'Creator', value: PLATFORM_WALLET },
+        { name: 'Royalty', value: '2' },
         { name: 'Title', value: metadata.name },
         { name: 'Description', value: metadata.description },
         { name: 'Collection', value: 'Neural-Salvage' },
@@ -399,11 +407,15 @@ export async function mintArweaveNFTHybridServer(
       [
         { name: 'App-Name', value: 'Neural-Salvage' },
         { name: 'Type', value: 'nft-metadata' },
-        // STAMP Protocol Tags
+        // STAMP Protocol Tags - Split royalties
         { name: 'Protocol-Name', value: 'STAMP' },
         { name: 'Protocol-Version', value: '0.2.0' },
+        // Creator gets 3%
         { name: 'Creator', value: creatorAddress },
-        { name: 'Royalty', value: '5' },
+        { name: 'Royalty', value: '3' },
+        // Platform gets 2%
+        { name: 'Creator', value: PLATFORM_WALLET },
+        { name: 'Royalty', value: '2' },
       ],
       {
         signature: userSignature.signature,
@@ -439,11 +451,15 @@ export async function mintArweaveNFTHybridServer(
         { name: 'App-Name', value: 'Neural-Salvage' },
         { name: 'Type', value: 'nft-manifest' },
         { name: 'NFT-Standard', value: 'atomic' },
-        // STAMP Protocol Tags - Primary entry point for marketplaces
+        // STAMP Protocol Tags - Split royalties (Primary entry point)
         { name: 'Protocol-Name', value: 'STAMP' },
         { name: 'Protocol-Version', value: '0.2.0' },
+        // Creator gets 3%
         { name: 'Creator', value: creatorAddress },
-        { name: 'Royalty', value: '5' }, // 5% lifetime royalty
+        { name: 'Royalty', value: '3' },
+        // Platform gets 2%
+        { name: 'Creator', value: PLATFORM_WALLET },
+        { name: 'Royalty', value: '2' },
         { name: 'Title', value: metadata.name },
         { name: 'Description', value: metadata.description },
         { name: 'Collection', value: 'Neural-Salvage' },
@@ -463,12 +479,14 @@ export async function mintArweaveNFTHybridServer(
       platformPaid: totalCost.toFixed(6) + ' AR',
       userSigned: '✅',
       stampEnabled: '✅',
-      royalty: '5%'
+      totalRoyalty: '5%',
+      split: 'Creator 3% + Platform 2%'
     });
     
-    console.log('💰 [STAMP] Lifetime royalty enabled:', {
-      creator: creatorAddress.substring(0, 12) + '...',
-      royaltyPercentage: '5%',
+    console.log('💰 [STAMP] Split royalty enabled:', {
+      creator: creatorAddress.substring(0, 12) + '... → 3%',
+      platform: PLATFORM_WALLET.substring(0, 12) + '... → 2%',
+      totalRoyalty: '5%',
       protocol: 'STAMP v0.2.0',
       collection: 'Neural-Salvage'
     });
