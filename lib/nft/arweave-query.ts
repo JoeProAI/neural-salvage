@@ -189,26 +189,35 @@ export async function fetchNFTMetadata(manifestId: string) {
     
     const metadataPath = manifest.paths?.['metadata.json']?.id;
     if (!metadataPath) {
-      console.warn('⚠️ [METADATA] No metadata.json in manifest, checking for direct paths');
+      console.warn('⚠️ [METADATA] No manifest paths - this IS the metadata');
       
-      // Try all possible path names
+      // This transaction IS the metadata.json itself
+      // Check for image URL in the metadata
+      let imageUrl = manifest.image;
+      
+      // If image field exists and is an Arweave ID (not full URL)
+      if (imageUrl && !imageUrl.startsWith('http')) {
+        imageUrl = `https://arweave.net/${imageUrl}`;
+      }
+      
+      // Also try to extract from paths if they exist
       const imagePath = 
         manifest.paths?.['asset']?.id || 
         manifest.paths?.['image']?.id ||
         manifest.paths?.['image.png']?.id ||
         manifest.paths?.['image.jpg']?.id;
       
-      console.log('🔍 [METADATA] Image path found:', imagePath ? imagePath.substring(0, 12) + '...' : 'None');
+      if (imagePath) {
+        imageUrl = `https://arweave.net/${imagePath}`;
+      }
       
-      // Also check if manifest has index or default path
-      const indexPath = manifest.index?.path || manifest.manifest?.index;
+      console.log('🔍 [METADATA] Image URL:', imageUrl ? imageUrl.substring(0, 40) + '...' : 'None');
       
       return {
-        image: imagePath ? `https://arweave.net/${imagePath}` : 
-               indexPath ? `https://arweave.net/${indexPath}` :
-               `https://arweave.net/${manifestId}`,
+        ...manifest, // Include all metadata fields (name, description, etc.)
+        image: imageUrl || `https://arweave.net/${manifestId}`,
         manifestUrl: `https://arweave.net/${manifestId}`,
-        paths: manifest.paths,
+        isMetadataOnly: true,
       };
     }
 
@@ -368,6 +377,16 @@ export async function queryNFTsBySignature(
       // Extract all creators and royalties (for STAMP split)
       const creators = tags.filter((t: any) => t.name === 'Creator').map((t: any) => t.value);
       const royalties = tags.filter((t: any) => t.name === 'Royalty').map((t: any) => t.value);
+      
+      // Extract image URL from tags (for manifests that don't have paths)
+      const imageTag = getTag('Image') || getTag('Asset-Id') || getTag('image');
+      const imageUrl = imageTag ? `https://arweave.net/${imageTag}` : undefined;
+      
+      if (imageTag) {
+        console.log(`🖼️ [QUERY] Found image in tags for ${node.id.substring(0, 12)}: ${imageTag.substring(0, 12)}...`);
+      } else {
+        console.log(`⚠️ [QUERY] No image tag found for ${node.id.substring(0, 12)}. Available tags:`, tags.map((t: any) => t.name).join(', '));
+      }
 
       return {
         id: node.id,
@@ -381,6 +400,7 @@ export async function queryNFTsBySignature(
         timestamp: node.block?.timestamp || Date.now() / 1000,
         blockHeight: node.block?.height || 0,
         manifestUrl: `https://arweave.net/${node.id}`,
+        imageUrl: imageUrl, // Extract from tags
         tags: tags,
       };
     });
