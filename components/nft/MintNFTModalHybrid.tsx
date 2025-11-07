@@ -235,6 +235,18 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, onClo
       }
 
       console.log('🎉 [NFT MINT] SUCCESS!');
+      console.log('📊 [NFT MINT] Mint Result:', {
+        nftId: data.nft.id,
+        arweaveId: data.nft.arweaveId,
+        arweaveUrl: data.nft.arweaveUrl,
+        metadataUrl: data.nft.metadataUrl,
+        assetUrl: data.nft.assetUrl,
+        cost: data.nft.cost
+      });
+      console.log('🔗 [NFT MINT] View on Arweave:', data.nft.arweaveUrl);
+      console.log('🔗 [NFT MINT] View Asset:', data.nft.assetUrl);
+      console.log('🔗 [NFT MINT] View Metadata:', data.nft.metadataUrl);
+      
       onSuccess(data.nft.id);
     } catch (err: any) {
       console.error('❌ [NFT MINT] Mint error:', err);
@@ -420,10 +432,19 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, onClo
                 </div>
               </button>
             ) : (
-              <div className="bg-terminal-green/10 border-2 border-terminal-green/40 rounded-lg p-6 text-center">
-                <Loader2 className="w-12 h-12 text-terminal-green mx-auto mb-4 animate-spin" />
-                <p className="text-terminal-green font-space-mono font-bold text-lg uppercase">Minting Your NFT...</p>
-                <p className="text-ash-gray text-sm font-rajdhani mt-2">This may take 30-60 seconds</p>
+              <div className="bg-terminal-green/10 border-2 border-terminal-green/40 rounded-lg p-6 text-center space-y-3">
+                <Loader2 className="w-12 h-12 text-terminal-green mx-auto animate-spin" />
+                <div>
+                  <p className="text-terminal-green font-space-mono font-bold text-lg uppercase">Minting Your NFT...</p>
+                  <p className="text-ash-gray text-sm font-rajdhani mt-2">Uploading to Arweave blockchain</p>
+                </div>
+                <div className="bg-archive-amber/10 border border-archive-amber/30 rounded-lg p-3 mt-4">
+                  <p className="text-archive-amber text-xs font-rajdhani font-semibold uppercase tracking-wider mb-1">⏱️ Please Note</p>
+                  <p className="text-ash-gray text-xs font-rajdhani leading-relaxed">
+                    Upload takes 30-60 seconds. Once complete, your NFT will be in "Pending" status on Arweave.
+                    Full confirmation takes 5-20 minutes as the blockchain mines the block. This is normal!
+                  </p>
+                </div>
               </div>
             )}
 

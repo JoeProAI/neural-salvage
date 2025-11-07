@@ -349,7 +349,7 @@ export async function mintArweaveNFTHybridServer(
     console.log('🔧 [NFT MINT] Step 1: Initializing platform wallet...');
     const bundlr = await initBundlr();
     
-    // Step 2: Upload asset with ownership proof
+    // Step 2: Upload asset with ownership proof + STAMP protocol
     console.log('📸 [NFT MINT] Step 2: Uploading asset (platform pays)...');
     const assetUpload = await uploadWithPlatformAR(
       bundlr,
@@ -358,6 +358,15 @@ export async function mintArweaveNFTHybridServer(
       [
         { name: 'App-Name', value: 'Neural-Salvage' },
         { name: 'Type', value: 'nft-asset' },
+        // STAMP Protocol Tags - Enable automatic royalties
+        { name: 'Protocol-Name', value: 'STAMP' },
+        { name: 'Protocol-Version', value: '0.2.0' },
+        { name: 'Data-Protocol', value: 'STAMP' },
+        { name: 'Creator', value: creatorAddress },
+        { name: 'Royalty', value: '5' }, // 5% royalty on all resales
+        { name: 'Title', value: metadata.name },
+        { name: 'Description', value: metadata.description },
+        { name: 'Collection', value: 'Neural-Salvage' },
       ],
       {
         signature: userSignature.signature,
@@ -390,6 +399,11 @@ export async function mintArweaveNFTHybridServer(
       [
         { name: 'App-Name', value: 'Neural-Salvage' },
         { name: 'Type', value: 'nft-metadata' },
+        // STAMP Protocol Tags
+        { name: 'Protocol-Name', value: 'STAMP' },
+        { name: 'Protocol-Version', value: '0.2.0' },
+        { name: 'Creator', value: creatorAddress },
+        { name: 'Royalty', value: '5' },
       ],
       {
         signature: userSignature.signature,
@@ -425,6 +439,14 @@ export async function mintArweaveNFTHybridServer(
         { name: 'App-Name', value: 'Neural-Salvage' },
         { name: 'Type', value: 'nft-manifest' },
         { name: 'NFT-Standard', value: 'atomic' },
+        // STAMP Protocol Tags - Primary entry point for marketplaces
+        { name: 'Protocol-Name', value: 'STAMP' },
+        { name: 'Protocol-Version', value: '0.2.0' },
+        { name: 'Creator', value: creatorAddress },
+        { name: 'Royalty', value: '5' }, // 5% lifetime royalty
+        { name: 'Title', value: metadata.name },
+        { name: 'Description', value: metadata.description },
+        { name: 'Collection', value: 'Neural-Salvage' },
       ],
       {
         signature: userSignature.signature,
@@ -439,7 +461,16 @@ export async function mintArweaveNFTHybridServer(
       owner: creatorAddress.substring(0, 12) + '...',
       manifestId: manifestUpload.txId.substring(0, 12) + '...',
       platformPaid: totalCost.toFixed(6) + ' AR',
-      userSigned: '✅'
+      userSigned: '✅',
+      stampEnabled: '✅',
+      royalty: '5%'
+    });
+    
+    console.log('💰 [STAMP] Lifetime royalty enabled:', {
+      creator: creatorAddress.substring(0, 12) + '...',
+      royaltyPercentage: '5%',
+      protocol: 'STAMP v0.2.0',
+      collection: 'Neural-Salvage'
     });
     
     return {
