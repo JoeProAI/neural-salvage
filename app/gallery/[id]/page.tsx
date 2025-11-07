@@ -664,14 +664,8 @@ export default function AssetDetailPage() {
             setShowMintModal(false);
             loadAsset(); // Reload to show NFT status
             
-            // Show success with instructions
-            alert(
-              `🎉 NFT Minted Successfully!\n\n` +
-              `NFT ID: ${nftId}\n\n` +
-              `✅ Your ownership is proven on-chain!\n\n` +
-              `⚠️ NOTE: It may take 5-20 minutes for the transaction to appear on Arweave.\n` +
-              `Check the console (F12) for transaction URLs.`
-            );
+            // Navigate to NFT detail page
+            router.push(`/nft/${nftId}`);
           }}
         />
       )}
