@@ -151,6 +151,37 @@ export default function NFTDetailPage() {
               <ShoppingCart className="w-6 h-6" />
               <span className="font-space-mono font-bold uppercase">List for Sale on BazAR</span>
             </a>
+
+            {/* Selling Info */}
+            <div className="bg-quantum-blue/10 border-2 border-quantum-blue/30 rounded-lg p-6">
+              <h3 className="text-quantum-blue font-space-mono font-bold text-sm uppercase tracking-wider mb-3">
+                💰 How to Sell
+              </h3>
+              <div className="space-y-3 text-sm font-rajdhani text-pure-white/80">
+                <div className="flex items-start gap-2">
+                  <span className="text-quantum-blue font-bold">1.</span>
+                  <span>Click "List for Sale" above to open BazAR marketplace</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-quantum-blue font-bold">2.</span>
+                  <span>Connect your wallet and set your price in AR tokens</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-quantum-blue font-bold">3.</span>
+                  <span>When someone buys, AR is deposited instantly to your wallet</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-quantum-blue font-bold">4.</span>
+                  <span>You earn 97.5% (after 2.5% BazAR fee) + future 3% royalties</span>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-quantum-blue/20">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-ash-gray">Example: Sell for 10 AR</span>
+                  <span className="text-terminal-green font-bold">You get ~9.75 AR ($58)</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Right Column - Details */}
