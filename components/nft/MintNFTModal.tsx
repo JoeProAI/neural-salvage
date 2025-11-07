@@ -216,17 +216,17 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
         />
       )}
 
-      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-        <div className="bg-salvage-dark border border-neon-cyan/30 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-gradient-to-br from-deep-space/95 via-void-black/98 to-deep-space/95 border-2 border-data-cyan/30 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-[0_0_50px_rgba(111,205,221,0.15)]">
         {/* Header */}
-        <div className="sticky top-0 bg-salvage-dark border-b border-neon-cyan/30 p-6 flex justify-between items-center">
+        <div className="sticky top-0 bg-gradient-to-r from-void-black via-deep-space to-void-black border-b-2 border-data-cyan/30 p-6 flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-neon-cyan">Mint NFT on Arweave</h2>
-            <p className="text-sm text-gray-400 mt-1">Create a real, permanent blockchain NFT</p>
+            <h2 className="text-2xl font-space-mono font-bold text-data-cyan uppercase tracking-wider" style={{ textShadow: '0 0 20px #6FCDDD' }}>Mint NFT on Arweave</h2>
+            <p className="text-sm text-ash-gray mt-2 font-rajdhani">Create a real, permanent blockchain NFT • 200+ Year Storage</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-ash-gray hover:text-archive-amber transition-colors p-2 hover:bg-archive-amber/10 rounded-lg"
           >
             <X className="w-6 h-6" />
           </button>
@@ -236,8 +236,8 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
         <div className="p-6 space-y-6">
           {loading && (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-cyan mx-auto"></div>
-              <p className="text-gray-400 mt-4">Calculating costs...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-data-cyan mx-auto" style={{ filter: 'drop-shadow(0 0 10px #6FCDDD)' }}></div>
+              <p className="text-ash-gray mt-4 font-rajdhani uppercase tracking-wider">Calculating costs...</p>
             </div>
           )}
 
@@ -256,79 +256,79 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
               {/* NFT Details Form */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-rajdhani font-semibold text-data-cyan mb-2 uppercase tracking-wider">
                     NFT Name
                   </label>
                   <input
                     type="text"
                     value={nftName}
                     onChange={(e) => setNftName(e.target.value)}
-                    className="w-full bg-salvage-metal border-2 border-neon-cyan/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan"
+                    className="w-full bg-deep-space/80 border-2 border-data-cyan/30 rounded-lg px-4 py-3 text-pure-white placeholder-ash-gray/50 focus:outline-none focus:border-data-cyan focus:shadow-[0_0_20px_rgba(111,205,221,0.3)] transition-all font-inter"
                     placeholder="Enter NFT name"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-rajdhani font-semibold text-data-cyan mb-2 uppercase tracking-wider">
                     Description (Optional)
                   </label>
                   <textarea
                     value={nftDescription}
                     onChange={(e) => setNftDescription(e.target.value)}
                     rows={3}
-                    className="w-full bg-salvage-metal border-2 border-neon-cyan/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan resize-none"
+                    className="w-full bg-deep-space/80 border-2 border-data-cyan/30 rounded-lg px-4 py-3 text-pure-white placeholder-ash-gray/50 focus:outline-none focus:border-data-cyan focus:shadow-[0_0_20px_rgba(111,205,221,0.3)] resize-none transition-all font-inter"
                     placeholder="Describe your NFT"
                   />
                 </div>
               </div>
 
               {/* Cost Breakdown */}
-              <div className="bg-salvage-metal border border-neon-cyan/30 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-white mb-3">Cost Breakdown</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">File Size:</span>
-                    <span className="text-white">{estimate.fileSizeMB} MB</span>
+              <div className="bg-gradient-to-br from-deep-space/60 to-panel-dark/80 border-2 border-data-cyan/30 rounded-lg p-5" style={{ boxShadow: 'inset 0 2px 0 rgba(111, 205, 221, 0.1)' }}>
+                <h3 className="text-lg font-space-mono font-bold text-archive-amber mb-4 uppercase tracking-wider" style={{ textShadow: '0 0 15px #E8A55C' }}>Cost Breakdown</h3>
+                <div className="space-y-3 text-sm font-rajdhani">
+                  <div className="flex justify-between items-center">
+                    <span className="text-ash-gray font-medium">File Size:</span>
+                    <span className="text-pure-white font-semibold">{estimate.fileSizeMB} MB</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Arweave Storage:</span>
-                    <span className="text-white">${estimate.costs.arweave.usd}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-ash-gray font-medium">Arweave Storage:</span>
+                    <span className="text-pure-white font-semibold">${estimate.costs.arweave.usd}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Platform Fee:</span>
-                    <span className="text-white">${estimate.costs.platformFee.usd}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-ash-gray font-medium">Platform Fee:</span>
+                    <span className="text-pure-white font-semibold">${estimate.costs.platformFee.usd}</span>
                   </div>
-                  <div className="border-t border-neon-cyan/30 pt-2 mt-2 flex justify-between">
-                    <span className="text-neon-cyan font-semibold">Total Cost:</span>
-                    <span className="text-neon-cyan font-bold text-lg">${estimate.costs.total.usd}</span>
+                  <div className="border-t-2 border-data-cyan/30 pt-3 mt-3 flex justify-between items-center">
+                    <span className="text-data-cyan font-bold text-base uppercase">Total Cost:</span>
+                    <span className="text-archive-amber font-bold text-xl" style={{ textShadow: '0 0 15px #E8A55C' }}>${estimate.costs.total.usd}</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-ash-gray/70 mt-2 font-jetbrains">
                     AR Price: ${estimate.arweavePrice.usd} USD
                   </p>
                 </div>
               </div>
 
               {/* Benefits */}
-              <div className="bg-neon-cyan/5 border border-neon-cyan/30 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-neon-cyan mb-3">Why Arweave?</h3>
-                <ul className="space-y-2">
+              <div className="bg-data-cyan/5 border-2 border-data-cyan/30 rounded-lg p-5">
+                <h3 className="text-lg font-space-mono font-bold text-data-cyan mb-4 uppercase tracking-wider" style={{ textShadow: '0 0 15px #6FCDDD' }}>Why Arweave?</h3>
+                <ul className="space-y-3">
                   {estimate.benefits.map((benefit, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm text-gray-300">
-                      <Check className="w-4 h-4 text-neon-cyan flex-shrink-0 mt-0.5" />
-                      <span>{benefit}</span>
+                    <li key={index} className="flex items-start gap-3 text-sm text-ash-gray font-rajdhani">
+                      <Check className="w-5 h-5 text-terminal-green flex-shrink-0 mt-0.5" style={{ filter: 'drop-shadow(0 0 8px #7FB069)' }} />
+                      <span className="text-pure-white">{benefit}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
               {/* Important Notes */}
-              <div className="bg-yellow-500/5 border border-yellow-500/30 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-yellow-400 mb-2">Important</h3>
-                <ul className="space-y-1 text-sm text-gray-300">
+              <div className="bg-archive-amber/5 border-2 border-archive-amber/30 rounded-lg p-5">
+                <h3 className="text-lg font-space-mono font-bold text-archive-amber mb-3 uppercase tracking-wider" style={{ textShadow: '0 0 15px #E8A55C' }}>⚠️ Important</h3>
+                <ul className="space-y-2 text-sm text-ash-gray font-rajdhani">
                   {estimate.notes.map((note, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <span className="text-yellow-400">•</span>
-                      <span>{note}</span>
+                    <li key={index} className="flex items-start gap-3">
+                      <span className="text-archive-amber font-bold text-lg">•</span>
+                      <span className="text-pure-white">{note}</span>
                     </li>
                   ))}
                 </ul>
@@ -339,34 +339,44 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
                 <button
                   onClick={wallet.connect}
                   disabled={wallet.connecting}
-                  className="w-full bg-neon-cyan text-black hover:bg-neon-cyan/90 font-bold py-6 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="w-full bg-gradient-to-r from-data-cyan via-quantum-blue to-data-cyan text-void-black hover:shadow-[0_0_30px_rgba(111,205,221,0.6)] font-space-mono font-bold py-6 px-6 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center uppercase tracking-wider transform hover:scale-[1.02]"
+                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
                 >
-                  <Wallet className="w-5 h-5 mr-2" />
+                  <Wallet className="w-5 h-5 mr-3" />
                   {wallet.connecting ? 'Connecting...' : 'Connect ArConnect Wallet'}
                 </button>
               ) : (
-                <div className="space-y-3">
-                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 flex items-center gap-3">
-                    <Check className="w-5 h-5 text-green-500" />
+                <div className="space-y-4">
+                  <div className="bg-terminal-green/10 border-2 border-terminal-green/40 rounded-lg p-4 flex items-center gap-3">
+                    <div className="w-3 h-3 bg-terminal-green rounded-full animate-pulse" style={{ boxShadow: '0 0 15px #7FB069' }}></div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-green-400 font-medium text-sm">Wallet Connected</p>
-                      <p className="text-green-300 text-xs truncate">{wallet.address}</p>
+                      <p className="text-terminal-green font-rajdhani font-bold text-sm uppercase tracking-wider">Wallet Connected</p>
+                      <p className="text-ash-gray text-xs truncate font-jetbrains mt-1">{wallet.address}</p>
                     </div>
                   </div>
 
                   <button
                     onClick={handleMint}
                     disabled={minting || !nftName}
-                    className="w-full bg-neon-cyan text-black hover:bg-neon-cyan/90 font-bold py-6 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="cyberpunk-button w-full py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
                   >
-                    {minting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black mr-2"></div>
-                        Minting NFT...
-                      </>
-                    ) : (
-                      <>Mint NFT for ${Math.max(parseFloat(estimate.costs.total.usd), 2.99).toFixed(2)}</>
-                    )}
+                    {/* Animated background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-archive-amber via-data-cyan to-archive-amber opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+                    
+                    <div className="relative z-10 flex items-center justify-center">
+                      {minting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-void-black mr-3"></div>
+                          <span className="font-space-mono font-bold uppercase tracking-wider">Minting NFT...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-space-mono font-bold uppercase tracking-wider">
+                            🎨 Mint NFT for ${Math.max(parseFloat(estimate.costs.total.usd), 2.99).toFixed(2)}
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </button>
                 </div>
               )}
@@ -377,9 +387,9 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
                   href="https://arweave.org"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-neon-cyan hover:underline inline-flex items-center gap-1"
+                  className="text-sm text-data-cyan hover:text-archive-amber transition-colors inline-flex items-center gap-2 font-rajdhani font-semibold uppercase tracking-wider hover:shadow-[0_0_15px_rgba(111,205,221,0.3)] px-4 py-2 rounded-lg"
                 >
-                  Learn more about Arweave <ExternalLink className="w-3 h-3" />
+                  Learn more about Arweave <ExternalLink className="w-4 h-4" />
                 </a>
               </div>
             </>
