@@ -51,23 +51,29 @@ export default function NFTGalleryPage() {
       setLoading(true);
       console.log('🔍 [NFT GALLERY] Loading NFTs from multiple sources...');
       
-      // Source 1: Firebase cache (fast)
-      console.log('📦 [NFT GALLERY] Loading from Firebase cache...');
-      const nftsQuery = query(
-        collection(db, 'nfts'),
-        where('userId', '==', user.id),
-        orderBy('createdAt', 'desc')
-      );
+      // Source 1: Firebase cache (fast but optional)
+      let firebaseNFTs: NFT[] = [];
+      try {
+        console.log('📦 [NFT GALLERY] Loading from Firebase cache...');
+        const nftsQuery = query(
+          collection(db, 'nfts'),
+          where('userId', '==', user.id),
+          orderBy('createdAt', 'desc')
+        );
+        
+        const snapshot = await getDocs(nftsQuery);
+        firebaseNFTs = snapshot.docs.map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+        })) as NFT[];
+        
+        console.log('✅ [FIREBASE] Loaded', firebaseNFTs.length, 'cached NFTs');
+      } catch (firebaseError: any) {
+        console.warn('⚠️ [FIREBASE] Cache unavailable (will use blockchain only):', firebaseError.message);
+        console.log('💡 [FIREBASE] This is OK - blockchain is the source of truth!');
+      }
       
-      const snapshot = await getDocs(nftsQuery);
-      const firebaseNFTs = snapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-      })) as NFT[];
-      
-      console.log('✅ [FIREBASE] Loaded', firebaseNFTs.length, 'cached NFTs');
-      
-      // Source 2: Arweave blockchain (source of truth)
+      // Source 2: Arweave blockchain (source of truth - ALWAYS runs)
       let blockchainNFTs: ArweaveNFTResult[] = [];
       if (walletAddress) {
         console.log('⛓️ [BLOCKCHAIN] Querying Arweave for wallet:', walletAddress);
