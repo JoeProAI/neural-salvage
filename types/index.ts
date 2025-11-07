@@ -289,7 +289,7 @@ export interface NFT {
   updatedAt: Date;
 }
 
-// NFT Minting Request
+// NFT Minting Request - HYBRID MODEL
 export interface MintNFTRequest {
   assetId: string;
   blockchain: BlockchainType;
@@ -303,4 +303,9 @@ export interface MintNFTRequest {
   };
   royaltyPercentage?: number;     // Default 10%
   walletAddress: string;          // User's wallet
+  userSignature: {                // User's ownership signature (hybrid model)
+    signature: string;
+    message: string;
+    timestamp: number;
+  };
 }

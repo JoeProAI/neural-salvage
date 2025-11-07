@@ -1,25 +1,27 @@
 /**
- * NFT Minting API
+ * NFT Minting API - HYBRID MODEL
  * POST /api/nft/mint
  * 
- * Mints REAL blockchain NFTs on Arweave
- * This is NOT a fake certificate - it's permanent blockchain storage
+ * Mints REAL blockchain NFTs on Arweave with:
+ * - Platform-paid AR (from pool)
+ * - User-signed ownership proof
+ * - True decentralization + easy UX
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, adminStorage } from '@/lib/firebase/admin';
-import { initBundlr, mintArweaveNFT } from '@/lib/nft/arweave';
+import { mintArweaveNFTHybridServer } from '@/lib/nft/arweave-hybrid';
 import type { NFT, NFTMetadata, MintNFTRequest } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
     const body: MintNFTRequest = await request.json();
-    const { assetId, blockchain, metadata, royaltyPercentage = 10, walletAddress } = body;
+    const { assetId, blockchain, metadata, royaltyPercentage = 10, walletAddress, userSignature } = body;
 
     // Validate inputs
-    if (!assetId || !blockchain || !metadata || !walletAddress) {
+    if (!assetId || !blockchain || !metadata || !walletAddress || !userSignature) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields (need assetId, blockchain, metadata, walletAddress, userSignature)' },
         { status: 400 }
       );
     }
@@ -106,24 +108,11 @@ export async function POST(request: NextRequest) {
       mimeType: asset.mimeType,
     });
 
-    // Initialize Bundlr (for now, using platform wallet)
-    // TODO: Support user's own wallet via ArConnect
-    const bundlrPrivateKey = process.env.ARWEAVE_PRIVATE_KEY;
-    
-    if (!bundlrPrivateKey) {
-      return NextResponse.json(
-        { error: 'Arweave wallet not configured. Please contact support.' },
-        { status: 500 }
-      );
-    }
-
-    const bundlr = await initBundlr(bundlrPrivateKey);
-
     // Prepare NFT metadata
     const nftMetadata: NFTMetadata = {
       name: metadata.name || asset.originalFilename,
       description: metadata.description || `Created by ${user?.username || 'Unknown'} on Neural Salvage`,
-      image: '', // Will be set by mintArweaveNFT
+      image: '', // Will be set by hybrid mint
       external_url: `${process.env.NEXT_PUBLIC_APP_URL}/asset/${assetId}`,
       attributes: [
         {
@@ -157,14 +146,15 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    // Mint the NFT on Arweave
-    console.log('Minting NFT on Arweave...');
-    const mintResult = await mintArweaveNFT(
-      bundlr,
+    // Mint the NFT on Arweave with user signature (platform pays AR)
+    console.log('🎨 [API] Minting NFT with hybrid model (platform-paid, user-signed)...');
+    const mintResult = await mintArweaveNFTHybridServer(
       fileBuffer,
       asset.mimeType,
       nftMetadata,
-      walletAddress
+      walletAddress,
+      userSignature,
+      assetId
     );
 
     // Create NFT document in Firestore

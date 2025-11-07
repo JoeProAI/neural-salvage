@@ -322,6 +322,147 @@ export async function mintArweaveNFTHybrid(
 }
 
 /**
+ * Server-side NFT minting with pre-generated user signature
+ * Used by API route - signature comes from client
+ */
+export async function mintArweaveNFTHybridServer(
+  assetBuffer: Buffer,
+  assetMimeType: string,
+  metadata: NFTMetadata,
+  creatorAddress: string,
+  userSignature: {
+    signature: string;
+    message: string;
+    timestamp: number;
+  },
+  assetId: string
+): Promise<{
+  assetId: string;
+  assetUrl: string;
+  metadataId: string;
+  metadataUrl: string;
+  manifestId: string;
+  manifestUrl: string;
+  totalCost: number;
+  userSignature: string;
+}> {
+  try {
+    console.log('🎨 [NFT MINT SERVER] Starting platform-funded mint with user signature...');
+    
+    // Step 1: Initialize platform Bundlr
+    console.log('🔧 [NFT MINT] Step 1: Initializing platform wallet...');
+    const bundlr = await initBundlr();
+    
+    // Step 2: Upload asset with ownership proof
+    console.log('📸 [NFT MINT] Step 2: Uploading asset (platform pays)...');
+    const assetUpload = await uploadWithPlatformAR(
+      bundlr,
+      assetBuffer,
+      assetMimeType,
+      [
+        { name: 'App-Name', value: 'Neural-Salvage' },
+        { name: 'Type', value: 'nft-asset' },
+      ],
+      {
+        signature: userSignature.signature,
+        message: userSignature.message,
+        walletAddress: creatorAddress
+      }
+    );
+    
+    // Step 3: Upload metadata
+    console.log('📋 [NFT MINT] Step 3: Uploading metadata...');
+    const fullMetadata: NFTMetadata = {
+      ...metadata,
+      image: assetUpload.url,
+      external_url: metadata.external_url || `https://neural-salvage.com/nft/${assetUpload.txId}`,
+      attributes: [
+        ...(metadata.attributes || []),
+        { trait_type: 'Owner', value: creatorAddress },
+        { trait_type: 'Signature', value: userSignature.signature },
+        { trait_type: 'Signed At', value: new Date(userSignature.timestamp).toISOString() },
+        { trait_type: 'Platform', value: 'Neural-Salvage' },
+        { trait_type: 'Ownership Proof', value: 'user-signed' },
+      ],
+    };
+    
+    const metadataBuffer = Buffer.from(JSON.stringify(fullMetadata, null, 2));
+    const metadataUpload = await uploadWithPlatformAR(
+      bundlr,
+      metadataBuffer,
+      'application/json',
+      [
+        { name: 'App-Name', value: 'Neural-Salvage' },
+        { name: 'Type', value: 'nft-metadata' },
+      ],
+      {
+        signature: userSignature.signature,
+        message: userSignature.message,
+        walletAddress: creatorAddress
+      }
+    );
+    
+    // Step 4: Create manifest
+    console.log('🔗 [NFT MINT] Step 4: Creating manifest...');
+    const manifest = {
+      manifest: 'arweave/paths',
+      version: '0.2.0',
+      index: {
+        path: 'metadata.json',
+      },
+      paths: {
+        'metadata.json': {
+          id: metadataUpload.txId,
+        },
+        'asset': {
+          id: assetUpload.txId,
+        },
+      },
+    };
+    
+    const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+    const manifestUpload = await uploadWithPlatformAR(
+      bundlr,
+      manifestBuffer,
+      'application/x.arweave-manifest+json',
+      [
+        { name: 'App-Name', value: 'Neural-Salvage' },
+        { name: 'Type', value: 'nft-manifest' },
+        { name: 'NFT-Standard', value: 'atomic' },
+      ],
+      {
+        signature: userSignature.signature,
+        message: userSignature.message,
+        walletAddress: creatorAddress
+      }
+    );
+    
+    const totalCost = assetUpload.cost + metadataUpload.cost + manifestUpload.cost;
+    
+    console.log('🎉 [NFT MINT SERVER] SUCCESS!', {
+      owner: creatorAddress.substring(0, 12) + '...',
+      manifestId: manifestUpload.txId.substring(0, 12) + '...',
+      platformPaid: totalCost.toFixed(6) + ' AR',
+      userSigned: '✅'
+    });
+    
+    return {
+      assetId: assetUpload.txId,
+      assetUrl: assetUpload.url,
+      metadataId: metadataUpload.txId,
+      metadataUrl: metadataUpload.url,
+      manifestId: manifestUpload.txId,
+      manifestUrl: manifestUpload.url,
+      totalCost,
+      userSignature: userSignature.signature,
+    };
+  } catch (error) {
+    console.error('❌ [NFT MINT SERVER] Failed:', error);
+    throw error;
+  }
+}
+
+/**
  * Calculate cost estimate for hybrid minting
  * Platform pays AR, user pays $4.99 service fee
  */
