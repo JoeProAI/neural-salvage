@@ -5,7 +5,7 @@
  * Allows users to mint their assets as REAL blockchain NFTs on Arweave
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useArweaveWallet } from '@/lib/hooks/useArweaveWallet';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,6 +47,7 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
   const [showWarning, setShowWarning] = useState(false);
   const [warningAccepted, setWarningAccepted] = useState(false);
   const [shouldAutoMint, setShouldAutoMint] = useState(false);
+  const hasAutoTriggered = useRef(false);
 
   // Check if user already accepted warning (for post-payment flow)
   useEffect(() => {
@@ -73,14 +74,26 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
 
   // Auto-trigger mint after payment when wallet is connected and estimate is loaded
   useEffect(() => {
-    if (shouldAutoMint && wallet.connected && estimate && !loading && !minting && warningAccepted) {
-      console.log('🚀 [NFT MINT] Auto-triggering mint after payment...');
+    console.log('🔍 [NFT MINT] Auto-trigger check:', {
+      shouldAutoMint,
+      walletConnected: wallet.connected,
+      hasEstimate: !!estimate,
+      loading,
+      minting,
+      warningAccepted,
+      hasAutoTriggered: hasAutoTriggered.current
+    });
+    
+    if (shouldAutoMint && wallet.connected && estimate && !loading && !minting && warningAccepted && !hasAutoTriggered.current) {
+      console.log('🚀 [NFT MINT] All conditions met - auto-triggering mint after payment...');
+      hasAutoTriggered.current = true;
       setShouldAutoMint(false);
-      // Small delay to ensure UI is fully ready
-      const timer = setTimeout(() => {
+      
+      // Use setTimeout to ensure React has finished rendering
+      setTimeout(() => {
+        console.log('🎯 [NFT MINT] Executing auto-mint...');
         startMintProcess();
-      }, 800);
-      return () => clearTimeout(timer);
+      }, 100);
     }
   }, [shouldAutoMint, wallet.connected, estimate, loading, minting, warningAccepted]);
 
@@ -241,8 +254,8 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
   };
 
   const handleMint = async () => {
-    // Show warning modal if not yet accepted
-    if (!warningAccepted) {
+    // Show warning modal if not yet accepted (and not auto-minting)
+    if (!warningAccepted && !shouldAutoMint) {
       setShowWarning(true);
       return;
     }
