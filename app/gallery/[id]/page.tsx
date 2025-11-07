@@ -8,7 +8,7 @@ import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { MediaAsset } from '@/types';
 import Link from 'next/link';
-import { MintNFTModal } from '@/components/nft/MintNFTModal';
+import { MintNFTModalHybrid } from '@/components/nft/MintNFTModalHybrid';
 
 export default function AssetDetailPage() {
   const { user, loading } = useAuth();
@@ -653,9 +653,9 @@ export default function AssetDetailPage() {
         </div>
       </main>
 
-      {/* Mint NFT Modal */}
+      {/* Mint NFT Modal - HYBRID */}
       {showMintModal && (
-        <MintNFTModal
+        <MintNFTModalHybrid
           assetId={assetId}
           assetName={asset.title || asset.filename}
           assetDescription={asset.description || asset.aiAnalysis?.caption || ''}
@@ -663,7 +663,7 @@ export default function AssetDetailPage() {
           onSuccess={(nftId) => {
             setShowMintModal(false);
             loadAsset(); // Reload to show NFT status
-            alert(`NFT minted successfully! NFT ID: ${nftId}`);
+            alert(`🎉 NFT minted successfully! Your ownership is proven on-chain. NFT ID: ${nftId}`);
           }}
         />
       )}
