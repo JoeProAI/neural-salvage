@@ -8,12 +8,31 @@ import { db } from '@/lib/firebase/config';
 import { NFT } from '@/types';
 import Link from 'next/link';
 import { ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { queryNFTsByWallet, queryNFTsBySignature, fetchNFTMetadata, type ArweaveNFTResult } from '@/lib/nft/arweave-query';
 
 export default function NFTGalleryPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [loading, setLoading] = useState(true);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [blockchainNFTs, setBlockchainNFTs] = useState<ArweaveNFTResult[]>([]);
+
+  // Check for connected wallet
+  useEffect(() => {
+    const checkWallet = async () => {
+      if (typeof window !== 'undefined' && (window as any).arweaveWallet) {
+        try {
+          const address = await (window as any).arweaveWallet.getActiveAddress();
+          setWalletAddress(address);
+          console.log('👛 [NFT GALLERY] Wallet connected:', address);
+        } catch (error) {
+          console.log('👛 [NFT GALLERY] No wallet connected');
+        }
+      }
+    };
+    checkWallet();
+  }, []);
 
   useEffect(() => {
     if (!authLoading) {
@@ -23,15 +42,17 @@ export default function NFTGalleryPage() {
         loadNFTs();
       }
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, walletAddress]);
 
   const loadNFTs = async () => {
     if (!user) return;
     
     try {
       setLoading(true);
-      console.log('🔍 [NFT GALLERY] Loading NFTs for user:', user.id);
+      console.log('🔍 [NFT GALLERY] Loading NFTs from multiple sources...');
       
+      // Source 1: Firebase cache (fast)
+      console.log('📦 [NFT GALLERY] Loading from Firebase cache...');
       const nftsQuery = query(
         collection(db, 'nfts'),
         where('userId', '==', user.id),
@@ -39,15 +60,94 @@ export default function NFTGalleryPage() {
       );
       
       const snapshot = await getDocs(nftsQuery);
-      const nftData = snapshot.docs.map(doc => ({
+      const firebaseNFTs = snapshot.docs.map(doc => ({
         ...doc.data(),
         id: doc.id,
       })) as NFT[];
       
-      console.log('✅ [NFT GALLERY] Loaded', nftData.length, 'NFTs');
-      console.log('📊 [NFT GALLERY] NFT IDs:', nftData.map(n => n.id));
+      console.log('✅ [FIREBASE] Loaded', firebaseNFTs.length, 'cached NFTs');
       
-      setNfts(nftData);
+      // Source 2: Arweave blockchain (source of truth)
+      let blockchainNFTs: ArweaveNFTResult[] = [];
+      if (walletAddress) {
+        console.log('⛓️ [BLOCKCHAIN] Querying Arweave for wallet:', walletAddress);
+        try {
+          // Query by Creator tag (ownership signature)
+          blockchainNFTs = await queryNFTsBySignature(walletAddress);
+          console.log('✅ [BLOCKCHAIN] Found', blockchainNFTs.length, 'NFTs on-chain');
+          setBlockchainNFTs(blockchainNFTs);
+        } catch (error) {
+          console.error('❌ [BLOCKCHAIN] Query failed:', error);
+        }
+      } else {
+        console.log('⚠️ [BLOCKCHAIN] No wallet connected - showing cached NFTs only');
+      }
+      
+      // Merge results: prioritize blockchain, supplement with cache
+      const merged = new Map<string, NFT>();
+      
+      // Add all Firebase NFTs first
+      firebaseNFTs.forEach(nft => {
+        merged.set(nft.arweave?.arweaveId || nft.id, nft);
+      });
+      
+      // Add blockchain NFTs (will override if exists)
+      blockchainNFTs.forEach(blockchainNFT => {
+        const existing = merged.get(blockchainNFT.txId);
+        if (existing) {
+          // Update status if confirmed on blockchain
+          merged.set(blockchainNFT.txId, {
+            ...existing,
+            status: 'confirmed',
+          });
+        } else {
+          // New NFT found on blockchain but not in cache!
+          console.log('🆕 [MERGE] Found NFT on blockchain not in cache:', blockchainNFT.txId);
+          merged.set(blockchainNFT.txId, {
+            id: blockchainNFT.txId,
+            assetId: '',
+            userId: user.id,
+            blockchain: 'arweave',
+            status: 'confirmed',
+            arweave: {
+              arweaveId: blockchainNFT.txId,
+              arweaveUrl: blockchainNFT.manifestUrl,
+              manifestId: blockchainNFT.txId,
+              bundlrId: blockchainNFT.txId,
+              uploadCost: 0,
+              uploadedAt: new Date(blockchainNFT.timestamp * 1000),
+              confirmedAt: new Date(blockchainNFT.timestamp * 1000),
+            },
+            metadata: {
+              name: blockchainNFT.title || 'Untitled NFT',
+              description: blockchainNFT.description || '',
+              image: blockchainNFT.imageUrl || '',
+              attributes: [],
+            },
+            metadataUri: `${blockchainNFT.manifestUrl}/metadata.json`,
+            currentOwner: blockchainNFT.owner,
+            originalMinter: blockchainNFT.creator,
+            royaltyPercentage: parseInt(blockchainNFT.royalty) || 5,
+            transfers: [],
+            isVerified: true,
+            verifiedAt: new Date(blockchainNFT.timestamp * 1000),
+            createdAt: new Date(blockchainNFT.timestamp * 1000),
+            updatedAt: new Date(),
+          });
+        }
+      });
+      
+      const allNFTs = Array.from(merged.values()).sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      
+      console.log('📊 [NFT GALLERY] Final count:', {
+        firebase: firebaseNFTs.length,
+        blockchain: blockchainNFTs.length,
+        total: allNFTs.length,
+      });
+      
+      setNfts(allNFTs);
     } catch (error) {
       console.error('❌ [NFT GALLERY] Error loading NFTs:', error);
     } finally {
