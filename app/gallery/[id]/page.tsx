@@ -54,9 +54,9 @@ export default function AssetDetailPage() {
         // Auto-trigger AI analysis
         triggerAIAnalysis();
       } else if (action === 'mint') {
-        // Auto-open NFT mint modal (payment already complete)
+        // Auto-open NFT mint modal (payment already complete, will auto-mint)
         setShowMintModal(true);
-        alert('✅ Payment successful! Complete the mint process to finalize your NFT.');
+        console.log('✅ [GALLERY] Payment successful - opening mint modal to complete NFT');
       }
     }
   }, [searchParams, asset, user, assetId]);

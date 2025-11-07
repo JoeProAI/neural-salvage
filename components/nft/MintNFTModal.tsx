@@ -5,7 +5,7 @@
  * Allows users to mint their assets as REAL blockchain NFTs on Arweave
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useArweaveWallet } from '@/lib/hooks/useArweaveWallet';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,6 +46,42 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
   const [nftDescription, setNftDescription] = useState(assetDescription || '');
   const [showWarning, setShowWarning] = useState(false);
   const [warningAccepted, setWarningAccepted] = useState(false);
+  const autoTriggerMint = useRef(false);
+
+  // Check if user already accepted warning (for post-payment flow)
+  useEffect(() => {
+    const storageKey = `nft-mint-${assetId}`;
+    const savedData = localStorage.getItem(storageKey);
+    if (savedData) {
+      try {
+        const { warningAccepted: accepted, nftName: savedName, nftDescription: savedDesc } = JSON.parse(savedData);
+        if (accepted) {
+          console.log('✅ [NFT MINT] Found saved warning acceptance from payment flow - will auto-trigger mint');
+          setWarningAccepted(true);
+          if (savedName) setNftName(savedName);
+          if (savedDesc) setNftDescription(savedDesc);
+          // Clear the saved data
+          localStorage.removeItem(storageKey);
+          // Set flag to auto-trigger mint once wallet is ready
+          autoTriggerMint.current = true;
+        }
+      } catch (e) {
+        console.error('Failed to parse saved mint data:', e);
+      }
+    }
+  }, [assetId]);
+
+  // Auto-trigger mint after payment when wallet is connected and estimate is loaded
+  useEffect(() => {
+    if (autoTriggerMint.current && wallet.connected && estimate && !loading && !minting) {
+      console.log('🚀 [NFT MINT] Auto-triggering mint after payment...');
+      autoTriggerMint.current = false;
+      // Small delay to ensure UI is ready
+      setTimeout(() => {
+        handleMint();
+      }, 500);
+    }
+  }, [wallet.connected, estimate, loading, minting]);
 
   useEffect(() => {
     fetchEstimate();
@@ -181,6 +217,16 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
         });
         onSuccess(data.nft.id);
       } else if (paymentData.checkoutUrl) {
+        // Save warning acceptance and mint details before payment redirect
+        const storageKey = `nft-mint-${assetId}`;
+        localStorage.setItem(storageKey, JSON.stringify({
+          warningAccepted: true,
+          nftName,
+          nftDescription,
+          timestamp: Date.now()
+        }));
+        console.log('💾 [NFT MINT] Saved warning acceptance for post-payment flow');
+        
         // Redirect to payment
         console.log('💰 [NFT MINT] Payment required, redirecting to Stripe...', {
           checkoutUrl: paymentData.checkoutUrl
