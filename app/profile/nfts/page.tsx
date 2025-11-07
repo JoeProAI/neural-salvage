@@ -35,12 +35,14 @@ export default function NFTGalleryPage() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        router.push('/login');
-      } else {
+    if (!authLoading && user) {
+      // Small delay to ensure wallet is checked first
+      const timer = setTimeout(() => {
         loadNFTs();
-      }
+      }, 100);
+      return () => clearTimeout(timer);
+    } else if (!authLoading && !user) {
+      router.push('/login');
     }
   }, [user, authLoading, router, walletAddress]);
 

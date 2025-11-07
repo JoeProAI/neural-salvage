@@ -148,17 +148,50 @@ export async function queryNFTsByWallet(
 
 /**
  * Get detailed NFT metadata from Arweave
+ * Handles both manifest-based NFTs and direct image NFTs
  */
 export async function fetchNFTMetadata(manifestId: string) {
   try {
-    // Fetch the manifest
+    console.log('📥 [METADATA] Fetching for:', manifestId.substring(0, 12) + '...');
+    
+    // Try to fetch as manifest first
     const manifestResponse = await fetch(`https://arweave.net/${manifestId}`);
-    const manifest = await manifestResponse.json();
+    const contentType = manifestResponse.headers.get('content-type');
+    
+    // Check if it's an image (not a manifest)
+    if (contentType?.includes('image')) {
+      console.log('🖼️ [METADATA] Transaction is an image, not a manifest');
+      return {
+        image: `https://arweave.net/${manifestId}`,
+        manifestUrl: `https://arweave.net/${manifestId}`,
+        isDirectImage: true,
+      };
+    }
+    
+    // Try to parse as JSON manifest
+    const text = await manifestResponse.text();
+    let manifest;
+    try {
+      manifest = JSON.parse(text);
+    } catch (parseError) {
+      console.warn('⚠️ [METADATA] Not valid JSON, treating as direct asset');
+      return {
+        image: `https://arweave.net/${manifestId}`,
+        manifestUrl: `https://arweave.net/${manifestId}`,
+        isDirectImage: true,
+      };
+    }
 
-    // Get metadata URL from manifest
+    // It's a proper manifest - extract metadata and image
     const metadataPath = manifest.paths?.['metadata.json']?.id;
     if (!metadataPath) {
-      throw new Error('No metadata found in manifest');
+      console.warn('⚠️ [METADATA] No metadata.json in manifest');
+      // Try to find image directly
+      const imagePath = manifest.paths?.['asset']?.id || manifest.paths?.['image']?.id;
+      return {
+        image: imagePath ? `https://arweave.net/${imagePath}` : `https://arweave.net/${manifestId}`,
+        manifestUrl: `https://arweave.net/${manifestId}`,
+      };
     }
 
     // Fetch metadata
@@ -169,15 +202,22 @@ export async function fetchNFTMetadata(manifestId: string) {
     const imagePath = manifest.paths?.['asset']?.id || manifest.paths?.['image']?.id;
     const imageUrl = imagePath ? `https://arweave.net/${imagePath}` : undefined;
 
+    console.log('✅ [METADATA] Successfully loaded metadata and image');
+    
     return {
       ...metadata,
       image: imageUrl || metadata.image,
       manifestUrl: `https://arweave.net/${manifestId}`,
       metadataUrl: `https://arweave.net/${metadataPath}`,
     };
-  } catch (error) {
-    console.error('❌ Failed to fetch NFT metadata:', error);
-    return null;
+  } catch (error: any) {
+    console.error('❌ [METADATA] Failed to fetch:', error.message);
+    // Return basic structure with direct link
+    return {
+      image: `https://arweave.net/${manifestId}`,
+      manifestUrl: `https://arweave.net/${manifestId}`,
+      error: error.message,
+    };
   }
 }
 
@@ -198,6 +238,7 @@ export async function verifyNFTExists(txId: string): Promise<boolean> {
 /**
  * Query NFTs signed by a specific wallet (ownership proof)
  * Checks for ownership signature in tags
+ * Works with both old (pre-STAMP) and new (STAMP) NFTs
  */
 export async function queryNFTsBySignature(
   walletAddress: string
@@ -205,12 +246,14 @@ export async function queryNFTsBySignature(
   try {
     console.log('🔍 [ARWEAVE QUERY] Fetching NFTs signed by:', walletAddress);
 
+    // Query for Neural-Salvage NFTs where user is Creator
+    // Works for both STAMP and pre-STAMP NFTs
     const query = `
       query GetNFTsBySignature($creator: String!) {
         transactions(
           tags: [
-            { name: "Protocol-Name", values: ["STAMP"] }
             { name: "App-Name", values: ["Neural-Salvage"] }
+            { name: "Type", values: ["nft-manifest"] }
             { name: "Creator", values: [$creator] }
           ]
           first: 100
@@ -249,9 +292,16 @@ export async function queryNFTsBySignature(
     });
 
     const result = await response.json();
+    
+    if (result.errors) {
+      console.error('❌ [ARWEAVE QUERY] GraphQL errors:', result.errors);
+      throw new Error(`GraphQL errors: ${JSON.stringify(result.errors)}`);
+    }
+    
     const edges = result.data?.transactions?.edges || [];
 
     console.log(`✅ [ARWEAVE QUERY] Found ${edges.length} NFTs by signature`);
+    console.log(`📋 [ARWEAVE QUERY] Transaction IDs:`, edges.map((e: any) => e.node.id));
 
     return edges.map((edge: any) => {
       const node = edge.node;
@@ -259,14 +309,19 @@ export async function queryNFTsBySignature(
       const getTag = (name: string) => 
         tags.find((t: any) => t.name === name)?.value || '';
 
+      // Extract all creators and royalties (for STAMP split)
+      const creators = tags.filter((t: any) => t.name === 'Creator').map((t: any) => t.value);
+      const royalties = tags.filter((t: any) => t.name === 'Royalty').map((t: any) => t.value);
+
       return {
         id: node.id,
         txId: node.id,
         owner: node.owner.address,
-        title: getTag('Title'),
-        description: getTag('Description'),
+        title: getTag('Title') || getTag('Title') || 'Untitled NFT',
+        description: getTag('Description') || '',
         creator: walletAddress,
-        royalty: getTag('Royalty'),
+        royalty: royalties[0] || '5', // Default 5% if not specified
+        platformRoyalty: royalties[1] || undefined,
         timestamp: node.block?.timestamp || Date.now() / 1000,
         blockHeight: node.block?.height || 0,
         manifestUrl: `https://arweave.net/${node.id}`,
