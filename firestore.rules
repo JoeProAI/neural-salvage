@@ -51,16 +51,25 @@ service cloud.firestore {
       allow read, write: if isOwner(resource.data.userId);
     }
     
-    // NFTs - Users can read their own NFTs, anyone can read public NFTs
+    // NFTs - Users can read their own NFTs and verified public NFTs
     match /nfts/{nftId} {
-      allow read: if isAuthenticated() && (
-        isOwner(resource.data.userId) || 
-        isOwner(resource.data.currentOwner) ||
+      // Allow list/query if authenticated (query filters by userId)
+      allow list: if isAuthenticated();
+      // Allow get if authenticated and (owns it OR it's verified)
+      allow get: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.currentOwner == request.auth.uid ||
         resource.data.isVerified == true
       );
-      allow create: if isAuthenticated();
-      allow update: if isOwner(resource.data.userId) || isOwner(resource.data.currentOwner);
-      allow delete: if isOwner(resource.data.userId);
+      // Allow creating NFTs if authenticated and setting own userId
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Allow update if owner
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.currentOwner == request.auth.uid
+      );
+      // Allow delete if creator
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
     
     // Pending Mints
