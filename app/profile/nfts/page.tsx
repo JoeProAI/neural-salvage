@@ -79,8 +79,27 @@ export default function NFTGalleryPage() {
         console.log('⛓️ [BLOCKCHAIN] Querying Arweave for wallet:', walletAddress);
         try {
           // Query by Creator tag (ownership signature)
-          blockchainNFTs = await queryNFTsBySignature(walletAddress);
-          console.log('✅ [BLOCKCHAIN] Found', blockchainNFTs.length, 'NFTs on-chain');
+          const rawBlockchainNFTs = await queryNFTsBySignature(walletAddress);
+          console.log('✅ [BLOCKCHAIN] Found', rawBlockchainNFTs.length, 'NFTs on-chain');
+          
+          // Fetch full metadata for each NFT (includes image URLs)
+          blockchainNFTs = await Promise.all(
+            rawBlockchainNFTs.map(async (nft) => {
+              try {
+                const fullMetadata = await fetchNFTMetadata(nft.txId);
+                return {
+                  ...nft,
+                  imageUrl: fullMetadata?.image || nft.imageUrl,
+                  metadataUrl: fullMetadata?.metadataUrl,
+                };
+              } catch (error) {
+                console.warn('⚠️ Failed to fetch metadata for', nft.txId);
+                return nft;
+              }
+            })
+          );
+          
+          console.log('📸 [BLOCKCHAIN] Loaded metadata with images');
           setBlockchainNFTs(blockchainNFTs);
         } catch (error) {
           console.error('❌ [BLOCKCHAIN] Query failed:', error);
@@ -89,37 +108,60 @@ export default function NFTGalleryPage() {
         console.log('⚠️ [BLOCKCHAIN] No wallet connected - showing cached NFTs only');
       }
       
-      // Merge results: prioritize blockchain, supplement with cache
+      // Merge results: blockchain is source of truth, Firebase supplements
       const merged = new Map<string, NFT>();
       
-      // Add all Firebase NFTs first
-      firebaseNFTs.forEach(nft => {
-        merged.set(nft.arweave?.arweaveId || nft.id, nft);
-      });
+      console.log('🔄 [MERGE] Merging Firebase cache with blockchain data...');
       
-      // Add blockchain NFTs (will override if exists)
+      // First, add all blockchain NFTs (source of truth)
       blockchainNFTs.forEach(blockchainNFT => {
-        const existing = merged.get(blockchainNFT.txId);
-        if (existing) {
-          // Update status if confirmed on blockchain
-          merged.set(blockchainNFT.txId, {
-            ...existing,
-            status: 'confirmed',
+        const nftId = blockchainNFT.txId;
+        
+        // Check if we have this in Firebase cache
+        const cached = firebaseNFTs.find(
+          fb => fb.arweave?.manifestId === nftId || fb.arweave?.arweaveId === nftId || fb.id === nftId
+        );
+        
+        if (cached) {
+          // Merge: Use blockchain data but keep Firebase assetId/userId
+          console.log('✅ [MERGE] Found in both - using blockchain data:', nftId.substring(0, 12) + '...');
+          merged.set(nftId, {
+            ...cached,
+            id: nftId, // Use blockchain ID for routing
+            status: 'confirmed', // Blockchain confirms it
+            metadata: {
+              ...cached.metadata,
+              image: blockchainNFT.imageUrl || cached.metadata.image, // Prefer blockchain image
+            },
+            arweave: cached.arweave ? {
+              ...cached.arweave,
+              arweaveId: nftId,
+              manifestId: nftId,
+              confirmedAt: new Date(blockchainNFT.timestamp * 1000),
+            } : {
+              arweaveId: nftId,
+              arweaveUrl: blockchainNFT.manifestUrl,
+              manifestId: nftId,
+              bundlrId: nftId,
+              uploadCost: 0,
+              uploadedAt: new Date(blockchainNFT.timestamp * 1000),
+              confirmedAt: new Date(blockchainNFT.timestamp * 1000),
+            },
           });
         } else {
-          // New NFT found on blockchain but not in cache!
-          console.log('🆕 [MERGE] Found NFT on blockchain not in cache:', blockchainNFT.txId);
-          merged.set(blockchainNFT.txId, {
-            id: blockchainNFT.txId,
+          // New NFT found on blockchain but not in cache
+          console.log('🆕 [MERGE] Found only on blockchain:', nftId.substring(0, 12) + '...');
+          merged.set(nftId, {
+            id: nftId,
             assetId: '',
             userId: user.id,
             blockchain: 'arweave',
             status: 'confirmed',
             arweave: {
-              arweaveId: blockchainNFT.txId,
+              arweaveId: nftId,
               arweaveUrl: blockchainNFT.manifestUrl,
-              manifestId: blockchainNFT.txId,
-              bundlrId: blockchainNFT.txId,
+              manifestId: nftId,
+              bundlrId: nftId,
               uploadCost: 0,
               uploadedAt: new Date(blockchainNFT.timestamp * 1000),
               confirmedAt: new Date(blockchainNFT.timestamp * 1000),
@@ -130,16 +172,25 @@ export default function NFTGalleryPage() {
               image: blockchainNFT.imageUrl || '',
               attributes: [],
             },
-            metadataUri: `${blockchainNFT.manifestUrl}/metadata.json`,
+            metadataUri: blockchainNFT.metadataUrl || `${blockchainNFT.manifestUrl}/metadata.json`,
             currentOwner: blockchainNFT.owner,
             originalMinter: blockchainNFT.creator,
-            royaltyPercentage: parseInt(blockchainNFT.royalty) || 5,
+            royaltyPercentage: parseInt(blockchainNFT.royalty) || 3,
             transfers: [],
             isVerified: true,
             verifiedAt: new Date(blockchainNFT.timestamp * 1000),
             createdAt: new Date(blockchainNFT.timestamp * 1000),
             updatedAt: new Date(),
           });
+        }
+      });
+      
+      // Add any Firebase-only NFTs (pending mints not yet confirmed)
+      firebaseNFTs.forEach(firebaseNFT => {
+        const fbId = firebaseNFT.arweave?.manifestId || firebaseNFT.arweave?.arweaveId || firebaseNFT.id;
+        if (!merged.has(fbId)) {
+          console.log('📦 [MERGE] Found only in cache (pending?):', fbId.substring(0, 12) + '...');
+          merged.set(fbId, firebaseNFT);
         }
       });
       
