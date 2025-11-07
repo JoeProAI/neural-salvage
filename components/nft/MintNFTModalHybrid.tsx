@@ -435,6 +435,16 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, onClo
                   <p className="text-terminal-green font-rajdhani font-bold text-sm uppercase tracking-wider">Wallet Connected</p>
                   <p className="text-ash-gray text-xs truncate font-jetbrains mt-1">{wallet.address}</p>
                 </div>
+                <button
+                  onClick={() => {
+                    wallet.disconnect();
+                    onClose();
+                  }}
+                  className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border-2 border-red-500/50 hover:border-red-500 text-red-400 hover:text-red-300 rounded-lg font-rajdhani font-bold text-xs uppercase tracking-wider transition-all"
+                  title="Disconnect wallet and reconnect with new permissions"
+                >
+                  Disconnect
+                </button>
               </div>
             )}
           </div>
