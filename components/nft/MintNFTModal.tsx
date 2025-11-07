@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useArweaveWallet } from '@/lib/hooks/useArweaveWallet';
+import { useAuth } from '@/contexts/AuthContext';
 import { X, Wallet, Check, AlertCircle, ExternalLink } from 'lucide-react';
 import { PermanenceWarningModal } from './PermanenceWarningModal';
 
@@ -35,6 +36,7 @@ interface CostEstimate {
 }
 
 export function MintNFTModal({ assetId, assetName, assetDescription, onClose, onSuccess }: MintNFTModalProps) {
+  const { user } = useAuth();
   const wallet = useArweaveWallet();
   const [loading, setLoading] = useState(true);
   const [minting, setMinting] = useState(false);
@@ -101,10 +103,12 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
       setMinting(true);
       setError(null);
 
-      // TODO: Get userId from auth context
-      // For now, we'll need to pass it from parent component
-      const userId = 'current-user-id'; // Replace with actual user ID
-      console.warn('⚠️ [NFT MINT] Using placeholder userId - needs real auth integration');
+      // Get userId from auth context
+      if (!user?.id) {
+        throw new Error('You must be logged in to mint NFTs');
+      }
+      const userId = user.id;
+      console.log('✅ [NFT MINT] User authenticated:', { userId: userId.substring(0, 8) + '...' });
 
       // Enforce Stripe minimum of $0.50, default to $2.99
       const estimatedPrice = estimate?.costs?.total?.usd ? parseFloat(estimate.costs.total.usd) : 2.99;
