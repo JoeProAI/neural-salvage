@@ -183,14 +183,32 @@ export async function fetchNFTMetadata(manifestId: string) {
     }
 
     // It's a proper manifest - extract metadata and image
+    console.log('📋 [METADATA] Manifest structure:', Object.keys(manifest));
+    console.log('📂 [METADATA] Paths:', manifest.paths ? Object.keys(manifest.paths) : 'No paths');
+    console.log('🔍 [METADATA] Full manifest:', JSON.stringify(manifest).substring(0, 300));
+    
     const metadataPath = manifest.paths?.['metadata.json']?.id;
     if (!metadataPath) {
-      console.warn('⚠️ [METADATA] No metadata.json in manifest');
-      // Try to find image directly
-      const imagePath = manifest.paths?.['asset']?.id || manifest.paths?.['image']?.id;
+      console.warn('⚠️ [METADATA] No metadata.json in manifest, checking for direct paths');
+      
+      // Try all possible path names
+      const imagePath = 
+        manifest.paths?.['asset']?.id || 
+        manifest.paths?.['image']?.id ||
+        manifest.paths?.['image.png']?.id ||
+        manifest.paths?.['image.jpg']?.id;
+      
+      console.log('🔍 [METADATA] Image path found:', imagePath ? imagePath.substring(0, 12) + '...' : 'None');
+      
+      // Also check if manifest has index or default path
+      const indexPath = manifest.index?.path || manifest.manifest?.index;
+      
       return {
-        image: imagePath ? `https://arweave.net/${imagePath}` : `https://arweave.net/${manifestId}`,
+        image: imagePath ? `https://arweave.net/${imagePath}` : 
+               indexPath ? `https://arweave.net/${indexPath}` :
+               `https://arweave.net/${manifestId}`,
         manifestUrl: `https://arweave.net/${manifestId}`,
+        paths: manifest.paths,
       };
     }
 
