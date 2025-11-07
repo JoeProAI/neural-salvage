@@ -152,6 +152,9 @@ function GalleryContent() {
               <Link href="/gallery">
                 <Button variant="ghost">Gallery</Button>
               </Link>
+              <Link href="/profile/nfts">
+                <Button variant="ghost" className="text-data-cyan hover:text-archive-amber">My NFTs</Button>
+              </Link>
               <Link href="/collections">
                 <Button variant="ghost">Collections</Button>
               </Link>
