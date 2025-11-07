@@ -125,47 +125,85 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, onClo
       setStep('signature');
 
       console.log('✍️ [NFT MINT] Requesting user signature...');
+      console.log('📋 [NFT MINT] Wallet address:', wallet.address);
 
-      // Create message for user to sign
+      // Check ArConnect availability
+      if (!(window as any).arweaveWallet) {
+        throw new Error('ArConnect not found. Please install ArConnect extension.');
+      }
+
+      // Create simple message for user to sign
+      const timestamp = Date.now();
       const message = JSON.stringify({
         action: 'mint-nft',
         platform: 'Neural-Salvage',
         assetId,
         name: nftName,
         description: nftDescription,
-        timestamp: Date.now(),
+        timestamp,
         statement: 'I authorize the minting of this NFT and claim ownership'
       });
 
-      // Request signature from ArConnect
-      const signature = await (window as any).arweaveWallet.signature(
-        new TextEncoder().encode(message),
-        {
-          name: 'RSA-PSS',
-          saltLength: 32,
+      console.log('📝 [NFT MINT] Message to sign:', message);
+
+      // Request signature from ArConnect using simpler signMessage API
+      let signatureBase64: string;
+      try {
+        // Try the newer signMessage API first
+        const signatureResult = await (window as any).arweaveWallet.signMessage(
+          new TextEncoder().encode(message)
+        );
+        
+        // Convert to base64
+        if (typeof signatureResult === 'string') {
+          signatureBase64 = signatureResult;
+        } else {
+          signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signatureResult)));
         }
-      );
-
-      const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
-
-      console.log('✅ [NFT MINT] Signature obtained');
+        
+        console.log('✅ [NFT MINT] Signature obtained via signMessage');
+      } catch (signError) {
+        console.log('⚠️ [NFT MINT] signMessage failed, trying signature API...', signError);
+        
+        // Fallback to older signature API
+        const signature = await (window as any).arweaveWallet.signature(
+          new TextEncoder().encode(message),
+          {
+            name: 'RSA-PSS',
+            saltLength: 32,
+          }
+        );
+        signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
+        console.log('✅ [NFT MINT] Signature obtained via signature API');
+      }
+      
+      console.log('🔐 [NFT MINT] Signature length:', signatureBase64.length);
       
       // Proceed to mint
       await handleMint({
         signature: signatureBase64,
         message,
-        timestamp: Date.now()
+        timestamp
       });
 
     } catch (err: any) {
       console.error('❌ [NFT MINT] Signature error:', err);
-      if (err.message?.includes('User cancelled') || err.message?.includes('rejected')) {
-        setError('Signature cancelled. You need to sign to prove ownership.');
+      console.error('❌ [NFT MINT] Error details:', {
+        message: err.message,
+        name: err.name,
+        stack: err.stack
+      });
+      
+      if (err.message?.includes('User cancelled') || err.message?.includes('rejected') || err.message?.includes('denied')) {
+        setError('❌ Signature cancelled. You must sign to prove ownership of this NFT.');
+      } else if (err.message?.includes('ArConnect not found')) {
+        setError('❌ ArConnect wallet not found. Please install the ArConnect browser extension.');
       } else {
-        setError('Failed to get signature: ' + err.message);
+        setError('❌ Failed to get signature: ' + err.message + '. Please try again.');
       }
       setMinting(false);
-      setStep('payment');
+      // Stay on signature step, don't revert to payment
+      setStep('signature');
     }
   };
 
