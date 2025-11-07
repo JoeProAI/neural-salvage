@@ -126,37 +126,33 @@ export async function uploadWithPlatformAR(
   try {
     console.log('📤 [UPLOAD] Starting platform-funded upload...');
     
-    const transaction = bundlr.createTransaction(data);
-    
-    // Add content type
-    transaction.addTag('Content-Type', contentType);
-    
-    // Add custom tags
-    tags.forEach(tag => {
-      transaction.addTag(tag.name, tag.value);
-    });
+    // Build all tags
+    const allTags = [
+      { name: 'Content-Type', value: contentType },
+      ...tags,
+    ];
     
     // Add user ownership proof if provided
     if (userSignature) {
-      transaction.addTag('Creator', userSignature.walletAddress);
-      transaction.addTag('User-Signature', userSignature.signature);
-      transaction.addTag('Signed-Message', userSignature.message);
-      transaction.addTag('Ownership-Proof', 'user-signed');
-      console.log('🔐 [UPLOAD] Added user ownership signature');
+      allTags.push(
+        { name: 'Creator', value: userSignature.walletAddress },
+        { name: 'User-Signature', value: userSignature.signature },
+        { name: 'Signed-Message', value: userSignature.message },
+        { name: 'Ownership-Proof', value: 'user-signed' }
+      );
+      console.log('🔐 [UPLOAD] Added user ownership signature to tags');
     }
     
-    // Sign with platform wallet
-    await transaction.sign();
+    console.log('📋 [UPLOAD] Uploading with', allTags.length, 'tags');
     
-    const cost = parseFloat(bundlr.utils.fromAtomic(transaction.reward));
-    
-    console.log('💰 [UPLOAD] Transaction cost:', cost.toFixed(6), 'AR');
-    
-    // Upload
-    await transaction.upload();
+    // Upload to Arweave via Bundlr (correct API)
+    const transaction = await bundlr.upload(data, {
+      tags: allTags,
+    });
     
     const txId = transaction.id;
     const url = `https://arweave.net/${txId}`;
+    const cost = parseFloat(bundlr.utils.fromAtomic(transaction.reward));
     
     console.log('✅ [UPLOAD] Complete:', {
       txId: txId.substring(0, 12) + '...',
