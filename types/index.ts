@@ -64,6 +64,14 @@ export interface MediaAsset {
     analyzedAt: Date;
   };
   
+  // AI-Generated Cover Art (for audio and documents)
+  coverArt?: {
+    url: string;
+    generatedAt: Date;
+    prompt: string;
+    generator: string;
+  };
+  
   // Organization
   collectionIds: string[];
   visibility: 'private' | 'public';

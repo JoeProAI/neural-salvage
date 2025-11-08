@@ -349,11 +349,15 @@ export default function AssetDetailPage() {
             ) : asset.type === 'audio' ? (
               <div className="relative aspect-square flex flex-col items-center justify-center bg-salvage-rust rounded overflow-hidden">
                 {/* Cover Art or Fallback */}
-                {asset.thumbnailUrl ? (
+                {asset.thumbnailUrl || asset.coverArt?.url ? (
                   <img 
-                    src={asset.thumbnailUrl} 
+                    src={asset.thumbnailUrl || asset.coverArt?.url} 
                     alt={`${asset.filename} cover art`}
                     className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Failed to load cover art:', asset.thumbnailUrl);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 ) : (
                   <div className="text-8xl mb-4">🎵</div>
@@ -366,11 +370,15 @@ export default function AssetDetailPage() {
             ) : asset.type === 'document' ? (
               <div className="relative aspect-square flex items-center justify-center bg-salvage-rust rounded overflow-hidden">
                 {/* Cover Art or Fallback */}
-                {asset.thumbnailUrl ? (
+                {asset.thumbnailUrl || asset.coverArt?.url ? (
                   <img 
-                    src={asset.thumbnailUrl} 
+                    src={asset.thumbnailUrl || asset.coverArt?.url} 
                     alt={`${asset.filename} cover`}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Failed to load cover art:', asset.thumbnailUrl);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 ) : (
                   <div className="text-8xl">📄</div>
@@ -591,6 +599,18 @@ export default function AssetDetailPage() {
                         <div className="w-full bg-retro-purple/20 border-2 border-retro-purple text-retro-purple px-4 py-3 rounded-lg text-center font-bold">
                           ✅ Minted as NFT on Arweave
                         </div>
+                        
+                        {/* Blockchain Confirmation Notice */}
+                        <div className="bg-archive-amber/10 border-2 border-archive-amber/50 rounded-lg p-3">
+                          <p className="text-archive-amber text-xs font-rajdhani font-bold uppercase tracking-wider mb-1">
+                            ⏱️ Blockchain Confirmation
+                          </p>
+                          <p className="text-ash-gray text-xs font-rajdhani leading-relaxed">
+                            NFT transactions can take <strong className="text-pure-white">up to 20 minutes</strong> to fully confirm on the Arweave blockchain. 
+                            Your NFT is permanent and secure - just be patient!
+                          </p>
+                        </div>
+                        
                         {nftData ? (
                           <>
                             <div className="grid grid-cols-2 gap-2">

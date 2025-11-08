@@ -559,11 +559,19 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
                   <p className="text-terminal-green font-space-mono font-bold text-lg uppercase">Minting Your NFT...</p>
                   <p className="text-ash-gray text-sm font-rajdhani mt-2">Uploading to Arweave blockchain</p>
                 </div>
-                <div className="bg-archive-amber/10 border border-archive-amber/30 rounded-lg p-3 mt-4">
-                  <p className="text-archive-amber text-xs font-rajdhani font-semibold uppercase tracking-wider mb-1">⏱️ Please Note</p>
-                  <p className="text-ash-gray text-xs font-rajdhani leading-relaxed">
-                    Upload takes 30-60 seconds. Once complete, your NFT will be in "Pending" status on Arweave.
-                    Full confirmation takes 5-20 minutes as the blockchain mines the block. This is normal!
+                <div className="bg-archive-amber/10 border-2 border-archive-amber/50 rounded-lg p-4 mt-4">
+                  <p className="text-archive-amber text-sm font-rajdhani font-bold uppercase tracking-wider mb-2">
+                    ⏱️ Blockchain Confirmation Time
+                  </p>
+                  <p className="text-pure-white text-sm font-rajdhani leading-relaxed mb-2">
+                    <strong>Upload:</strong> 30-60 seconds
+                  </p>
+                  <p className="text-pure-white text-sm font-rajdhani leading-relaxed font-bold">
+                    <strong>Full Confirmation:</strong> UP TO 20 MINUTES
+                  </p>
+                  <p className="text-ash-gray text-xs font-rajdhani leading-relaxed mt-2">
+                    Your NFT will show as "Pending" until the Arweave blockchain mines the block. 
+                    This is completely normal for decentralized NFTs!
                   </p>
                 </div>
               </div>
