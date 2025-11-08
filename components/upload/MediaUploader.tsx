@@ -30,10 +30,10 @@ export function MediaUploader({ onUploadComplete, onClose }: MediaUploaderProps)
     accept: {
       'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
       'video/*': ['.mp4', '.mov', '.avi', '.webm'],
-      'audio/*': ['.mp3', '.wav', '.ogg', '.m4a'],
+      'audio/*': ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'],
       'application/pdf': ['.pdf'],
     },
-    maxSize: 100 * 1024 * 1024, // 100MB
+    maxSize: 500 * 1024 * 1024, // 500MB - Perfect for high-quality music/video
   });
 
   const handleUpload = async () => {
@@ -152,7 +152,7 @@ export function MediaUploader({ onUploadComplete, onClose }: MediaUploaderProps)
             : 'Drag & drop files here, or click to select'}
         </p>
         <p className="text-sm text-gray-400">
-          Supports images, videos, audio, and documents (max 100MB)
+          Supports images, videos, audio, and documents (max 500MB)
         </p>
       </div>
 

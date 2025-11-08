@@ -9,6 +9,8 @@ import { NFT } from '@/types';
 import Link from 'next/link';
 import { ExternalLink, ArrowLeft, Copy, Check, ShoppingCart } from 'lucide-react';
 import { ListForSaleModal } from '@/components/marketplace/ListForSaleModal';
+import { MediaPlayer } from '@/components/nft/MediaPlayer';
+import { getMediaInfo } from '@/lib/utils/mediaType';
 
 export default function NFTDetailPage() {
   const { user, loading: authLoading } = useAuth();
@@ -165,22 +167,51 @@ export default function NFTDetailPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           
-          {/* Left Column - Image/Media */}
+          {/* Left Column - Media */}
           <div className="space-y-6">
-            <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-data-cyan/30 bg-deep-space/80">
-              {nft.metadata.image && (
-                <img
-                  src={nft.metadata.image}
-                  alt={nft.metadata.name}
-                  className="w-full h-full object-cover"
-                />
-              )}
-              <div className="absolute top-4 right-4">
-                <span className="bg-terminal-green/20 border-2 border-terminal-green text-terminal-green px-4 py-2 rounded-lg font-space-mono font-bold text-sm uppercase">
-                  {nft.status}
-                </span>
-              </div>
-            </div>
+            {(() => {
+              const mediaInfo = getMediaInfo(nft.metadata.image || '');
+              
+              // Show MediaPlayer for audio/video
+              if (mediaInfo.type === 'audio' || mediaInfo.type === 'video') {
+                return (
+                  <div className="space-y-4">
+                    <MediaPlayer
+                      src={nft.metadata.image || ''}
+                      type={mediaInfo.type}
+                      title={nft.metadata.name}
+                      showDownload={user?.id === nft.userId}
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="bg-terminal-green/20 border-2 border-terminal-green text-terminal-green px-4 py-2 rounded-lg font-space-mono font-bold text-sm uppercase">
+                        {nft.status}
+                      </span>
+                      <span className="text-data-cyan font-space-mono text-sm">
+                        {mediaInfo.type === 'audio' ? '🎵 Audio NFT' : '🎬 Video NFT'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+              
+              // Show image for everything else
+              return (
+                <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-data-cyan/30 bg-deep-space/80">
+                  {nft.metadata.image && (
+                    <img
+                      src={nft.metadata.image}
+                      alt={nft.metadata.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                  <div className="absolute top-4 right-4">
+                    <span className="bg-terminal-green/20 border-2 border-terminal-green text-terminal-green px-4 py-2 rounded-lg font-space-mono font-bold text-sm uppercase">
+                      {nft.status}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-4">

@@ -7,8 +7,9 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { NFT } from '@/types';
 import Link from 'next/link';
-import { ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { ExternalLink, Image as ImageIcon, Music, Video, FileText } from 'lucide-react';
 import { queryNFTsByWallet, queryNFTsBySignature, fetchNFTMetadata, type ArweaveNFTResult } from '@/lib/nft/arweave-query';
+import { getMediaInfo, getMediaIcon } from '@/lib/utils/mediaType';
 
 export default function NFTGalleryPage() {
   const { user, loading: authLoading } = useAuth();
@@ -343,8 +344,9 @@ export default function NFTGalleryPage() {
                     </div>
                   )}
                   
-                  {/* Status Badge */}
-                  <div className="absolute top-3 right-3">
+                  {/* Badges */}
+                  <div className="absolute top-3 right-3 flex flex-col gap-2 items-end">
+                    {/* Status Badge */}
                     <span className={`px-3 py-1 rounded-lg font-space-mono font-bold text-xs uppercase ${
                       nft.status === 'confirmed' 
                         ? 'bg-terminal-green/20 border-2 border-terminal-green text-terminal-green'
@@ -352,6 +354,36 @@ export default function NFTGalleryPage() {
                     }`}>
                       {nft.status}
                     </span>
+                    
+                    {/* Media Type Badge */}
+                    {(() => {
+                      const mediaInfo = getMediaInfo(nft.metadata.image || '');
+                      if (mediaInfo.type === 'audio') {
+                        return (
+                          <span className="px-3 py-1 rounded-lg bg-quantum-blue/20 border-2 border-quantum-blue text-quantum-blue font-space-mono font-bold text-xs flex items-center gap-1">
+                            <Music className="w-3 h-3" />
+                            AUDIO
+                          </span>
+                        );
+                      }
+                      if (mediaInfo.type === 'video') {
+                        return (
+                          <span className="px-3 py-1 rounded-lg bg-data-cyan/20 border-2 border-data-cyan text-data-cyan font-space-mono font-bold text-xs flex items-center gap-1">
+                            <Video className="w-3 h-3" />
+                            VIDEO
+                          </span>
+                        );
+                      }
+                      if (mediaInfo.type === 'pdf') {
+                        return (
+                          <span className="px-3 py-1 rounded-lg bg-archive-amber/20 border-2 border-archive-amber text-archive-amber font-space-mono font-bold text-xs flex items-center gap-1">
+                            <FileText className="w-3 h-3" />
+                            PDF
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
 
                   {/* Hover Overlay */}
