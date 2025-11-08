@@ -119,6 +119,26 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     });
 
+    // Trigger cover art generation for audio/documents (background task)
+    if ((type === 'audio' || type === 'document') && !asset?.thumbnailUrl) {
+      const baseUrl = process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}`
+        : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      
+      fetch(`${baseUrl}/api/ai/generate-cover`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assetId,
+          userId,
+        }),
+      }).catch(error => {
+        console.error('[AI ANALYZE] Failed to trigger cover art generation:', error);
+      });
+      
+      console.log('🎨 [AI ANALYZE] Cover art generation triggered in background');
+    }
+
     return NextResponse.json({
       success: true,
       analysis,

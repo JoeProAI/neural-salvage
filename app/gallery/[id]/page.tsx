@@ -27,6 +27,7 @@ export default function AssetDetailPage() {
   const [price, setPrice] = useState('');
   const [showMintModal, setShowMintModal] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
+  const [generatingCover, setGeneratingCover] = useState(false);
   const [nftData, setNftData] = useState<any>(null);
 
   useEffect(() => {
@@ -271,6 +272,44 @@ export default function AssetDetailPage() {
       </div>
     );
   }
+
+  const handleGenerateCover = async () => {
+    if (!asset || !user || generatingCover) return;
+    
+    // Check if valid type for cover generation
+    if (asset.type !== 'audio' && asset.type !== 'document') {
+      alert('Cover art can only be generated for audio tracks and documents');
+      return;
+    }
+    
+    try {
+      setGeneratingCover(true);
+      
+      const response = await fetch('/api/ai/generate-cover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assetId: asset.id,
+          userId: user.id,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Cover art generation failed');
+      }
+      
+      alert('🎨 Cover art generated successfully!');
+      await loadAsset(); // Reload to show new cover
+      
+    } catch (error: any) {
+      console.error('Cover art generation error:', error);
+      alert(error.message || 'Failed to generate cover art');
+    } finally {
+      setGeneratingCover(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-salvage-dark">
@@ -594,6 +633,18 @@ export default function AssetDetailPage() {
                     >
                       {generatingAI ? '🤖 Generating...' : '✨ Generate AI Description & Tags'}
                     </Button>
+                    
+                    {/* Generate Cover Art Button - for audio and documents */}
+                    {(asset.type === 'audio' || asset.type === 'document') && (
+                      <Button
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold"
+                        onClick={handleGenerateCover}
+                        disabled={generatingCover}
+                      >
+                        {generatingCover ? '🎨 Generating Cover...' : '🎨 Generate Edgy AI Cover Art'}
+                      </Button>
+                    )}
+                    
                     <Button
                       variant="neon"
                       className="w-full"
