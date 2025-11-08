@@ -218,7 +218,35 @@ Beta users see:
    No monthly limits!
    ```
 
-4. **Marketplace:**
+4. **Beta Savings Calculator:**
+   ```
+   🎉 Your Beta Savings This Month: $247.56
+   
+   This Month's Activity:
+   - 15 NFTs minted
+   - 42 AI analyses
+   - 18 cover arts
+   
+   What This Would Cost:
+   - NFT Minting: $59.85 (15 × $3.99)
+   - AI Analysis: $63.68 (32 × $1.99)
+   - Cover Art: $64.87 (13 × $4.99)
+   - Subscription Equivalent: Pro Tier ($34.99/mo)
+   
+   💬 Feedback Questions:
+   - Would you pay $247.56 for this usage?
+   - Is the Pro subscription ($34.99/mo) fair?
+   - What's reasonable for 15 NFT mints?
+   ```
+   
+   **Component:** `<BetaSavingsCalculator user={user} />`
+   
+   **Purpose:** 
+   - Show beta users real value they're getting
+   - Collect pricing feedback
+   - Help you refine pricing model
+
+5. **Marketplace:**
    - Can sell NFTs normally
    - Receives 93% of sale price (you get 2% + 3% creator royalty)
    - No special treatment on sales (they're the seller)
