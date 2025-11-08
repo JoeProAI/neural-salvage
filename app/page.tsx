@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -177,9 +178,9 @@ export default function Home() {
             {/* Stat Cards with Wild Hover */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-7 mb-14" style={{ transformStyle: 'preserve-3d', transform: 'translateZ(68px)' }}>
               {[
-                { value: '200+', label: 'Years Storage', icon: '✓' },
-                { value: '∞', label: 'Permanence', icon: '⚡' },
-                { value: '100%', label: 'Decentralized', icon: '🌐' }
+                { value: '200+', label: 'Years Storage', icon: '/icons/storage-vault.png' },
+                { value: '∞', label: 'Permanence', icon: '/icons/energy-core.png' },
+                { value: '100%', label: 'Decentralized', icon: '/icons/satellite-network.png' }
               ].map((stat, i) => (
                 <div
                   key={i}
@@ -192,10 +193,17 @@ export default function Home() {
                   }}
                 >
                   <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-data-cyan to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="text-5xl mb-5 transition-all duration-500 group-hover:scale-125 group-hover:rotate-[360deg]"
-                    style={{ filter: 'drop-shadow(0 4px 12px rgba(111, 205, 221, 0.3))' }}
+                  <div className="mb-5 flex justify-center transition-all duration-500 group-hover:scale-125 group-hover:rotate-[360deg]"
+                    style={{ filter: 'drop-shadow(0 4px 12px rgba(111, 205, 221, 0.4))' }}
                   >
-                    {stat.icon}
+                    <Image
+                      src={stat.icon}
+                      alt={stat.label}
+                      width={80}
+                      height={80}
+                      className="object-contain"
+                      style={{ filter: 'drop-shadow(0 0 8px rgba(111, 205, 221, 0.6))' }}
+                    />
                   </div>
                   <div className="font-space-mono text-6xl font-bold text-archive-amber mb-3 transition-all duration-500 group-hover:scale-110"
                     style={{ textShadow: '0 0 22px #E8A55C' }}
@@ -212,21 +220,24 @@ export default function Home() {
             {/* CTA Section */}
             <div className="text-center" style={{ transformStyle: 'preserve-3d', transform: 'translateZ(85px)' }}>
               <div className="max-w-2xl mx-auto mb-9">
-                <div className="flex gap-5 bg-void-black/45 p-3 rounded-xl border-2 border-data-cyan/28 backdrop-blur-sm"
-                  style={{ boxShadow: 'inset 0 3px 12px rgba(0, 0, 0, 0.5), 0 0 35px rgba(111, 205, 221, 0.08)' }}
+                <Link 
+                  href="/auth/signup"
+                  className="cyberpunk-button inline-block"
                 >
-                  <input
-                    type="email"
-                    placeholder="Enter your email address"
-                    className="flex-1 bg-void-black/85 border border-data-cyan/30 rounded-lg px-6 py-5 font-inter text-pure-white outline-none focus:border-data-cyan focus:shadow-[0_0_25px_rgba(111,205,221,0.3)] transition-all"
-                  />
-                  <button className="cyberpunk-button">
-                    GET STARTED
-                  </button>
-                </div>
+                  GET STARTED
+                </Link>
               </div>
               
               <div className="flex gap-9 justify-center flex-wrap">
+                <Link 
+                  href="/auth/signup"
+                  className="font-rajdhani text-lg text-data-cyan uppercase tracking-[0.12em] font-semibold relative group"
+                >
+                  Sign Up
+                  <span className="absolute bottom-[-5px] left-0 w-0 h-[2px] bg-archive-amber group-hover:w-full transition-all duration-400"
+                    style={{ boxShadow: '0 0 12px #E8A55C' }}
+                  />
+                </Link>
                 <Link 
                   href="/auth/login"
                   className="font-rajdhani text-lg text-data-cyan uppercase tracking-[0.12em] font-semibold relative group"
