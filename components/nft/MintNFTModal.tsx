@@ -30,6 +30,13 @@ interface CostEstimate {
     platformFee: { usd: string };
     total: { usd: string };
   };
+  pricing: {
+    tier: string;
+    tierDescription: string;
+    basePrice: string;
+    discount: number;
+    finalPrice: string;
+  };
   arweavePrice: { usd: string };
   benefits: string[];
   notes: string[];
@@ -154,14 +161,14 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
       const userId = user.id;
       console.log('✅ [NFT MINT] User authenticated:', { userId: userId.substring(0, 8) + '...' });
 
-      // Enforce Stripe minimum of $0.50, default to $2.99
-      const estimatedPrice = estimate?.costs?.total?.usd ? parseFloat(estimate.costs.total.usd) : 2.99;
-      const mintPrice = Math.max(estimatedPrice, 2.99);
+      // Use the calculated price from our estimate API (already optimized)
+      const estimatedPrice = estimate?.costs?.total?.usd ? parseFloat(estimate.costs.total.usd) : 3.99;
+      const mintPrice = estimatedPrice; // No minimum - our pricing tiers already handle this
       
       console.log('💰 [NFT MINT] Price calculation:', {
+        tier: estimate?.pricing?.tier,
         estimatedPrice,
-        finalPrice: mintPrice,
-        enforceMinimum: mintPrice !== estimatedPrice
+        finalPrice: mintPrice
       });
 
       // Check if payment is required
@@ -436,7 +443,7 @@ export function MintNFTModal({ assetId, assetName, assetDescription, onClose, on
                       ) : (
                         <>
                           <span className="font-space-mono font-bold uppercase tracking-wider">
-                            🎨 Mint NFT for ${Math.max(parseFloat(estimate.costs.total.usd), 2.99).toFixed(2)}
+                            🎨 Mint NFT for ${parseFloat(estimate.costs.total.usd).toFixed(2)}
                           </span>
                         </>
                       )}

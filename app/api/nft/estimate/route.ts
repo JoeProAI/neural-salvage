@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { calculateUploadCost, getArweavePrice } from '@/lib/nft/arweave';
+import { calculateMintPrice, PRICE_TIERS } from '@/lib/utils/pricing';
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,33 +53,43 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Calculate costs
+    // Calculate costs using NEW pricing model
     const fileSize = asset.size;
+    const fileSizeMB = fileSize / (1024 * 1024);
+    
+    // Get price based on file size (our new tiered pricing)
+    const pricing = calculateMintPrice(fileSize); // Base price, no discount
+    
+    // Get actual AR cost for transparency
     const arweavePrice = await getArweavePrice();
     const uploadCost = await calculateUploadCost(fileSize);
-
-    // Platform fee (if any)
-    const platformFeeUSD = 0.10; // Small fee to cover costs
-    const totalCostUSD = parseFloat(uploadCost.usd) + platformFeeUSD;
+    const actualARCostUSD = parseFloat(uploadCost.usd);
 
     return NextResponse.json({
       success: true,
       estimate: {
         assetId,
         fileSize,
-        fileSizeMB: (fileSize / 1024 / 1024).toFixed(2),
+        fileSizeMB: fileSizeMB.toFixed(2),
         blockchain: 'arweave',
         costs: {
           arweave: {
             ar: uploadCost.ar,
-            usd: uploadCost.usd,
+            usd: actualARCostUSD.toFixed(2), // Show actual AR cost
           },
           platformFee: {
-            usd: platformFeeUSD.toFixed(2),
+            usd: pricing.platformProfit.toFixed(2), // Our profit
           },
           total: {
-            usd: totalCostUSD.toFixed(2),
+            usd: pricing.totalPrice.toFixed(2), // NEW PRICING: $3.99-$29.99
           },
+        },
+        pricing: {
+          tier: pricing.tier.name,
+          tierDescription: pricing.tier.description,
+          basePrice: pricing.basePrice.toFixed(2),
+          discount: 0,
+          finalPrice: pricing.totalPrice.toFixed(2),
         },
         arweavePrice: {
           usd: arweavePrice.toFixed(2),
