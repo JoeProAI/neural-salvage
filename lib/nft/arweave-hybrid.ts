@@ -231,9 +231,18 @@ export async function mintArweaveNFTHybrid(
     
     // Step 4: Upload metadata
     console.log('📋 [NFT MINT] Step 4: Uploading metadata...');
+    
+    // For audio/video, keep the original image (cover art) if provided
+    // For images, use the uploaded asset URL
+    const imageUrl = metadata.image && metadata.image.length > 0 
+      ? metadata.image  // Keep cover art for audio/video
+      : assetUpload.url; // Use asset URL for images
+    
+    console.log('🖼️ [NFT MINT] Image URL for metadata:', imageUrl.substring(0, 60) + '...');
+    
     const fullMetadata: NFTMetadata = {
       ...metadata,
-      image: assetUpload.url,
+      image: imageUrl,
       external_url: metadata.external_url || `https://neural-salvage.com/nft/${assetUpload.txId}`,
       attributes: [
         ...(metadata.attributes || []),
@@ -385,9 +394,18 @@ export async function mintArweaveNFTHybridServer(
     
     // Step 3: Upload metadata
     console.log('📋 [NFT MINT] Step 3: Uploading metadata...');
+    
+    // For audio/video, keep the original image (cover art) if provided
+    // For images, use the uploaded asset URL
+    const imageUrl = metadata.image && metadata.image.length > 0 
+      ? metadata.image  // Keep cover art for audio/video
+      : assetUpload.url; // Use asset URL for images
+    
+    console.log('🖼️ [NFT MINT SERVER] Image URL for metadata:', imageUrl.substring(0, 60) + '...');
+    
     const fullMetadata: NFTMetadata = {
       ...metadata,
-      image: assetUpload.url,
+      image: imageUrl,
       external_url: metadata.external_url || `https://neural-salvage.com/nft/${assetUpload.txId}`,
       attributes: [
         ...(metadata.attributes || []),
