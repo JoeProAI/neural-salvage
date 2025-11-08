@@ -353,13 +353,22 @@ function GalleryContent() {
                     layout === 'filmstrip' ? 'flex-shrink-0 w-64' : ''
                   } ${layout === 'masonry' ? 'mb-4' : ''}`}
                 >
-                  {asset.type === 'image' ? (
+                  {asset.thumbnailUrl ? (
+                    /* Show thumbnail/cover art if available */
                     <img
-                      src={asset.thumbnailUrl || asset.url}
+                      src={asset.thumbnailUrl}
                       alt={asset.filename}
-                      className="w-full h-auto object-cover"
+                      className="w-full aspect-square object-cover"
+                    />
+                  ) : asset.type === 'image' ? (
+                    /* Show full image for images without thumbnail */
+                    <img
+                      src={asset.url}
+                      alt={asset.filename}
+                      className="w-full aspect-square object-cover"
                     />
                   ) : (
+                    /* Fallback emoji for media without cover art */
                     <div className="w-full aspect-square flex items-center justify-center bg-salvage-rust">
                       <div className="text-6xl">
                         {asset.type === 'video'

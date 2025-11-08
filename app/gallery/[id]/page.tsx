@@ -347,9 +347,34 @@ export default function AssetDetailPage() {
                 className="w-full h-auto rounded"
               />
             ) : asset.type === 'audio' ? (
-              <div className="aspect-square flex flex-col items-center justify-center bg-salvage-rust rounded">
-                <div className="text-8xl mb-4">🎵</div>
-                <audio src={asset.url} controls className="w-full px-4" />
+              <div className="relative aspect-square flex flex-col items-center justify-center bg-salvage-rust rounded overflow-hidden">
+                {/* Cover Art or Fallback */}
+                {asset.thumbnailUrl ? (
+                  <img 
+                    src={asset.thumbnailUrl} 
+                    alt={`${asset.filename} cover art`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="text-8xl mb-4">🎵</div>
+                )}
+                {/* Audio Player Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-4">
+                  <audio src={asset.url} controls className="w-full" />
+                </div>
+              </div>
+            ) : asset.type === 'document' ? (
+              <div className="relative aspect-square flex items-center justify-center bg-salvage-rust rounded overflow-hidden">
+                {/* Cover Art or Fallback */}
+                {asset.thumbnailUrl ? (
+                  <img 
+                    src={asset.thumbnailUrl} 
+                    alt={`${asset.filename} cover`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="text-8xl">📄</div>
+                )}
               </div>
             ) : (
               <div className="aspect-square flex items-center justify-center bg-salvage-rust rounded">
