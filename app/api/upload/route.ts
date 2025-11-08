@@ -33,12 +33,16 @@ export async function POST(request: NextRequest) {
 
     console.log(`[UPLOAD] Rate limit OK - ${rateLimit.remaining} uploads remaining`);
 
-    // Validate file size (max 100MB)
-    const maxSize = 100 * 1024 * 1024;
+    // Validate file size (max 50MB - Vercel limit)
+    const maxSize = 50 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: 'File size exceeds 100MB limit' },
-        { status: 400 }
+        { 
+          error: 'File size exceeds 50MB limit',
+          message: 'Please upload files smaller than 50MB. For larger files, consider compressing your audio/video.',
+          maxSize: '50MB'
+        },
+        { status: 413 }
       );
     }
 
@@ -196,8 +200,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// Next.js 13+ App Router - body parsing config
+export const runtime = 'nodejs';
+export const maxDuration = 60; // 60 seconds max execution time

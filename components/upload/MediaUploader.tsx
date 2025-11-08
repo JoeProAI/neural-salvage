@@ -33,7 +33,7 @@ export function MediaUploader({ onUploadComplete, onClose }: MediaUploaderProps)
       'audio/*': ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'],
       'application/pdf': ['.pdf'],
     },
-    maxSize: 500 * 1024 * 1024, // 500MB - Perfect for high-quality music/video
+    maxSize: 50 * 1024 * 1024, // 50MB - Vercel hosting limit
   });
 
   const handleUpload = async () => {
@@ -152,7 +152,10 @@ export function MediaUploader({ onUploadComplete, onClose }: MediaUploaderProps)
             : 'Drag & drop files here, or click to select'}
         </p>
         <p className="text-sm text-gray-400">
-          Supports images, videos, audio, and documents (max 500MB)
+          Supports images, videos, audio, and documents (max 50MB)
+        </p>
+        <p className="text-xs text-archive-amber/70 mt-1">
+          💡 Tip: Compress large audio/video files before uploading
         </p>
       </div>
 

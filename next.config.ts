@@ -13,6 +13,13 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['firebasestorage.googleapis.com'],
   },
+  experimental: {
+    // Increase body size limit for uploads
+    // Note: Vercel has hard limits (50MB on Pro, 4.5MB on Hobby)
+    serverActions: {
+      bodySizeLimit: '50mb',
+    },
+  },
 };
 
 export default withSentryConfig(nextConfig, {
