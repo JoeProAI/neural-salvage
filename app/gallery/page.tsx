@@ -8,6 +8,7 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { MediaAsset, LayoutType } from '@/types';
 import Link from 'next/link';
+import { uploadFileDirectly, validateFileForUpload, getMediaType } from '@/lib/firebase/directUpload';
 
 function GalleryContent() {
   const { user, loading } = useAuth();
@@ -76,19 +77,46 @@ function GalleryContent() {
 
     try {
       for (const file of uploadFiles) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('userId', user.id);
-        formData.append('visibility', 'private');
+        // Validate file (500MB limit)
+        const validation = validateFileForUpload(file, 500);
+        if (!validation.valid) {
+          alert(validation.error || 'File validation failed');
+          continue;
+        }
 
-        const response = await fetch('/api/upload', {
+        console.log('[GALLERY] Uploading file directly to Firebase:', file.name);
+
+        // Upload directly to Firebase Storage
+        const result = await uploadFileDirectly({
+          userId: user.id,
+          file: file,
+          onProgress: (progress) => {
+            console.log(`[GALLERY] Upload progress: ${progress.progress.toFixed(1)}%`);
+          },
+        });
+
+        console.log('[GALLERY] Direct upload complete:', result.url);
+
+        // Save metadata to Firestore via API
+        const response = await fetch('/api/upload/metadata', {
           method: 'POST',
-          body: formData,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            filename: file.name,
+            url: result.url,
+            path: result.path,
+            size: file.size,
+            type: getMediaType(file.type),
+            mimeType: file.type,
+          }),
         });
 
         if (!response.ok) {
-          throw new Error('Upload failed');
+          throw new Error('Failed to save metadata');
         }
+
+        console.log('[GALLERY] Metadata saved successfully');
       }
 
       // Reload assets
