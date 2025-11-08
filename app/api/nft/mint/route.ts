@@ -132,10 +132,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Prepare NFT metadata
+    // For audio/documents with cover art, use the cover art as the NFT image
+    const coverArtUrl = asset.thumbnailUrl || asset.coverArt?.url || '';
+    
     const nftMetadata: NFTMetadata = {
       name: metadata.name || asset.originalFilename,
       description: metadata.description || `Created by ${user?.username || 'Unknown'} on Neural Salvage`,
-      image: '', // Will be set by hybrid mint
+      image: coverArtUrl, // Use cover art for audio/docs, will be set by hybrid mint for images
       external_url: `${process.env.NEXT_PUBLIC_APP_URL}/asset/${assetId}`,
       attributes: [
         {
@@ -201,7 +204,10 @@ export async function POST(request: NextRequest) {
       },
       metadata: {
         ...nftMetadata,
-        image: mintResult.assetUrl,
+        // Use cover art for audio/docs, use Arweave URL for images/videos
+        image: (asset.type === 'audio' || asset.type === 'document') && coverArtUrl
+          ? coverArtUrl
+          : mintResult.assetUrl,
       },
       metadataUri: mintResult.metadataUrl,
       currentOwner: walletAddress,

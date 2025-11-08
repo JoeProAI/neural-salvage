@@ -139,15 +139,30 @@ export default function MarketplacePage() {
               <Link key={asset.id} href={`/marketplace/${asset.id}`}>
                 <div className="metal-card rounded-lg overflow-hidden glow-hover cursor-pointer">
                   {/* Media Preview */}
-                  {asset.type === 'image' ? (
+                  {asset.thumbnailUrl || asset.coverArt?.url ? (
+                    /* Show thumbnail/cover art if available */
                     <div className="aspect-square">
                       <img
-                        src={asset.thumbnailUrl || asset.url}
+                        src={asset.thumbnailUrl || asset.coverArt?.url}
+                        alt={asset.filename}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('Failed to load cover art:', asset.thumbnailUrl);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  ) : asset.type === 'image' ? (
+                    /* Show full image for images without thumbnail */
+                    <div className="aspect-square">
+                      <img
+                        src={asset.url}
                         alt={asset.filename}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   ) : (
+                    /* Fallback emoji for media without cover art */
                     <div className="aspect-square flex items-center justify-center bg-salvage-rust">
                       <div className="text-6xl">
                         {asset.type === 'video'
