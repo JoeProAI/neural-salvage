@@ -192,6 +192,22 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
         throw new Error('ArConnect not found. Please install ArConnect extension.');
       }
 
+      // Ensure we have SIGN_TRANSACTION permission
+      try {
+        const permissions = await (window as any).arweaveWallet.getPermissions();
+        console.log('🔑 [NFT MINT] Current permissions:', permissions);
+        
+        if (!permissions.includes('SIGN_TRANSACTION') && !permissions.includes('ACCESS_ADDRESS')) {
+          console.log('⚠️ [NFT MINT] Missing permissions, requesting...');
+          await (window as any).arweaveWallet.connect(['ACCESS_ADDRESS', 'SIGN_TRANSACTION']);
+          console.log('✅ [NFT MINT] Permissions granted');
+        }
+      } catch (permErr) {
+        console.warn('⚠️ [NFT MINT] Permission check failed:', permErr);
+        // Try to reconnect with proper permissions
+        await (window as any).arweaveWallet.connect(['ACCESS_ADDRESS', 'SIGN_TRANSACTION']);
+      }
+
       // Create simple message for user to sign
       const timestamp = Date.now();
       const message = JSON.stringify({
@@ -206,36 +222,53 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
 
       console.log('📝 [NFT MINT] Message to sign:', message);
 
-      // Request signature from ArConnect using simpler signMessage API
+      // Request signature from ArConnect using simpler signMessage API with timeout
       let signatureBase64: string;
-      try {
-        // Try the newer signMessage API first
-        const signatureResult = await (window as any).arweaveWallet.signMessage(
-          new TextEncoder().encode(message)
-        );
-        
-        // Convert to base64
-        if (typeof signatureResult === 'string') {
-          signatureBase64 = signatureResult;
-        } else {
-          signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signatureResult)));
-        }
-        
-        console.log('✅ [NFT MINT] Signature obtained via signMessage');
-      } catch (signError) {
-        console.log('⚠️ [NFT MINT] signMessage failed, trying signature API...', signError);
-        
-        // Fallback to older signature API
-        const signature = await (window as any).arweaveWallet.signature(
-          new TextEncoder().encode(message),
-          {
-            name: 'RSA-PSS',
-            saltLength: 32,
+      
+      // Create a promise with timeout
+      const signaturePromise = new Promise<string>(async (resolve, reject) => {
+        try {
+          console.log('🔐 [NFT MINT] Requesting signature from ArConnect...');
+          
+          // Try the newer signMessage API first
+          const signatureResult = await (window as any).arweaveWallet.signMessage(
+            new TextEncoder().encode(message)
+          );
+          
+          // Convert to base64
+          if (typeof signatureResult === 'string') {
+            resolve(signatureResult);
+          } else {
+            resolve(btoa(String.fromCharCode(...new Uint8Array(signatureResult))));
           }
-        );
-        signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
-        console.log('✅ [NFT MINT] Signature obtained via signature API');
-      }
+          
+          console.log('✅ [NFT MINT] Signature obtained via signMessage');
+        } catch (signError) {
+          console.log('⚠️ [NFT MINT] signMessage failed, trying signature API...', signError);
+          
+          try {
+            // Fallback to older signature API
+            const signature = await (window as any).arweaveWallet.signature(
+              new TextEncoder().encode(message),
+              {
+                name: 'RSA-PSS',
+                saltLength: 32,
+              }
+            );
+            resolve(btoa(String.fromCharCode(...new Uint8Array(signature))));
+            console.log('✅ [NFT MINT] Signature obtained via signature API');
+          } catch (fallbackError) {
+            reject(fallbackError);
+          }
+        }
+      });
+
+      // Add 60 second timeout
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Signature request timed out after 60 seconds. Please try again.')), 60000);
+      });
+
+      signatureBase64 = await Promise.race([signaturePromise, timeoutPromise]);
       
       console.log('🔐 [NFT MINT] Signature length:', signatureBase64.length);
       
@@ -255,11 +288,15 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
       });
       
       if (err.message?.includes('User cancelled') || err.message?.includes('rejected') || err.message?.includes('denied')) {
-        setError('❌ Signature cancelled. You must sign to prove ownership of this NFT.');
+        setError('❌ Signature cancelled. You must approve the ArConnect popup to prove ownership of this NFT.');
+      } else if (err.message?.includes('timed out')) {
+        setError('⏱️ Signature request timed out. Please check for an ArConnect popup window and try again. You may need to click the ArConnect extension icon.');
       } else if (err.message?.includes('ArConnect not found')) {
-        setError('❌ ArConnect wallet not found. Please install the ArConnect browser extension.');
+        setError('❌ ArConnect wallet not found. Please install the ArConnect browser extension and refresh the page.');
+      } else if (err.message?.includes('permission')) {
+        setError('🔐 Missing permissions. Please reconnect your ArConnect wallet and grant signature permissions.');
       } else {
-        setError('❌ Failed to get signature: ' + err.message + '. Please try again.');
+        setError('❌ Failed to get signature: ' + err.message + '. Try: 1) Check ArConnect popup, 2) Click the button again, or 3) Disconnect and reconnect your wallet below.');
       }
       setMinting(false);
       // Stay on signature step, don't revert to payment
@@ -477,25 +514,44 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
                 </div>
               </button>
             ) : step === 'signature' ? (
-              <button
-                onClick={handleGetSignature}
-                disabled={minting}
-                className="cyberpunk-button w-full py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
-              >
-                <div className="relative z-10 flex items-center justify-center">
-                  {minting ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                      <span className="font-space-mono font-bold uppercase tracking-wider">Getting Signature...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Shield className="w-5 h-5 mr-3" />
-                      <span className="font-space-mono font-bold uppercase tracking-wider">Sign to Prove Ownership</span>
-                    </>
-                  )}
+              <>
+                {/* Signature Help Message */}
+                <div className="bg-data-cyan/10 border-2 border-data-cyan/40 rounded-lg p-4 mb-4">
+                  <p className="text-data-cyan font-rajdhani font-bold text-sm uppercase tracking-wider mb-2">
+                    💎 Final Step: Prove Ownership
+                  </p>
+                  <p className="text-ash-gray text-xs font-rajdhani leading-relaxed">
+                    Click below to sign with ArConnect. This proves you own this NFT (no blockchain fees!). 
+                    A popup will appear - approve it to continue.
+                  </p>
                 </div>
-              </button>
+                
+                <button
+                  onClick={handleGetSignature}
+                  disabled={minting}
+                  className="cyberpunk-button w-full py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+                >
+                  <div className="relative z-10 flex items-center justify-center">
+                    {minting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                        <span className="font-space-mono font-bold uppercase tracking-wider">Waiting for Signature...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="w-5 h-5 mr-3" />
+                        <span className="font-space-mono font-bold uppercase tracking-wider">Sign to Prove Ownership</span>
+                      </>
+                    )}
+                  </div>
+                </button>
+                
+                {minting && (
+                  <p className="text-xs text-archive-amber font-rajdhani mt-3 text-center">
+                    ⏳ Check ArConnect popup and approve the signature request
+                  </p>
+                )}
+              </>
             ) : (
               <div className="bg-terminal-green/10 border-2 border-terminal-green/40 rounded-lg p-6 text-center space-y-3">
                 <Loader2 className="w-12 h-12 text-terminal-green mx-auto animate-spin" />
