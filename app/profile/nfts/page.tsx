@@ -305,7 +305,7 @@ export default function NFTGalleryPage() {
             {nfts.map((nft) => (
               <Link
                 key={nft.id}
-                href={`/nft/${nft.id}`}
+                href={`/nft/${nft.arweave?.manifestId || nft.arweave?.arweaveId || nft.id}`}
                 className="group relative bg-deep-space/60 border-2 border-data-cyan/30 hover:border-data-cyan rounded-xl overflow-hidden transition-all hover:shadow-[0_0_30px_rgba(111,205,221,0.3)] hover:scale-[1.02]"
               >
                 {/* Image */}

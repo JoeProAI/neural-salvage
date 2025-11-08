@@ -28,15 +28,68 @@ export default function NFTDetailPage() {
   const loadNFT = async () => {
     try {
       setLoading(true);
+      console.log('🔍 [NFT DETAIL] Loading NFT:', nftId);
+      
+      // Try Firebase first
       const nftDoc = await getDoc(doc(db, 'nfts', nftId));
       
       if (nftDoc.exists()) {
+        console.log('✅ [NFT DETAIL] Found in Firebase');
         setNft({ ...nftDoc.data(), id: nftDoc.id } as NFT);
       } else {
-        console.error('NFT not found');
+        console.log('⚠️ [NFT DETAIL] Not in Firebase, checking blockchain...');
+        
+        // Query blockchain by transaction ID
+        try {
+          const { queryNFTsBySignature, fetchNFTMetadata } = await import('@/lib/nft/arweave-query');
+          
+          // Fetch the transaction directly
+          const metadata = await fetchNFTMetadata(nftId);
+          
+          if (metadata) {
+            console.log('✅ [NFT DETAIL] Found on blockchain');
+            
+            // Create temporary NFT object from blockchain data
+            setNft({
+              id: nftId,
+              assetId: '',
+              userId: user?.id || '',
+              blockchain: 'arweave',
+              status: 'confirmed',
+              arweave: {
+                arweaveId: nftId,
+                arweaveUrl: `https://arweave.net/${nftId}`,
+                manifestId: nftId,
+                bundlrId: nftId,
+                uploadCost: 0,
+                uploadedAt: new Date(),
+                confirmedAt: new Date(),
+              },
+              metadata: {
+                name: metadata.name || 'Untitled NFT',
+                description: metadata.description || '',
+                image: metadata.image || '',
+                attributes: metadata.attributes || [],
+              },
+              metadataUri: `https://arweave.net/${nftId}`,
+              currentOwner: '',
+              originalMinter: '',
+              royaltyPercentage: 3,
+              transfers: [],
+              isVerified: true,
+              verifiedAt: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            } as NFT);
+          } else {
+            console.error('❌ [NFT DETAIL] NFT not found on blockchain either');
+          }
+        } catch (blockchainError) {
+          console.error('❌ [NFT DETAIL] Blockchain query failed:', blockchainError);
+        }
       }
     } catch (error) {
-      console.error('Error loading NFT:', error);
+      console.error('❌ [NFT DETAIL] Error loading NFT:', error);
     } finally {
       setLoading(false);
     }
