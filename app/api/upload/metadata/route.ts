@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
         userId,
         imageUrl: url,
         type,
+        mimeType,
       }),
     }).catch(error => {
       console.error('[METADATA] Failed to trigger AI analysis:', error);

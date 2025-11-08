@@ -14,6 +14,10 @@ interface AIAnalysisResult {
   ocr?: string;
   colors?: string[];
   transcript?: string;
+  summary?: string;
+  keyTopics?: string[];
+  documentType?: string;
+  extractedText?: string;
 }
 
 export class DaytonaService {
@@ -323,6 +327,128 @@ print(json.dumps(results))
 
       if (response.exitCode !== 0) {
         throw new Error(`Transcription failed: ${response.result}`);
+      }
+
+      return JSON.parse(response.result);
+    } finally {
+      await sandbox.delete();
+    }
+  }
+
+  /**
+   * Analyze document (PDF, TXT, etc.) with AI
+   */
+  async analyzeDocument(documentUrl: string, mimeType: string): Promise<AIAnalysisResult> {
+    const sandbox = await this.daytona.create({
+      envVars: {
+        OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+        DOCUMENT_URL: documentUrl,
+        MIME_TYPE: mimeType,
+      },
+    });
+
+    try {
+      const analysisCode = `
+import os
+import json
+import requests
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+document_url = os.environ['DOCUMENT_URL']
+mime_type = os.environ.get('MIME_TYPE', 'application/pdf')
+
+results = {
+    "summary": "",
+    "tags": [],
+    "keyTopics": [],
+    "documentType": "",
+    "extractedText": ""
+}
+
+try:
+    # Download document
+    doc_response = requests.get(document_url)
+    
+    # Extract text based on document type
+    extracted_text = ""
+    
+    if 'pdf' in mime_type:
+        # For PDFs, use PyPDF2
+        try:
+            import PyPDF2
+            from io import BytesIO
+            
+            pdf_file = BytesIO(doc_response.content)
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            
+            # Extract text from all pages (limit to first 20 pages for performance)
+            max_pages = min(20, len(pdf_reader.pages))
+            for page_num in range(max_pages):
+                page = pdf_reader.pages[page_num]
+                extracted_text += page.extract_text() + "\\n"
+                
+        except Exception as pdf_error:
+            print(f"PDF extraction error: {pdf_error}", file=sys.stderr)
+            extracted_text = f"PDF content (binary, {len(doc_response.content)} bytes)"
+            
+    elif 'text' in mime_type:
+        # Plain text document
+        extracted_text = doc_response.text
+    
+    # Limit text for analysis (first 4000 chars)
+    text_sample = extracted_text[:4000] if extracted_text else "Document content unavailable"
+    results["extractedText"] = text_sample[:500]  # Store short sample
+    
+    # Analyze document with GPT
+    analysis_response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{
+            "role": "system",
+            "content": "You are an expert document analyst. Analyze the provided document text and extract key information."
+        }, {
+            "role": "user",
+            "content": f"""Analyze this document and provide:
+1. A concise summary (2-3 sentences)
+2. 8-12 relevant tags/keywords
+3. Main topics/themes (3-5 items)
+4. Document type/category
+
+Document text:
+{text_sample}
+
+Return as JSON with keys: summary, tags (array), keyTopics (array), documentType (string)"""
+        }],
+        response_format={"type": "json_object"},
+        max_tokens=500
+    )
+    
+    analysis_result = json.loads(analysis_response.choices[0].message.content)
+    results.update(analysis_result)
+    
+    # Ensure tags are lowercase
+    if 'tags' in results:
+        results['tags'] = [tag.lower().strip() for tag in results['tags']]
+    
+except Exception as e:
+    import sys
+    print(f"Document analysis error: {str(e)}", file=sys.stderr)
+    results["error"] = str(e)
+    results["tags"] = ["document", "unanalyzed"]
+    results["summary"] = f"Document uploaded ({mime_type})"
+
+print(json.dumps(results))
+`;
+
+      const response = await sandbox.process.codeRun(analysisCode);
+
+      if (response.exitCode !== 0) {
+        console.error('Document analysis failed:', response.result);
+        // Return basic analysis on failure
+        return {
+          tags: ['document'],
+          caption: `Document uploaded (${mimeType})`,
+        };
       }
 
       return JSON.parse(response.result);

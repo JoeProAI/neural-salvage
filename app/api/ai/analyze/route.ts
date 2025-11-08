@@ -7,7 +7,7 @@ import admin from 'firebase-admin';
 
 export async function POST(request: NextRequest) {
   try {
-    const { assetId, userId, imageUrl, type } = await request.json();
+    const { assetId, userId, imageUrl, type, mimeType } = await request.json();
 
     if (!assetId || !userId || !imageUrl) {
       return NextResponse.json(
@@ -70,14 +70,21 @@ export async function POST(request: NextRequest) {
       // Transcribe audio in Daytona sandbox
       const audioAnalysis = await daytonaService.transcribeAudio(imageUrl);
       analysis = { ...analysis, ...audioAnalysis };
+    } else if (type === 'document') {
+      // Analyze document (PDF, TXT, etc.) in Daytona sandbox
+      const documentAnalysis = await daytonaService.analyzeDocument(imageUrl, mimeType || 'application/pdf');
+      analysis = { ...analysis, ...documentAnalysis };
     }
 
     // Generate embedding for semantic search
     const embeddingText = [
       asset?.filename,
       analysis.caption,
+      analysis.summary,
       analysis.transcript,
+      analysis.extractedText,
       ...(analysis.tags || []),
+      ...(analysis.keyTopics || []),
     ]
       .filter(Boolean)
       .join(' ');

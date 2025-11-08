@@ -132,7 +132,15 @@ export default function Home() {
           
             {/* Complex Spinning Logo */}
             <div className="text-center mb-14" style={{ transformStyle: 'preserve-3d', transform: 'translateZ(95px)' }}>
-              <div className="w-28 h-28 mx-auto mb-7 animate-complex-rotate" style={{ transformStyle: 'preserve-3d', filter: 'drop-shadow(0 0 28px #6FCDDD)' }}>
+              <div 
+                className="w-28 h-28 mx-auto mb-7 animate-complex-rotate" 
+                style={{ 
+                  transformStyle: 'preserve-3d', 
+                  filter: 'drop-shadow(0 0 28px #6FCDDD)',
+                  backfaceVisibility: 'visible',
+                  willChange: 'transform'
+                }}
+              >
                 <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="50" cy="50" r="44" stroke="#6FCDDD" strokeWidth="1.5" fill="none" strokeDasharray="12 4 8 6"/>
                   <path d="M 50 16 L 73 31 L 73 61 L 50 76 L 27 61 L 27 31 Z" fill="rgba(232, 165, 92, 0.08)" stroke="#E8A55C" strokeWidth="1.8"/>

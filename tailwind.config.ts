@@ -115,11 +115,11 @@ const config: Config = {
           "66%": { transform: "translateY(-8px) rotateX(0.5deg) rotateZ(0.8deg)" },
         },
         "complex-rotate": {
-          "0%": { transform: "rotateY(0deg) rotateZ(0deg) rotateX(0deg)" },
-          "25%": { transform: "rotateY(90deg) rotateZ(45deg) rotateX(5deg)" },
-          "50%": { transform: "rotateY(180deg) rotateZ(180deg) rotateX(-3deg)" },
-          "75%": { transform: "rotateY(270deg) rotateZ(225deg) rotateX(4deg)" },
-          "100%": { transform: "rotateY(360deg) rotateZ(360deg) rotateX(0deg)" },
+          "0%": { transform: "perspective(1000px) rotateY(0deg) rotateX(0deg)" },
+          "25%": { transform: "perspective(1000px) rotateY(90deg) rotateX(5deg)" },
+          "50%": { transform: "perspective(1000px) rotateY(180deg) rotateX(0deg)" },
+          "75%": { transform: "perspective(1000px) rotateY(270deg) rotateX(-5deg)" },
+          "100%": { transform: "perspective(1000px) rotateY(360deg) rotateX(0deg)" },
         },
         "logo-float": {
           "0%": { transform: "rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateZ(0px)" },
@@ -201,7 +201,7 @@ const config: Config = {
       animation: {
         // ===== CYBERPUNK 3D ANIMATIONS =====
         "organic-float": "organic-float 9s ease-in-out infinite",
-        "complex-rotate": "complex-rotate 22s ease-in-out infinite",
+        "complex-rotate": "complex-rotate 18s cubic-bezier(0.4, 0, 0.2, 1) infinite",
         "logo-float": "logo-float 22s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite",
         "drift": "drift 25s ease-in-out infinite alternate",
         "slide-shimmer": "slide-shimmer 4s ease-in-out infinite",
