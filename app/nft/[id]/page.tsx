@@ -197,12 +197,33 @@ export default function NFTDetailPage() {
               // Show image for everything else
               return (
                 <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-data-cyan/30 bg-deep-space/80">
-                  {nft.metadata.image && (
+                  {nft.metadata.image ? (
                     <img
                       src={nft.metadata.image}
                       alt={nft.metadata.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error('Failed to load NFT image:', nft.metadata.image);
+                        e.currentTarget.style.display = 'none';
+                        // Show fallback
+                        const parent = e.currentTarget.parentElement;
+                        if (parent && !parent.querySelector('.fallback-icon')) {
+                          const fallback = document.createElement('div');
+                          fallback.className = 'absolute inset-0 flex items-center justify-center fallback-icon';
+                          fallback.innerHTML = '<div class="text-center"><svg class="w-24 h-24 text-ash-gray/30 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><p class="text-ash-gray font-rajdhani">Image unavailable</p></div>';
+                          parent.appendChild(fallback);
+                        }
+                      }}
                     />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <svg className="w-24 h-24 text-ash-gray/30 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-ash-gray font-rajdhani">No image available</p>
+                      </div>
+                    </div>
                   )}
                   <div className="absolute top-4 right-4">
                     <span className="bg-terminal-green/20 border-2 border-terminal-green text-terminal-green px-4 py-2 rounded-lg font-space-mono font-bold text-sm uppercase">

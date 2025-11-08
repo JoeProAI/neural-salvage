@@ -15,9 +15,11 @@ export default function NFTGalleryPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [nfts, setNfts] = useState<NFT[]>([]);
+  const [allNFTs, setAllNFTs] = useState<NFT[]>([]); // Store all NFTs
   const [loading, setLoading] = useState(true);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [blockchainNFTs, setBlockchainNFTs] = useState<ArweaveNFTResult[]>([]);
+  const [filterMode, setFilterMode] = useState<'mine' | 'all'>('mine'); // Filter toggle
 
   // Check for connected wallet
   useEffect(() => {
@@ -46,6 +48,26 @@ export default function NFTGalleryPage() {
       router.push('/login');
     }
   }, [user, authLoading, router, walletAddress]);
+
+  // Update display when filter changes
+  useEffect(() => {
+    if (allNFTs.length > 0) {
+      applyFilter(allNFTs, filterMode);
+    }
+  }, [filterMode]);
+
+  const applyFilter = (nftList: NFT[], mode: 'mine' | 'all') => {
+    if (mode === 'mine') {
+      // Show only NFTs that belong to this user (by userId)
+      const myNFTs = nftList.filter(nft => nft.userId === user?.id);
+      setNfts(myNFTs);
+      console.log('🔍 [FILTER] Showing my NFTs only:', myNFTs.length, 'of', nftList.length);
+    } else {
+      // Show all NFTs from the connected wallet
+      setNfts(nftList);
+      console.log('🔍 [FILTER] Showing all NFTs:', nftList.length);
+    }
+  };
 
   const loadNFTs = async () => {
     if (!user) return;
@@ -228,7 +250,9 @@ export default function NFTGalleryPage() {
         total: allNFTs.length,
       });
       
-      setNfts(allNFTs);
+      // Store all NFTs and apply filter
+      setAllNFTs(allNFTs);
+      applyFilter(allNFTs, filterMode);
     } catch (error) {
       console.error('❌ [NFT GALLERY] Error loading NFTs:', error);
     } finally {
@@ -258,15 +282,43 @@ export default function NFTGalleryPage() {
                 My NFT Collection
               </h1>
               <p className="text-ash-gray mt-2 font-rajdhani">
-                {nfts.length} NFT{nfts.length !== 1 ? 's' : ''} minted • Stored permanently on Arweave
+                {nfts.length} NFT{nfts.length !== 1 ? 's' : ''} {filterMode === 'mine' ? 'minted by me' : 'in connected wallet'} • Stored permanently on Arweave
               </p>
             </div>
-            <Link
-              href="/gallery"
-              className="cyberpunk-button px-6 py-3"
-            >
-              <span className="font-space-mono font-bold uppercase text-sm">Back to Gallery</span>
-            </Link>
+            
+            {/* Filter Toggle */}
+            {walletAddress && allNFTs.length > 0 && (
+              <div className="flex items-center gap-2 bg-deep-space/60 border-2 border-data-cyan/30 rounded-lg p-1">
+                <button
+                  onClick={() => setFilterMode('mine')}
+                  className={`px-4 py-2 rounded-md font-space-mono font-bold text-sm uppercase tracking-wider transition-all ${
+                    filterMode === 'mine'
+                      ? 'bg-data-cyan text-void-black'
+                      : 'text-ash-gray hover:text-pure-white'
+                  }`}
+                >
+                  My NFTs
+                </button>
+                <button
+                  onClick={() => setFilterMode('all')}
+                  className={`px-4 py-2 rounded-md font-space-mono font-bold text-sm uppercase tracking-wider transition-all ${
+                    filterMode === 'all'
+                      ? 'bg-data-cyan text-void-black'
+                      : 'text-ash-gray hover:text-pure-white'
+                  }`}
+                >
+                  All Wallet NFTs
+                </button>
+              </div>
+            )}
+            <div className="flex items-center gap-4">
+              <Link
+                href="/gallery"
+                className="cyberpunk-button px-6 py-3"
+              >
+                <span className="font-space-mono font-bold uppercase text-sm">Back to Gallery</span>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
