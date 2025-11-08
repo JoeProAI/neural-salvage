@@ -31,12 +31,20 @@ export default function NFTDetailPage() {
       console.log('🔍 [NFT DETAIL] Loading NFT:', nftId);
       
       // Try Firebase first
-      const nftDoc = await getDoc(doc(db, 'nfts', nftId));
+      let foundInFirebase = false;
+      try {
+        const nftDoc = await getDoc(doc(db, 'nfts', nftId));
+        
+        if (nftDoc.exists()) {
+          console.log('✅ [NFT DETAIL] Found in Firebase');
+          setNft({ ...nftDoc.data(), id: nftDoc.id } as NFT);
+          foundInFirebase = true;
+        }
+      } catch (firebaseError: any) {
+        console.warn('⚠️ [NFT DETAIL] Firebase unavailable:', firebaseError.message);
+      }
       
-      if (nftDoc.exists()) {
-        console.log('✅ [NFT DETAIL] Found in Firebase');
-        setNft({ ...nftDoc.data(), id: nftDoc.id } as NFT);
-      } else {
+      if (!foundInFirebase) {
         console.log('⚠️ [NFT DETAIL] Not in Firebase, checking blockchain...');
         
         // Query blockchain by transaction ID

@@ -59,8 +59,8 @@ export default function NFTGalleryPage() {
         console.log('📦 [NFT GALLERY] Loading from Firebase cache...');
         const nftsQuery = query(
           collection(db, 'nfts'),
-          where('userId', '==', user.id),
-          orderBy('createdAt', 'desc')
+          where('userId', '==', user.id)
+          // No orderBy to avoid requiring composite index
         );
         
         const snapshot = await getDocs(nftsQuery);
@@ -68,6 +68,13 @@ export default function NFTGalleryPage() {
           ...doc.data(),
           id: doc.id,
         })) as NFT[];
+        
+        // Sort client-side instead
+        firebaseNFTs.sort((a, b) => {
+          const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : new Date(a.createdAt).getTime();
+          const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : new Date(b.createdAt).getTime();
+          return bTime - aTime; // Descending
+        });
         
         console.log('✅ [FIREBASE] Loaded', firebaseNFTs.length, 'cached NFTs');
       } catch (firebaseError: any) {
