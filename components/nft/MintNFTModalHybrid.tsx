@@ -571,12 +571,23 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
 
             {/* Wallet Status */}
             {wallet.connected && (
-              <div className="bg-terminal-green/10 border-2 border-terminal-green/40 rounded-lg p-4 flex items-center gap-3">
-                <div className="w-3 h-3 bg-terminal-green rounded-full animate-pulse" style={{ boxShadow: '0 0 15px #7FB069' }}></div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-terminal-green font-rajdhani font-bold text-sm uppercase tracking-wider">Wallet Connected</p>
-                  <p className="text-ash-gray text-xs truncate font-jetbrains mt-1">{wallet.address}</p>
+              <>
+                {/* Wallet Ownership Warning */}
+                <div className="bg-archive-amber/10 border-2 border-archive-amber/40 rounded-lg p-4">
+                  <p className="text-archive-amber font-rajdhani font-bold text-xs uppercase tracking-wider mb-2">
+                    ⚠️ Important: Check Your Wallet
+                  </p>
+                  <p className="text-ash-gray text-xs font-rajdhani leading-relaxed">
+                    This NFT will be permanently tied to the wallet address below. Make sure this is YOUR wallet before minting!
+                  </p>
                 </div>
+
+                <div className="bg-terminal-green/10 border-2 border-terminal-green/40 rounded-lg p-4 flex items-center gap-3">
+                  <div className="w-3 h-3 bg-terminal-green rounded-full animate-pulse" style={{ boxShadow: '0 0 15px #7FB069' }}></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-terminal-green font-rajdhani font-bold text-sm uppercase tracking-wider">Wallet Connected</p>
+                    <p className="text-ash-gray text-xs truncate font-jetbrains mt-1">{wallet.address}</p>
+                  </div>
                 <button
                   onClick={() => {
                     wallet.disconnect();
@@ -588,6 +599,7 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
                   Disconnect
                 </button>
               </div>
+              </>
             )}
           </div>
         </div>

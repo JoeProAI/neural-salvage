@@ -70,36 +70,59 @@ export async function POST(request: NextRequest) {
     // Download asset from Firebase Storage
     const bucket = adminStorage().bucket();
     
-    // Parse the storage path from the signed URL
-    // URL format: https://storage.googleapis.com/BUCKET_NAME/PATH?params
-    // We need just the PATH part
-    let storagePath = asset.url;
+    // Parse the storage path from the signed URL or direct path
+    let storagePath = asset.url || asset.filePath;
     
-    // Remove query parameters first
-    if (storagePath.includes('?')) {
-      storagePath = storagePath.split('?')[0];
-    }
+    console.log('📦 [NFT MINT] Original path:', storagePath);
     
-    // Extract path after bucket name
-    // Format: https://storage.googleapis.com/nueral-salvage.firebasestorage.app/users/...
-    const pathMatch = storagePath.match(/firebasestorage\.app\/(.+)$/);
-    if (pathMatch) {
-      storagePath = pathMatch[1];
-    } else {
-      // Fallback: try splitting on last occurrence of bucket name
-      const parts = storagePath.split('/');
-      const bucketIndex = parts.findIndex((p: string) => p.includes('firebasestorage.app'));
-      if (bucketIndex >= 0 && bucketIndex < parts.length - 1) {
-        storagePath = parts.slice(bucketIndex + 1).join('/');
+    // If it's a full URL, extract just the path
+    if (storagePath.startsWith('http')) {
+      // Remove query parameters first
+      if (storagePath.includes('?')) {
+        storagePath = storagePath.split('?')[0];
+      }
+      
+      // Extract path after /o/ (Firebase Storage REST API format)
+      // Format: https://firebasestorage.googleapis.com/v0/b/bucket/o/PATH
+      if (storagePath.includes('/o/')) {
+        const pathAfterO = storagePath.split('/o/')[1];
+        storagePath = decodeURIComponent(pathAfterO);
+      } 
+      // Or extract after bucket name
+      // Format: https://storage.googleapis.com/bucket/PATH
+      else {
+        const pathMatch = storagePath.match(/firebasestorage\.app\/(.+)$/);
+        if (pathMatch) {
+          storagePath = decodeURIComponent(pathMatch[1]);
+        } else {
+          // Fallback: try finding path after googleapis.com
+          const parts = storagePath.split('/');
+          const bucketIndex = parts.findIndex((p: string) => p.includes('firebasestorage') || p.includes('googleapis.com'));
+          if (bucketIndex >= 0 && bucketIndex < parts.length - 1) {
+            storagePath = decodeURIComponent(parts.slice(bucketIndex + 1).join('/'));
+          }
+        }
       }
     }
     
+    // Decode any remaining URL encoding
+    storagePath = decodeURIComponent(storagePath);
+    
     console.log('📦 [NFT MINT] Storage path extracted:', {
       originalUrl: asset.url,
+      filePath: asset.filePath,
       extractedPath: storagePath
     });
     
     const file = bucket.file(storagePath);
+    
+    // Check if file exists
+    const [exists] = await file.exists();
+    if (!exists) {
+      console.error('❌ [NFT MINT] File not found in storage:', storagePath);
+      throw new Error(`File not found in storage: ${storagePath}`);
+    }
+    
     const [fileBuffer] = await file.download();
     
     console.log('Asset downloaded:', {
