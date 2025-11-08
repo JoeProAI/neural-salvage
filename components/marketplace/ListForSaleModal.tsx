@@ -71,15 +71,14 @@ export function ListForSaleModal({
       setLoading(true);
       setError(null);
 
-      console.log('📝 [LIST] Creating listing...', {
+      console.log('📝 [LIST] Creating simple listing (no blockchain signature needed)...', {
         nftId,
         priceUSD,
-        priceAR,
         duration,
       });
 
-      // Call API to create listing
-      const response = await fetch('/api/marketplace/list', {
+      // Call simplified listing API (no signature required)
+      const response = await fetch('/api/marketplace/list-simple', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -87,7 +86,7 @@ export function ListForSaleModal({
           price: parseFloat(priceUSD),
           currency: 'USD',
           duration,
-          walletAddress: wallet.address,
+          seller: wallet.address,
         }),
       });
 
@@ -97,36 +96,10 @@ export function ListForSaleModal({
       }
 
       const data = await response.json();
-      console.log('✅ [LIST] Listing created:', data);
+      console.log('✅ [LIST] NFT listed successfully!', data.listingId);
 
-      // Now sign the transaction with user's wallet
-      if (wallet.connected && data.transaction) {
-        console.log('🔐 [LIST] Requesting signature from wallet...');
-        
-        try {
-          // Sign transaction with ArConnect or Wanderer
-          await (window as any).arweaveWallet.sign(data.transaction);
-          
-          // Submit to Arweave
-          const submitResponse = await fetch('/api/marketplace/submit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transaction: data.transaction }),
-          });
-
-          if (!submitResponse.ok) {
-            throw new Error('Failed to submit listing');
-          }
-
-          const submitData = await submitResponse.json();
-          console.log('🎉 [LIST] Listing submitted successfully!', submitData.transactionId);
-
-          onSuccess(submitData.transactionId);
-        } catch (signError: any) {
-          console.error('❌ [LIST] User rejected signature:', signError);
-          throw new Error('You must sign the transaction to list your NFT');
-        }
-      }
+      // Success! No signature needed.
+      onSuccess(data.listingId);
     } catch (err: any) {
       console.error('❌ [LIST] Error:', err);
       setError(err.message || 'Failed to create listing');
