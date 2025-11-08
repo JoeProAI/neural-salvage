@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -175,12 +174,12 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Stat Cards with Wild Hover */}
+            {/* Stat Cards with Code-Based Icons */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-7 mb-14" style={{ transformStyle: 'preserve-3d', transform: 'translateZ(68px)' }}>
               {[
-                { value: '200+', label: 'Years Storage', icon: '/icons/storage-vault.png' },
-                { value: '∞', label: 'Permanence', icon: '/icons/energy-core.png' },
-                { value: '100%', label: 'Decentralized', icon: '/icons/satellite-network.png' }
+                { value: '200+', label: 'Years Storage', iconType: 'vault' },
+                { value: '∞', label: 'Permanence', iconType: 'energy' },
+                { value: '100%', label: 'Decentralized', iconType: 'network' }
               ].map((stat, i) => (
                 <div
                   key={i}
@@ -193,19 +192,65 @@ export default function Home() {
                   }}
                 >
                   <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-data-cyan to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="mb-5 flex justify-center transition-all duration-500 group-hover:scale-110">
-                    <div className="relative w-24 h-24">
-                      <Image
-                        src={stat.icon}
-                        alt={stat.label}
-                        fill
-                        className="object-contain"
-                        style={{ 
-                          filter: 'drop-shadow(0 0 12px rgba(111, 205, 221, 0.5)) brightness(1.05)',
-                        }}
-                      />
-                    </div>
+                  
+                  {/* Code-based SVG Icons */}
+                  <div className="mb-5 flex justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-[360deg]">
+                    {stat.iconType === 'vault' && (
+                      <svg width="80" height="80" viewBox="0 0 80 80" className="transition-all duration-500">
+                        <defs>
+                          <linearGradient id="vaultGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style={{ stopColor: '#6FCDDD', stopOpacity: 0.8 }} />
+                            <stop offset="100%" style={{ stopColor: '#E8A55C', stopOpacity: 0.6 }} />
+                          </linearGradient>
+                        </defs>
+                        <rect x="10" y="10" width="60" height="60" fill="none" stroke="url(#vaultGrad)" strokeWidth="2" rx="4" />
+                        <circle cx="40" cy="40" r="18" fill="none" stroke="#6FCDDD" strokeWidth="2.5" />
+                        <circle cx="40" cy="40" r="12" fill="none" stroke="#E8A55C" strokeWidth="2" />
+                        <line x1="40" y1="28" x2="40" y2="35" stroke="#6FCDDD" strokeWidth="2.5" strokeLinecap="round" />
+                        <line x1="40" y1="45" x2="40" y2="52" stroke="#6FCDDD" strokeWidth="2.5" strokeLinecap="round" />
+                        <line x1="28" y1="40" x2="35" y2="40" stroke="#6FCDDD" strokeWidth="2.5" strokeLinecap="round" />
+                        <line x1="45" y1="40" x2="52" y2="40" stroke="#6FCDDD" strokeWidth="2.5" strokeLinecap="round" />
+                        <circle cx="40" cy="40" r="3" fill="#E8A55C" style={{ filter: 'drop-shadow(0 0 8px #E8A55C)' }} />
+                      </svg>
+                    )}
+                    {stat.iconType === 'energy' && (
+                      <svg width="80" height="80" viewBox="0 0 80 80" className="transition-all duration-500">
+                        <defs>
+                          <radialGradient id="energyGlow">
+                            <stop offset="0%" style={{ stopColor: '#6FCDDD', stopOpacity: 1 }} />
+                            <stop offset="100%" style={{ stopColor: '#6FCDDD', stopOpacity: 0 }} />
+                          </radialGradient>
+                        </defs>
+                        <circle cx="40" cy="40" r="28" fill="url(#energyGlow)" opacity="0.3" className="animate-pulse" />
+                        <circle cx="40" cy="40" r="20" fill="none" stroke="#6FCDDD" strokeWidth="2" opacity="0.6" />
+                        <circle cx="40" cy="40" r="14" fill="none" stroke="#E8A55C" strokeWidth="2" opacity="0.8" />
+                        <path d="M 40 25 L 35 40 L 45 40 L 40 55 Z" fill="#6FCDDD" style={{ filter: 'drop-shadow(0 0 12px #6FCDDD)' }} />
+                        <circle cx="40" cy="40" r="3" fill="#E8A55C" opacity="0.8" />
+                      </svg>
+                    )}
+                    {stat.iconType === 'network' && (
+                      <svg width="80" height="80" viewBox="0 0 80 80" className="transition-all duration-500">
+                        <defs>
+                          <linearGradient id="netGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style={{ stopColor: '#6FCDDD' }} />
+                            <stop offset="100%" style={{ stopColor: '#E8A55C' }} />
+                          </linearGradient>
+                        </defs>
+                        <circle cx="40" cy="20" r="5" fill="#6FCDDD" style={{ filter: 'drop-shadow(0 0 6px #6FCDDD)' }} />
+                        <circle cx="20" cy="40" r="5" fill="#6FCDDD" style={{ filter: 'drop-shadow(0 0 6px #6FCDDD)' }} />
+                        <circle cx="60" cy="40" r="5" fill="#6FCDDD" style={{ filter: 'drop-shadow(0 0 6px #6FCDDD)' }} />
+                        <circle cx="30" cy="60" r="5" fill="#E8A55C" style={{ filter: 'drop-shadow(0 0 6px #E8A55C)' }} />
+                        <circle cx="50" cy="60" r="5" fill="#E8A55C" style={{ filter: 'drop-shadow(0 0 6px #E8A55C)' }} />
+                        <line x1="40" y1="20" x2="20" y2="40" stroke="url(#netGrad)" strokeWidth="1.5" opacity="0.6" />
+                        <line x1="40" y1="20" x2="60" y2="40" stroke="url(#netGrad)" strokeWidth="1.5" opacity="0.6" />
+                        <line x1="20" y1="40" x2="30" y2="60" stroke="url(#netGrad)" strokeWidth="1.5" opacity="0.6" />
+                        <line x1="60" y1="40" x2="50" y2="60" stroke="url(#netGrad)" strokeWidth="1.5" opacity="0.6" />
+                        <line x1="30" y1="60" x2="50" y2="60" stroke="url(#netGrad)" strokeWidth="1.5" opacity="0.6" />
+                        <circle cx="40" cy="40" r="25" fill="none" stroke="#6FCDDD" strokeWidth="1" opacity="0.2" strokeDasharray="4 4" />
+                      </svg>
+                    )}
                   </div>
+
                   <div className="font-space-mono text-6xl font-bold text-archive-amber mb-3 transition-all duration-500 group-hover:scale-110"
                     style={{ textShadow: '0 0 22px #E8A55C' }}
                   >
