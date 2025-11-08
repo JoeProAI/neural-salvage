@@ -23,7 +23,7 @@ export function ListForSaleModal({
   onSuccess,
 }: ListForSaleModalProps) {
   const wallet = useArweaveWallet();
-  const [priceUSD, setPriceUSD] = useState<string>('50');
+  const [priceUSD, setPriceUSD] = useState<string>(''); // Empty - user sets their price
   const [priceAR, setPriceAR] = useState<string>('0');
   const [arPrice, setArPrice] = useState<number>(25);
   const [duration, setDuration] = useState<number>(0); // 0 = no expiration

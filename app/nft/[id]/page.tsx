@@ -302,9 +302,19 @@ export default function NFTDetailPage() {
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t border-quantum-blue/20">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-ash-gray">Example: Sell for $50</span>
-                  <span className="text-terminal-green font-bold">You get $49</span>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-ash-gray">Platform fee:</span>
+                    <span className="text-data-cyan font-bold">2%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-ash-gray">Your earnings:</span>
+                    <span className="text-terminal-green font-bold">98% of sale price</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-ash-gray/60 italic">
+                    <span>Example: $100 sale</span>
+                    <span>→ You get $98</span>
+                  </div>
                 </div>
               </div>
             </div>
