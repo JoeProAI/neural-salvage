@@ -1,3 +1,46 @@
+# 🔥 Deploy Firestore Rules - FIX SIGN UP/SIGN IN ISSUE
+
+## ❌ Current Issue
+
+**Error:** "Missing or insufficient permissions" when signing up/signing in
+
+**Cause:** Firestore security rules need to be deployed to allow user document creation during sign-up.
+
+**Solution:** Deploy the updated `firestore.rules` file to Firebase.
+
+---
+
+## ✅ **Deploy via Firebase Console (2 Minutes)**
+
+### **Steps:**
+
+1. **Go to Firebase Console:**
+   - https://console.firebase.google.com/
+
+2. **Select Your Project:**
+   - Click on **"nueral-salvage"**
+
+3. **Navigate to Firestore:**
+   - Left sidebar → Click **"Firestore Database"**
+   - Click **"Rules"** tab at the top
+
+4. **Replace the Rules:**
+   - You'll see the current rules in the editor
+   - **DELETE ALL** existing rules
+   - **COPY AND PASTE** the entire contents below
+
+5. **Publish:**
+   - Click **"Publish"** button (top right)
+   - Wait 5-10 seconds for deployment
+
+6. **Done!**
+   - Try signing up again - it will work!
+
+---
+
+## 📋 **Firestore Rules to Copy/Paste**
+
+```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -93,3 +136,34 @@ service cloud.firestore {
     }
   }
 }
+```
+
+---
+
+## 🧪 **After Deployment**
+
+1. **Wait 10-30 seconds** for rules to propagate
+2. **Try signing up/signing in again**
+3. **Should work!** No more "insufficient permissions" error
+
+---
+
+## 📝 **What Was Fixed**
+
+The rules now properly allow user document creation during the sign-up flow.
+
+---
+
+## 🎯 **Summary**
+
+```
+Problem: "Missing or insufficient permissions" on sign up/sign in
+Solution: Deploy updated Firestore rules
+Method:  Firebase Console (Firestore Database → Rules)
+Time:    2 minutes
+Result:  Sign up/sign in will work!
+```
+
+---
+
+**Deploy these Firestore rules now and authentication will work!** 🚀

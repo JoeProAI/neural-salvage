@@ -1,0 +1,59 @@
+[debug] [2025-11-08T09:18:01.868Z] ----------------------------------------------------------------------
+[debug] [2025-11-08T09:18:01.885Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\JosephGaither\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only storage
+[debug] [2025-11-08T09:18:01.886Z] CLI Version:   14.9.0
+[debug] [2025-11-08T09:18:01.886Z] Platform:      win32
+[debug] [2025-11-08T09:18:01.886Z] Node Version:  v23.1.0
+[debug] [2025-11-08T09:18:01.887Z] Time:          Sat Nov 08 2025 04:18:01 GMT-0500 (Eastern Standard Time)
+[debug] [2025-11-08T09:18:01.887Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-11-08T09:18:02.848Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-08T09:18:02.849Z] > authorizing via signed-in user (joe@joepro.ai)
+[debug] [2025-11-08T09:18:02.849Z] [iam] checking project nueral-salvage for permissions ["firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]
+[debug] [2025-11-08T09:18:02.852Z] Checked if tokens are valid: false, expires at: 1752988702629
+[debug] [2025-11-08T09:18:02.852Z] Checked if tokens are valid: false, expires at: 1752988702629
+[debug] [2025-11-08T09:18:02.853Z] > refreshing access token with scopes: []
+[debug] [2025-11-08T09:18:02.861Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-11-08T09:18:02.861Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-08T09:18:03.180Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2025-11-08T09:18:03.180Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2025-11-08T09:18:03.181Z] [iam] error while checking permissions, command may fail: Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[info] 
+[info] === Deploying to 'nueral-salvage'...
+[info] 
+[info] i  deploying storage 
+[info] i  storage: ensuring required API firebasestorage.googleapis.com is enabled... 
+[debug] [2025-11-08T09:18:03.188Z] Checked if tokens are valid: false, expires at: 1752988702629
+[debug] [2025-11-08T09:18:03.189Z] Checked if tokens are valid: false, expires at: 1752988702629
+[debug] [2025-11-08T09:18:03.189Z] > refreshing access token with scopes: []
+[debug] [2025-11-08T09:18:03.190Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-11-08T09:18:03.190Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-08T09:18:03.252Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2025-11-08T09:18:03.252Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] 
+[error] Error: Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2025-11-08T09:18:03.594Z] Error: EBUSY: resource busy or locked, unlink 'C:\Projects\The Machine\Nueral Salvage\neural-salvage\firebase-debug.log'
+    at Object.unlinkSync (node:fs:1878:11)
+    at process.<anonymous> (C:\Users\JosephGaither\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\cli.js:44:16)
+    at process.emit (node:events:519:35)
+    at process.exit (node:internal/process/per_thread:178:15)
+    at Timeout._onTimeout (C:\Users\JosephGaither\AppData\Roaming\npm\node_modules\firebase-tools\lib\errorOut.js:20:17)
+    at listOnTimeout (node:internal/timers:614:17)
+    at process.processTimers (node:internal/timers:549:7)
+[error] 
+[error] Error: An unexpected error has occurred.
