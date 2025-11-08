@@ -193,37 +193,17 @@ export default function Home() {
                   }}
                 >
                   <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-data-cyan to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="mb-5 flex justify-center relative">
-                    {/* Icon container with holographic effect */}
-                    <div className="relative w-20 h-20 transition-all duration-500 group-hover:scale-125 group-hover:rotate-[360deg]">
-                      {/* Main icon with duotone filter */}
+                  <div className="mb-5 flex justify-center transition-all duration-500 group-hover:scale-110">
+                    <div className="relative w-24 h-24">
                       <Image
                         src={stat.icon}
                         alt={stat.label}
-                        width={80}
-                        height={80}
-                        className="object-contain relative z-10"
+                        fill
+                        className="object-contain"
                         style={{ 
-                          filter: 'grayscale(1) contrast(1.4) brightness(1.1)',
-                          mixBlendMode: 'screen',
-                          opacity: 0.85
+                          filter: 'drop-shadow(0 0 12px rgba(111, 205, 221, 0.5)) brightness(1.05)',
                         }}
                       />
-                      {/* Cyan glow overlay */}
-                      <div className="absolute inset-0 z-0" style={{
-                        background: 'radial-gradient(circle, rgba(111, 205, 221, 0.4) 0%, transparent 70%)',
-                        filter: 'blur(8px)'
-                      }} />
-                      {/* Amber accent glow */}
-                      <div className="absolute inset-0 z-0 opacity-40" style={{
-                        background: 'radial-gradient(circle at 30% 30%, rgba(232, 165, 92, 0.3) 0%, transparent 60%)',
-                        filter: 'blur(6px)'
-                      }} />
-                      {/* Scanline effect */}
-                      <div className="absolute inset-0 z-20 pointer-events-none" style={{
-                        backgroundImage: 'repeating-linear-gradient(0deg, rgba(111, 205, 221, 0.08) 0px, transparent 1px, transparent 2px, rgba(111, 205, 221, 0.08) 3px)',
-                        opacity: 0.6
-                      }} />
                     </div>
                   </div>
                   <div className="font-space-mono text-6xl font-bold text-archive-amber mb-3 transition-all duration-500 group-hover:scale-110"
