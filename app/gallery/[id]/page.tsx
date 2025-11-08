@@ -658,7 +658,8 @@ export default function AssetDetailPage() {
         <MintNFTModalHybrid
           assetId={assetId}
           assetName={asset.title || asset.filename}
-          assetDescription={asset.description || asset.aiAnalysis?.caption || ''}
+          assetDescription={asset.description}
+          aiAnalysis={asset.aiAnalysis}
           onClose={() => setShowMintModal(false)}
           onSuccess={(nftId) => {
             setShowMintModal(false);

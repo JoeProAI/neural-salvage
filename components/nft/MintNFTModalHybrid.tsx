@@ -12,21 +12,81 @@ import { useAuth } from '@/contexts/AuthContext';
 import { X, Wallet, Check, AlertCircle, Loader2, Shield } from 'lucide-react';
 import { PermanenceWarningModal } from './PermanenceWarningModal';
 
+interface AIAnalysis {
+  caption?: string;
+  summary?: string;
+  tags?: string[];
+  transcript?: string;
+  keyTopics?: string[];
+  documentType?: string;
+  colors?: string[];
+  ocr?: string;
+}
+
 interface MintNFTModalProps {
   assetId: string;
   assetName: string;
   assetDescription?: string;
+  aiAnalysis?: AIAnalysis;
   onClose: () => void;
   onSuccess: (nftId: string) => void;
 }
 
-export function MintNFTModalHybrid({ assetId, assetName, assetDescription, onClose, onSuccess }: MintNFTModalProps) {
+// Generate rich description from AI analysis
+const generateRichDescription = (aiAnalysis?: AIAnalysis, manualDescription?: string): string => {
+  if (manualDescription) return manualDescription;
+  if (!aiAnalysis) return '';
+  
+  const parts: string[] = [];
+  
+  // Add caption or summary
+  if (aiAnalysis.caption) {
+    parts.push(aiAnalysis.caption);
+  } else if (aiAnalysis.summary) {
+    parts.push(aiAnalysis.summary);
+  }
+  
+  // Add transcript excerpt
+  if (aiAnalysis.transcript) {
+    const excerpt = aiAnalysis.transcript.length > 200 
+      ? aiAnalysis.transcript.substring(0, 200) + '...'
+      : aiAnalysis.transcript;
+    parts.push(`\n\nTranscript: ${excerpt}`);
+  }
+  
+  // Add document type for documents
+  if (aiAnalysis.documentType) {
+    parts.push(`\n\nType: ${aiAnalysis.documentType}`);
+  }
+  
+  // Add key topics
+  if (aiAnalysis.keyTopics && aiAnalysis.keyTopics.length > 0) {
+    parts.push(`\n\nTopics: ${aiAnalysis.keyTopics.join(', ')}`);
+  }
+  
+  // Add tags
+  if (aiAnalysis.tags && aiAnalysis.tags.length > 0) {
+    parts.push(`\n\nTags: ${aiAnalysis.tags.join(', ')}`);
+  }
+  
+  // Add OCR text if available
+  if (aiAnalysis.ocr) {
+    const ocrExcerpt = aiAnalysis.ocr.length > 150 
+      ? aiAnalysis.ocr.substring(0, 150) + '...'
+      : aiAnalysis.ocr;
+    parts.push(`\n\nText: ${ocrExcerpt}`);
+  }
+  
+  return parts.join('');
+};
+
+export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAnalysis, onClose, onSuccess }: MintNFTModalProps) {
   const { user } = useAuth();
   const wallet = useArweaveWallet();
   const [minting, setMinting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nftName, setNftName] = useState(assetName);
-  const [nftDescription, setNftDescription] = useState(assetDescription || '');
+  const [nftDescription, setNftDescription] = useState(generateRichDescription(aiAnalysis, assetDescription));
   const [showWarning, setShowWarning] = useState(false);
   const [warningAccepted, setWarningAccepted] = useState(false);
   const [step, setStep] = useState<'connect' | 'payment' | 'signature' | 'minting'>('connect');
@@ -329,14 +389,19 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, onClo
 
               <div>
                 <label className="block text-sm font-rajdhani font-semibold text-data-cyan mb-2 uppercase tracking-wider">
-                  Description (Optional)
+                  Description {aiAnalysis && !assetDescription && '(AI-Generated)'}
                 </label>
+                {aiAnalysis && !assetDescription && (
+                  <p className="text-xs text-terminal-green mb-2 font-rajdhani">
+                    ✨ Auto-filled from AI analysis. Edit as needed.
+                  </p>
+                )}
                 <textarea
                   value={nftDescription}
                   onChange={(e) => setNftDescription(e.target.value)}
-                  rows={3}
-                  className="w-full bg-deep-space/80 border-2 border-data-cyan/30 rounded-lg px-4 py-3 text-pure-white placeholder-ash-gray/50 focus:outline-none focus:border-data-cyan focus:shadow-[0_0_20px_rgba(111,205,221,0.3)] resize-none transition-all font-inter"
-                  placeholder="Describe your NFT"
+                  rows={8}
+                  className="w-full bg-deep-space/80 border-2 border-data-cyan/30 rounded-lg px-4 py-3 text-pure-white placeholder-ash-gray/50 focus:outline-none focus:border-data-cyan focus:shadow-[0_0_20px_rgba(111,205,221,0.3)] resize-y transition-all font-inter text-sm leading-relaxed"
+                  placeholder="Describe your NFT (or let AI do it for you)"
                   disabled={minting}
                 />
               </div>
