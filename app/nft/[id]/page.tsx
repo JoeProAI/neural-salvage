@@ -8,6 +8,7 @@ import { db } from '@/lib/firebase/config';
 import { NFT } from '@/types';
 import Link from 'next/link';
 import { ExternalLink, ArrowLeft, Copy, Check, ShoppingCart } from 'lucide-react';
+import { ListForSaleModal } from '@/components/marketplace/ListForSaleModal';
 
 export default function NFTDetailPage() {
   const { user, loading: authLoading } = useAuth();
@@ -18,6 +19,8 @@ export default function NFTDetailPage() {
   const [nft, setNft] = useState<NFT | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [showListModal, setShowListModal] = useState(false);
+  const [listingSuccess, setListingSuccess] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
@@ -202,16 +205,26 @@ export default function NFTDetailPage() {
               </a>
             </div>
 
-            {/* List on BazAR */}
-            <a
-              href={bazarUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cyberpunk-button w-full py-4 flex items-center justify-center gap-3 text-lg"
-            >
-              <ShoppingCart className="w-6 h-6" />
-              <span className="font-space-mono font-bold uppercase">List for Sale on BazAR</span>
-            </a>
+            {/* List for Sale - New Button */}
+            {listingSuccess ? (
+              <div className="bg-terminal-green/10 border-2 border-terminal-green rounded-lg p-6 text-center">
+                <Check className="w-12 h-12 text-terminal-green mx-auto mb-3" />
+                <h3 className="text-terminal-green font-space-mono font-bold text-lg mb-2">
+                  Listed Successfully!
+                </h3>
+                <p className="text-ash-gray font-rajdhani text-sm">
+                  Your NFT is now for sale. It will appear on BazAR marketplace in 2-3 minutes.
+                </p>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowListModal(true)}
+                className="cyberpunk-button w-full py-4 flex items-center justify-center gap-3 text-lg"
+              >
+                <ShoppingCart className="w-6 h-6" />
+                <span className="font-space-mono font-bold uppercase">List for Sale</span>
+              </button>
+            )}
 
             {/* Selling Info */}
             <div className="bg-quantum-blue/10 border-2 border-quantum-blue/30 rounded-lg p-6">
@@ -221,25 +234,25 @@ export default function NFTDetailPage() {
               <div className="space-y-3 text-sm font-rajdhani text-pure-white/80">
                 <div className="flex items-start gap-2">
                   <span className="text-quantum-blue font-bold">1.</span>
-                  <span>Click "List for Sale" above to open BazAR marketplace</span>
+                  <span>Click "List for Sale" above and set your price in USD</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-quantum-blue font-bold">2.</span>
-                  <span>Connect your wallet and set your price in AR tokens</span>
+                  <span>Connect your wallet and sign the listing transaction</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-quantum-blue font-bold">3.</span>
-                  <span>When someone buys, AR is deposited instantly to your wallet</span>
+                  <span>Your NFT appears on BazAR and other marketplaces</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-quantum-blue font-bold">4.</span>
-                  <span>You earn 97.5% (after 2.5% BazAR fee) + future 3% royalties</span>
+                  <span>You earn 98% (after 2% platform fee) + future royalties</span>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t border-quantum-blue/20">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-ash-gray">Example: Sell for 10 AR</span>
-                  <span className="text-terminal-green font-bold">You get ~9.75 AR ($58)</span>
+                  <span className="text-ash-gray">Example: Sell for $50</span>
+                  <span className="text-terminal-green font-bold">You get $49</span>
                 </div>
               </div>
             </div>
@@ -424,6 +437,22 @@ export default function NFTDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* List for Sale Modal */}
+      {showListModal && nft && (
+        <ListForSaleModal
+          nftId={nftId}
+          nftName={nft.metadata.name}
+          nftImage={nft.metadata.image}
+          currentOwner={nft.currentOwner}
+          onClose={() => setShowListModal(false)}
+          onSuccess={(listingId) => {
+            console.log('🎉 [NFT DETAIL] NFT listed successfully:', listingId);
+            setShowListModal(false);
+            setListingSuccess(true);
+          }}
+        />
+      )}
     </div>
   );
 }

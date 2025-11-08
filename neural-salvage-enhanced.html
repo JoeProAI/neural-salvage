@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Salvage - Digital Asset Preservation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Rajdhani:wght@300;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Salvaged Futures Color Palette */
+            --deep-space: #0A0E14;
+            --void-black: #151B23;
+            --archive-amber: #E8A55C;
+            --data-cyan: #6FCDDD;
+            --quantum-blue: #3D5A80;
+            --warning-orange: #D97742;
+            --off-white: #F4F4F4;
+            --ash-gray: #BFC0C0;
+            
+            /* 3D Perspective */
+            --perspective: 1800px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--deep-space);
+            color: var(--off-white);
+            overflow-x: hidden;
+            perspective: var(--perspective);
+            perspective-origin: 50% 50%;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* Animated Star Field Background */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .star {
+            position: absolute;
+            background: var(--off-white);
+            border-radius: 50%;
+            animation: twinkle linear infinite;
+        }
+        
+        .star:nth-child(1) { width: 1.2px; height: 1.2px; top: 12%; left: 8%; opacity: 0.7; animation-duration: 6.3s; }
+        .star:nth-child(2) { width: 1.8px; height: 1.8px; top: 28%; left: 23%; opacity: 0.9; animation-duration: 8.7s; animation-delay: 1.2s; }
+        .star:nth-child(3) { width: 1px; height: 1px; top: 45%; left: 67%; opacity: 0.5; animation-duration: 5.1s; animation-delay: 2.4s; }
+        .star:nth-child(4) { width: 1.5px; height: 1.5px; top: 71%; left: 34%; opacity: 0.8; animation-duration: 7.2s; animation-delay: 0.8s; }
+        .star:nth-child(5) { width: 1.3px; height: 1.3px; top: 19%; left: 89%; opacity: 0.6; animation-duration: 9.4s; }
+        .star:nth-child(6) { width: 1px; height: 1px; top: 83%; left: 12%; opacity: 0.4; animation-duration: 6.8s; animation-delay: 3.1s; }
+        .star:nth-child(7) { width: 1.6px; height: 1.6px; top: 37%; left: 91%; opacity: 0.75; animation-duration: 8.1s; animation-delay: 1.7s; }
+        .star:nth-child(8) { width: 1.1px; height: 1.1px; top: 62%; left: 45%; opacity: 0.55; animation-duration: 7.6s; animation-delay: 2.9s; }
+        .star:nth-child(9) { width: 1.4px; height: 1.4px; top: 8%; left: 56%; opacity: 0.85; animation-duration: 5.9s; }
+        .star:nth-child(10) { width: 1.7px; height: 1.7px; top: 91%; left: 78%; opacity: 0.65; animation-duration: 9.2s; animation-delay: 1.5s; }
+        .star:nth-child(11) { width: 1.2px; height: 1.2px; top: 54%; left: 19%; opacity: 0.7; animation-duration: 6.5s; animation-delay: 0.4s; }
+        .star:nth-child(12) { width: 1px; height: 1px; top: 76%; left: 88%; opacity: 0.5; animation-duration: 8.3s; animation-delay: 2.2s; }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            25% { opacity: 0.9; transform: scale(1.2); }
+            50% { opacity: 0.5; transform: scale(0.9); }
+            75% { opacity: 1; transform: scale(1.1); }
+        }
+        
+        /* Noise Texture Overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* Scan Lines Effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 2;
+            animation: scan 22s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(10px); }
+        }
+        
+        /* Vignette Effect */
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(10, 14, 20, 0.7) 100%);
+            pointer-events: none;
+            z-index: 3;
+        }
+        
+        /* 3D Stage Container */
+        .stage-container {
+            position: relative;
+            transform-style: preserve-3d;
+            min-height: 100vh;
+            padding: 40px 20px;
+            z-index: 10;
+        }
+        
+        /* 3D Floor Panels */
+        .floor-panels {
+            position: fixed;
+            bottom: -200px;
+            left: 50%;
+            transform: translateX(-50%) rotateX(72deg);
+            width: 120%;
+            display: grid;
+            grid-template-columns: 1.2fr 0.9fr 1.1fr 0.85fr 1.15fr 0.95fr 1.05fr 0.88fr;
+            gap: 12px;
+            z-index: 4;
+            transform-style: preserve-3d;
+        }
+        
+        .floor-panel {
+            height: 180px;
+            background: rgba(61, 90, 128, 0.08);
+            border: 1px solid rgba(111, 205, 221, 0.2);
+            border-radius: 3px 5px 4px 6px;
+            animation: panelPulse ease-in-out infinite;
+            transform-style: preserve-3d;
+        }
+        
+        .floor-panel:nth-child(1) { animation-duration: 8.2s; animation-delay: 0s; }
+        .floor-panel:nth-child(2) { animation-duration: 9.7s; animation-delay: 1.3s; }
+        .floor-panel:nth-child(3) { animation-duration: 7.4s; animation-delay: 0.6s; }
+        .floor-panel:nth-child(4) { animation-duration: 10.1s; animation-delay: 2.1s; }
+        .floor-panel:nth-child(5) { animation-duration: 8.8s; animation-delay: 1.7s; }
+        .floor-panel:nth-child(6) { animation-duration: 9.3s; animation-delay: 0.9s; }
+        .floor-panel:nth-child(7) { animation-duration: 7.9s; animation-delay: 2.5s; }
+        .floor-panel:nth-child(8) { animation-duration: 10.6s; animation-delay: 1.1s; }
+        
+        @keyframes panelPulse {
+            0%, 100% {
+                border-color: rgba(111, 205, 221, 0.2);
+                box-shadow: 0 0 10px rgba(111, 205, 221, 0.1);
+            }
+            33% {
+                border-color: rgba(232, 165, 92, 0.35);
+                box-shadow: 0 0 25px rgba(232, 165, 92, 0.2);
+            }
+            66% {
+                border-color: rgba(61, 90, 128, 0.3);
+                box-shadow: 0 0 15px rgba(61, 90, 128, 0.15);
+            }
+        }
+        
+        /* Holographic Corner Brackets */
+        .corner-brackets {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .bracket {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border: 2px solid rgba(111, 205, 221, 0.4);
+        }
+        
+        .bracket.top-left {
+            top: 30px;
+            left: 30px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 8px 0 0 0;
+            animation: bracketGlow 6.5s ease-in-out infinite;
+        }
+        
+        .bracket.top-right {
+            top: 30px;
+            right: 30px;
+            border-left: none;
+            border-bottom: none;
+            border-radius: 0 8px 0 0;
+            animation: bracketGlow 7.2s ease-in-out infinite 1.2s;
+        }
+        
+        .bracket.bottom-left {
+            bottom: 30px;
+            left: 30px;
+            border-right: none;
+            border-top: none;
+            border-radius: 0 0 0 8px;
+            animation: bracketGlow 6.8s ease-in-out infinite 2.4s;
+        }
+        
+        .bracket.bottom-right {
+            bottom: 30px;
+            right: 30px;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 8px 0;
+            animation: bracketGlow 7.5s ease-in-out infinite 0.8s;
+        }
+        
+        @keyframes bracketGlow {
+            0%, 100% {
+                border-color: rgba(111, 205, 221, 0.4);
+                box-shadow: 0 0 10px rgba(111, 205, 221, 0.2);
+            }
+            50% {
+                border-color: rgba(232, 165, 92, 0.6);
+                box-shadow: 0 0 20px rgba(232, 165, 92, 0.3);
+            }
+        }
+        
+        /* Main Container with 3D Transform */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            transform-style: preserve-3d;
+            transform: translateZ(75px);
+        }
+        
+        /* Floating 3D Logo */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 60px 0 80px;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        
+        .floating-logo {
+            width: 180px;
+            height: 180px;
+            transform-style: preserve-3d;
+            animation: logoFloat 22s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+            filter: drop-shadow(0 20px 40px rgba(111, 205, 221, 0.4))
+                    drop-shadow(0 0 60px rgba(232, 165, 92, 0.3));
+        }
+        
+        @keyframes logoFloat {
+            0% {
+                transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateZ(0px);
+            }
+            15% {
+                transform: rotateX(15deg) rotateY(45deg) rotateZ(5deg) translateZ(20px);
+            }
+            30% {
+                transform: rotateX(-10deg) rotateY(90deg) rotateZ(-8deg) translateZ(10px);
+            }
+            45% {
+                transform: rotateX(20deg) rotateY(180deg) rotateZ(12deg) translateZ(30px);
+            }
+            60% {
+                transform: rotateX(-15deg) rotateY(270deg) rotateZ(-5deg) translateZ(15px);
+            }
+            75% {
+                transform: rotateX(10deg) rotateY(315deg) rotateZ(10deg) translateZ(25px);
+            }
+            90% {
+                transform: rotateX(-5deg) rotateY(350deg) rotateZ(-3deg) translateZ(5px);
+            }
+            100% {
+                transform: rotateX(0deg) rotateY(360deg) rotateZ(0deg) translateZ(0px);
+            }
+        }
+        
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 70px;
+            transform: translateZ(90px) rotate(-0.4deg);
+        }
+        
+        h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: 3.8rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, var(--data-cyan) 0%, var(--archive-amber) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 4px 20px rgba(111, 205, 221, 0.3);
+            animation: titleFloat 9s ease-in-out infinite;
+        }
+        
+        @keyframes titleFloat {
+            0%, 100% { transform: translateY(0px) rotate(-0.4deg); }
+            33% { transform: translateY(-8px) rotate(0.2deg); }
+            66% { transform: translateY(4px) rotate(-0.6deg); }
+        }
+        
+        .tagline {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            color: var(--ash-gray);
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.92fr 1.08fr;
+            gap: 28px;
+            margin-bottom: 65px;
+            transform-style: preserve-3d;
+        }
+        
+        .stat-card {
+            background: rgba(21, 27, 35, 0.88);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(111, 205, 221, 0.25);
+            border-radius: 7px 9px 6px 10px;
+            padding: 32px 28px;
+            transform: translateZ(68px) rotate(0.3deg);
+            transform-style: preserve-3d;
+            transition: all 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--data-cyan), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+        
+        .stat-card:hover::before {
+            transform: translateX(100%);
+        }
+        
+        .stat-card:nth-child(1) {
+            transform: translateZ(68px) rotate(-0.5deg);
+            border-radius: 6px 10px 7px 8px;
+        }
+        
+        .stat-card:nth-child(2) {
+            transform: translateZ(72px) rotate(0.7deg);
+            border-radius: 9px 6px 10px 7px;
+        }
+        
+        .stat-card:nth-child(3) {
+            transform: translateZ(65px) rotate(-0.3deg);
+            border-radius: 8px 7px 6px 11px;
+        }
+        
+        .stat-card:hover {
+            transform: translateZ(45px) translateY(-18px) rotateX(8deg) scale(1.05);
+            border-color: var(--archive-amber);
+            box-shadow: 
+                0 35px 70px rgba(0, 0, 0, 0.85),
+                0 0 80px rgba(232, 165, 92, 0.4),
+                inset 0 0 60px rgba(111, 205, 221, 0.15);
+        }
+        
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            margin-bottom: 20px;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            filter: drop-shadow(0 4px 12px rgba(111, 205, 221, 0.3));
+        }
+        
+        .stat-card:hover .stat-icon {
+            transform: rotate(360deg) scale(1.2);
+            filter: drop-shadow(0 8px 24px rgba(232, 165, 92, 0.5));
+        }
+        
+        .stat-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            color: var(--ash-gray);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        
+        .stat-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: var(--data-cyan);
+            text-shadow: 0 2px 15px rgba(111, 205, 221, 0.4);
+            transition: all 0.4s ease;
+        }
+        
+        .stat-card:hover .stat-value {
+            transform: scale(1.1);
+            color: var(--archive-amber);
+            text-shadow: 0 4px 25px rgba(232, 165, 92, 0.6);
+        }
+        
+        /* Main Content Card */
+        .content-card {
+            background: rgba(21, 27, 35, 0.92);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(111, 205, 221, 0.3);
+            border-radius: 10px 8px 12px 9px;
+            padding: 55px 45px;
+            margin-bottom: 50px;
+            transform: translateZ(80px) rotate(-0.2deg);
+            box-shadow: 
+                0 25px 60px rgba(0, 0, 0, 0.7),
+                0 0 40px rgba(111, 205, 221, 0.15),
+                inset 0 0 30px rgba(61, 90, 128, 0.1);
+            transform-style: preserve-3d;
+        }
+        
+        h2 {
+            font-family: 'Space Mono', monospace;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            margin-bottom: 28px;
+            color: var(--data-cyan);
+            text-shadow: 0 3px 15px rgba(111, 205, 221, 0.4);
+            transform: rotate(-0.3deg);
+        }
+        
+        .description {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: var(--ash-gray);
+            margin-bottom: 38px;
+            letter-spacing: 0.02em;
+        }
+        
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 0.95fr 1.1fr 0.98fr;
+            gap: 24px;
+            margin-bottom: 45px;
+            transform-style: preserve-3d;
+        }
+        
+        .feature-item {
+            background: rgba(10, 14, 20, 0.6);
+            border: 1px solid rgba(61, 90, 128, 0.4);
+            border-radius: 5px 8px 6px 9px;
+            padding: 26px 22px;
+            transform: translateZ(15px) rotate(0.4deg);
+            transition: all 0.48s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-item::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(232, 165, 92, 0.2) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+            border-radius: 50%;
+        }
+        
+        .feature-item:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .feature-item:nth-child(1) {
+            transform: translateZ(18px) rotate(-0.6deg);
+            border-radius: 8px 5px 9px 6px;
+        }
+        
+        .feature-item:nth-child(2) {
+            transform: translateZ(12px) rotate(0.8deg);
+            border-radius: 6px 9px 5px 10px;
+        }
+        
+        .feature-item:nth-child(3) {
+            transform: translateZ(20px) rotate(-0.4deg);
+            border-radius: 9px 6px 8px 5px;
+        }
+        
+        .feature-item:hover {
+            transform: translateZ(35px) translateY(-12px) rotateX(6deg) scale(1.03);
+            border-color: var(--archive-amber);
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.8),
+                0 0 50px rgba(232, 165, 92, 0.3);
+        }
+        
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            margin-bottom: 18px;
+            transition: all 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            filter: drop-shadow(0 3px 10px rgba(61, 90, 128, 0.4));
+            position: relative;
+            z-index: 1;
+        }
+        
+        .feature-item:hover .feature-icon {
+            transform: rotate(360deg) scale(1.15);
+            filter: drop-shadow(0 6px 20px rgba(232, 165, 92, 0.6));
+        }
+        
+        .feature-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            color: var(--off-white);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .feature-desc {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--ash-gray);
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Form Section */
+        .form-section {
+            background: rgba(10, 14, 20, 0.75);
+            border: 1px solid rgba(111, 205, 221, 0.25);
+            border-radius: 8px 11px 7px 10px;
+            padding: 42px 38px;
+            transform: translateZ(25px) rotate(0.2deg);
+            transform-style: preserve-3d;
+        }
+        
+        h3 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            margin-bottom: 25px;
+            color: var(--archive-amber);
+            text-transform: uppercase;
+            text-shadow: 0 2px 12px rgba(232, 165, 92, 0.3);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 22px;
+            margin-bottom: 22px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            color: var(--ash-gray);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        input, textarea {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            background: rgba(21, 27, 35, 0.7);
+            border: 1px solid rgba(61, 90, 128, 0.4);
+            border-radius: 4px 6px 5px 7px;
+            padding: 14px 16px;
+            color: var(--off-white);
+            transition: all 0.35s ease;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--data-cyan);
+            box-shadow: 
+                0 0 20px rgba(111, 205, 221, 0.3),
+                inset 0 0 10px rgba(111, 205, 221, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        /* Button */
+        .submit-btn {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--quantum-blue) 0%, var(--data-cyan) 100%);
+            color: var(--off-white);
+            border: none;
+            border-radius: 5px 8px 6px 9px;
+            padding: 16px 45px;
+            cursor: pointer;
+            transition: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(61, 90, 128, 0.4);
+        }
+        
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 
+                0 15px 40px rgba(61, 90, 128, 0.6),
+                0 0 50px rgba(111, 205, 221, 0.4);
+            background: linear-gradient(135deg, var(--data-cyan) 0%, var(--archive-amber) 100%);
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 35px 20px;
+            margin-top: 60px;
+            border-top: 1px solid rgba(111, 205, 221, 0.2);
+            transform: translateZ(50px);
+        }
+        
+        footer p {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.92rem;
+            color: var(--ash-gray);
+            letter-spacing: 0.05em;
+        }
+        
+        footer a {
+            color: var(--data-cyan);
+            text-decoration: none;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        footer a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--archive-amber);
+            transition: width 0.4s ease;
+        }
+        
+        footer a:hover {
+            color: var(--archive-amber);
+            text-shadow: 0 2px 10px rgba(232, 165, 92, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        footer a:hover::after {
+            width: 100%;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .floor-panels {
+                display: none;
+            }
+            
+            h1 {
+                font-size: 2.8rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                perspective: 1000px;
+            }
+            
+            .container {
+                transform: translateZ(30px);
+            }
+            
+            .stat-card, .content-card, .feature-item {
+                transform: translateZ(20px);
+            }
+            
+            .floating-logo {
+                width: 120px;
+                height: 120px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+                letter-spacing: 0.1em;
+            }
+            
+            .bracket {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .corner-brackets {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="stars">
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+    <div class="noise-overlay"></div>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    
+    <!-- 3D Floor Panels -->
+    <div class="floor-panels">
+        <div class="floor-panel"></div>
+        <div class="floor-panel"></div>
+        <div class="floor-panel"></div>
+        <div class="floor-panel"></div>
+        <div class="floor-panel"></div>
+        <div class="floor-panel"></div>
+        <div class="floor-panel"></div>
+        <div class="floor-panel"></div>
+    </div>
+    
+    <!-- Holographic Corner Brackets -->
+    <div class="corner-brackets">
+        <div class="bracket top-left"></div>
+        <div class="bracket top-right"></div>
+        <div class="bracket bottom-left"></div>
+        <div class="bracket bottom-right"></div>
+    </div>
+    
+    <!-- Main Stage Container -->
+    <div class="stage-container">
+        <div class="container">
+            <!-- Floating 3D Logo -->
+            <div class="logo-container">
+                <svg class="floating-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Outer Hexagon -->
+                    <polygon points="100,10 170,50 170,130 100,170 30,130 30,50" 
+                             fill="none" 
+                             stroke="#6FCDDD" 
+                             stroke-width="3"
+                             opacity="0.7"/>
+                    
+                    <!-- Inner Diamond -->
+                    <polygon points="100,40 140,90 100,140 60,90" 
+                             fill="rgba(232, 165, 92, 0.2)" 
+                             stroke="#E8A55C" 
+                             stroke-width="2.5"/>
+                    
+                    <!-- Center Circle -->
+                    <circle cx="100" cy="90" r="25" 
+                            fill="rgba(61, 90, 128, 0.4)" 
+                            stroke="#6FCDDD" 
+                            stroke-width="2"/>
+                    
+                    <!-- Asymmetric Inner Lines -->
+                    <line x1="100" y1="40" x2="100" y2="65" stroke="#E8A55C" stroke-width="2" opacity="0.8"/>
+                    <line x1="140" y1="90" x2="125" y2="90" stroke="#E8A55C" stroke-width="2" opacity="0.8"/>
+                    <line x1="100" y1="140" x2="100" y2="115" stroke="#E8A55C" stroke-width="2" opacity="0.8"/>
+                    <line x1="60" y1="90" x2="75" y2="90" stroke="#E8A55C" stroke-width="2" opacity="0.8"/>
+                    
+                    <!-- Accent Dots -->
+                    <circle cx="100" cy="90" r="8" fill="#6FCDDD" opacity="0.9"/>
+                    <circle cx="85" cy="75" r="3" fill="#E8A55C" opacity="0.7"/>
+                    <circle cx="115" cy="105" r="3" fill="#E8A55C" opacity="0.7"/>
+                    <circle cx="115" cy="75" r="2.5" fill="#6FCDDD" opacity="0.6"/>
+                    <circle cx="85" cy="105" r="2.5" fill="#6FCDDD" opacity="0.6"/>
+                </svg>
+            </div>
+            
+            <!-- Header -->
+            <header>
+                <h1>NEURAL SALVAGE</h1>
+                <p class="tagline">Where AI Meets Digital Creativity</p>
+            </header>
+            
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <svg class="stat-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="8" y="12" width="48" height="40" rx="4" fill="none" stroke="#6FCDDD" stroke-width="2.5"/>
+                        <path d="M 20 28 L 28 36 L 44 20" fill="none" stroke="#E8A55C" stroke-width="3" stroke-linecap="round"/>
+                        <circle cx="32" cy="28" r="3" fill="#6FCDDD"/>
+                    </svg>
+                    <div class="stat-label">NFTs Minted</div>
+                    <div class="stat-value">12,847</div>
+                </div>
+                
+                <div class="stat-card">
+                    <svg class="stat-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="32" cy="32" r="20" fill="none" stroke="#6FCDDD" stroke-width="2.5"/>
+                        <path d="M 32 12 L 32 32 L 44 38" fill="none" stroke="#E8A55C" stroke-width="2.5" stroke-linecap="round"/>
+                        <circle cx="32" cy="32" r="4" fill="#E8A55C"/>
+                    </svg>
+                    <div class="stat-label">Permanence</div>
+                    <div class="stat-value">200+ Yrs</div>
+                </div>
+                
+                <div class="stat-card">
+                    <svg class="stat-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 16 48 L 16 28 L 24 20 L 32 28 L 40 16 L 48 24 L 48 48" fill="none" stroke="#6FCDDD" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="24" cy="20" r="3" fill="#E8A55C"/>
+                        <circle cx="40" cy="16" r="3" fill="#E8A55C"/>
+                        <line x1="16" y1="48" x2="48" y2="48" stroke="#6FCDDD" stroke-width="2.5"/>
+                    </svg>
+                    <div class="stat-label">Assets Stored</div>
+                    <div class="stat-value">2.4 PB</div>
+                </div>
+            </div>
+            
+            <!-- Main Content Card -->
+            <div class="content-card">
+                <h2>AI-POWERED ASSET VAULT</h2>
+                <p class="description">
+                    Neural Salvage combines intelligent cloud storage with blockchain permanence. Upload your digital creations—images, 
+                    videos, audio—and let AI automatically analyze, tag, and organize everything. Search using natural language, 
+                    mint permanent NFTs on the Arweave blockchain, and monetize your work. No crypto knowledge required—just creativity.
+                </p>
+                
+                <!-- Features Grid -->
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <svg class="feature-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                            <polygon points="32,8 52,20 52,44 32,56 12,44 12,20" fill="none" stroke="#6FCDDD" stroke-width="2.5"/>
+                            <circle cx="32" cy="32" r="8" fill="rgba(232, 165, 92, 0.3)" stroke="#E8A55C" stroke-width="2"/>
+                            <line x1="32" y1="8" x2="32" y2="24" stroke="#E8A55C" stroke-width="2"/>
+                        </svg>
+                        <div class="feature-title">AI Analysis</div>
+                        <p class="feature-desc">Auto-generated captions, tags, and semantic search powered by GPT-4</p>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <svg class="feature-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="12" y="16" width="40" height="32" rx="3" fill="none" stroke="#6FCDDD" stroke-width="2.5"/>
+                            <path d="M 24 28 L 32 36 L 40 28" fill="none" stroke="#E8A55C" stroke-width="2.5" stroke-linecap="round"/>
+                            <circle cx="32" cy="32" r="3" fill="#E8A55C"/>
+                        </svg>
+                        <div class="feature-title">Arweave NFTs</div>
+                        <p class="feature-desc">Mint permanent blockchain NFTs with 200+ year storage guarantee</p>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <svg class="feature-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="32" cy="32" r="20" fill="none" stroke="#6FCDDD" stroke-width="2.5"/>
+                            <path d="M 32 12 A 20 20 0 0 1 52 32" fill="none" stroke="#E8A55C" stroke-width="3" stroke-linecap="round"/>
+                            <circle cx="32" cy="32" r="6" fill="#E8A55C"/>
+                        </svg>
+                        <div class="feature-title">Marketplace</div>
+                        <p class="feature-desc">Sell your creations with USD payments—no crypto required</p>
+                    </div>
+                </div>
+                
+                <!-- Form Section -->
+                <div class="form-section">
+                    <h3>Join the Waitlist</h3>
+                    <form>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="name">Creator Name</label>
+                                <input type="text" id="name" name="name" placeholder="Your name or artist alias" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" placeholder="creator@domain.com" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">What will you create?</label>
+                            <textarea id="message" name="message" placeholder="Tell us about your digital art, photography, or creative work..." required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">Request Early Access</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <footer>
+                <p>&copy; 2025 Neural Salvage. All rights reserved. | <a href="#">Privacy Protocol</a> | <a href="#">Terms of Service</a></p>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>
