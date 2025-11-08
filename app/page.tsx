@@ -66,7 +66,7 @@ export default function Home() {
         <div className="relative w-[92%] max-w-[1300px] mx-auto" style={{ transformStyle: 'preserve-3d' }}>
           
           {/* Holographic Corners */}
-          <div className="absolute inset-0 pointer-events-none z-[5]">
+          <div className="absolute inset-0 pointer-events-none z-[10]">
             {/* Top Left */}
             <div 
               className="absolute top-[-35px] left-[-45px] w-[130px] h-[110px] border-r-2 border-b-2 border-data-cyan animate-bracket-glow"
@@ -264,41 +264,45 @@ export default function Home() {
             </div>
 
             {/* CTA Section */}
-            <div className="text-center" style={{ transformStyle: 'preserve-3d', transform: 'translateZ(85px)' }}>
-              <div className="max-w-2xl mx-auto mb-9">
+            <div className="text-center relative z-[100]" style={{ transformStyle: 'preserve-3d', transform: 'translateZ(85px)' }}>
+              <div className="max-w-2xl mx-auto mb-9 relative z-[100]">
                 <Link 
                   href="/auth/signup"
-                  className="cyberpunk-button inline-block"
+                  className="cyberpunk-button inline-block relative z-[100] cursor-pointer"
+                  style={{ pointerEvents: 'auto' }}
                 >
                   GET STARTED
                 </Link>
               </div>
               
-              <div className="flex gap-9 justify-center flex-wrap">
+              <div className="flex gap-9 justify-center flex-wrap relative z-[100]">
                 <Link 
                   href="/auth/signup"
-                  className="font-rajdhani text-lg text-data-cyan uppercase tracking-[0.12em] font-semibold relative group"
+                  className="font-rajdhani text-lg text-data-cyan uppercase tracking-[0.12em] font-semibold relative group cursor-pointer z-[100]"
+                  style={{ pointerEvents: 'auto' }}
                 >
                   Sign Up
-                  <span className="absolute bottom-[-5px] left-0 w-0 h-[2px] bg-archive-amber group-hover:w-full transition-all duration-400"
+                  <span className="absolute bottom-[-5px] left-0 w-0 h-[2px] bg-archive-amber group-hover:w-full transition-all duration-400 pointer-events-none"
                     style={{ boxShadow: '0 0 12px #E8A55C' }}
                   />
                 </Link>
                 <Link 
                   href="/auth/login"
-                  className="font-rajdhani text-lg text-data-cyan uppercase tracking-[0.12em] font-semibold relative group"
+                  className="font-rajdhani text-lg text-data-cyan uppercase tracking-[0.12em] font-semibold relative group cursor-pointer z-[100]"
+                  style={{ pointerEvents: 'auto' }}
                 >
                   Sign In
-                  <span className="absolute bottom-[-5px] left-0 w-0 h-[2px] bg-archive-amber group-hover:w-full transition-all duration-400"
+                  <span className="absolute bottom-[-5px] left-0 w-0 h-[2px] bg-archive-amber group-hover:w-full transition-all duration-400 pointer-events-none"
                     style={{ boxShadow: '0 0 12px #E8A55C' }}
                   />
                 </Link>
                 <Link 
                   href="/dashboard"
-                  className="font-rajdhani text-lg text-data-cyan uppercase tracking-[0.12em] font-semibold relative group"
+                  className="font-rajdhani text-lg text-data-cyan uppercase tracking-[0.12em] font-semibold relative group cursor-pointer z-[100]"
+                  style={{ pointerEvents: 'auto' }}
                 >
                   View Demo
-                  <span className="absolute bottom-[-5px] left-0 w-0 h-[2px] bg-archive-amber group-hover:w-full transition-all duration-400"
+                  <span className="absolute bottom-[-5px] left-0 w-0 h-[2px] bg-archive-amber group-hover:w-full transition-all duration-400 pointer-events-none"
                     style={{ boxShadow: '0 0 12px #E8A55C' }}
                   />
                 </Link>
