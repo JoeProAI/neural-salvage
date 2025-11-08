@@ -62,8 +62,8 @@ export default function NFTDetailPage() {
           if (metadata) {
             console.log('✅ [NFT DETAIL] Found on blockchain');
             
-            // Create temporary NFT object from blockchain data
-            setNft({
+            // Create NFT object from blockchain data
+            const nftData = {
               id: nftId,
               assetId: '',
               userId: user?.id || '',
@@ -93,7 +93,21 @@ export default function NFTDetailPage() {
               verifiedAt: new Date(),
               createdAt: new Date(),
               updatedAt: new Date(),
-            } as NFT);
+            } as NFT;
+            
+            setNft(nftData);
+            
+            // Save to Firebase for future access and listing capability
+            try {
+              await fetch('/api/nft/sync-from-blockchain', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nftId, metadata, userId: user?.id }),
+              });
+              console.log('✅ [NFT DETAIL] Synced blockchain NFT to Firebase');
+            } catch (syncError) {
+              console.warn('⚠️ [NFT DETAIL] Failed to sync to Firebase (listing may not work):', syncError);
+            }
           } else {
             console.error('❌ [NFT DETAIL] NFT not found on blockchain either');
           }

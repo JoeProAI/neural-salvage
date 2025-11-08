@@ -47,16 +47,29 @@ export async function POST(request: NextRequest) {
     await adminDb().collection('marketplace_listings').doc(listingId).set(listing);
     console.log('✅ [SIMPLE LIST] Listing created in Firebase');
 
-    // Update NFT with listing info
-    await adminDb().collection('nfts').doc(assetId).update({
-      isListed: true,
-      currentListing: listingId,
-      listedAt: now,
-      listPrice: price,
-      listCurrency: currency || 'USD',
-      updatedAt: now,
-    });
-    console.log('✅ [SIMPLE LIST] NFT updated with listing info');
+    // Update NFT with listing info (if it exists in Firebase)
+    try {
+      const nftDoc = await adminDb().collection('nfts').doc(assetId).get();
+      
+      if (nftDoc.exists) {
+        await adminDb().collection('nfts').doc(assetId).update({
+          isListed: true,
+          currentListing: listingId,
+          listedAt: now,
+          listPrice: price,
+          listCurrency: currency || 'USD',
+          updatedAt: now,
+        });
+        console.log('✅ [SIMPLE LIST] NFT updated with listing info');
+      } else {
+        console.warn('⚠️ [SIMPLE LIST] NFT not found in Firebase, but listing created');
+        console.warn('⚠️ NFT may be on blockchain only - consider syncing to Firebase');
+      }
+    } catch (nftError) {
+      console.error('❌ [SIMPLE LIST] Failed to update NFT:', nftError);
+      // Don't fail the listing if NFT update fails
+      console.log('ℹ️ [SIMPLE LIST] Listing created successfully despite NFT update error');
+    }
 
     return NextResponse.json({
       success: true,
