@@ -142,14 +142,27 @@ export default function Home() {
                 }}
               >
                 <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  {/* Outer circle */}
                   <circle cx="50" cy="50" r="44" stroke="#6FCDDD" strokeWidth="1.5" fill="none" strokeDasharray="12 4 8 6"/>
+                  
+                  {/* Hexagon frame */}
                   <path d="M 50 16 L 73 31 L 73 61 L 50 76 L 27 61 L 27 31 Z" fill="rgba(232, 165, 92, 0.08)" stroke="#E8A55C" strokeWidth="1.8"/>
+                  
+                  {/* Inner diamond */}
                   <path d="M 50 32 L 63 46 L 52 62 L 37 47 Z" fill="#6FCDDD" opacity="0.75"/>
+                  
+                  {/* Letter N */}
                   <text x="49" y="59" fontFamily="Space Mono" fontSize="26" fontWeight="700" fill="#0A0E14" textAnchor="middle">N</text>
-                  <line x1="50" y1="6" x2="50" y2="16" stroke="#E8A55C" strokeWidth="2.5"/>
-                  <line x1="48" y1="84" x2="52" y2="94" stroke="#E8A55C" strokeWidth="2"/>
+                  
+                  {/* Top antenna - properly aligned */}
+                  <line x1="50" y1="6" x2="50" y2="16" stroke="#E8A55C" strokeWidth="2.5" strokeLinecap="round"/>
+                  
+                  {/* Bottom antenna - FIXED alignment */}
+                  <line x1="50" y1="84" x2="50" y2="94" stroke="#E8A55C" strokeWidth="2.5" strokeLinecap="round"/>
+                  
+                  {/* Side accent dots */}
                   <circle cx="85" cy="50" r="2" fill="#6FCDDD" opacity="0.8"/>
-                  <circle cx="15" cy="48" r="3" fill="#E8A55C" opacity="0.6"/>
+                  <circle cx="15" cy="50" r="2" fill="#E8A55C" opacity="0.8"/>
                 </svg>
               </div>
               
