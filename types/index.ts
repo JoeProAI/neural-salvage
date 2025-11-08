@@ -101,6 +101,7 @@ export interface Collection {
   name: string;
   description?: string;
   coverImageId?: string;
+  iconUrl?: string; // AI-generated collection icon
   assetIds: string[];
   visibility: 'private' | 'public';
   createdAt: Date;

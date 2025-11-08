@@ -57,10 +57,28 @@ export default function CollectionsPage() {
     if (!user || !newCollectionName.trim()) return;
 
     try {
+      // Generate a cool AI icon for the collection
+      const response = await fetch('/api/ai/generate-collection-icon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          collectionName: newCollectionName,
+          description: newCollectionDesc,
+          userId: user.id,
+        }),
+      });
+
+      let iconUrl = '';
+      if (response.ok) {
+        const data = await response.json();
+        iconUrl = data.iconUrl || '';
+      }
+
       await addDoc(collection(db, 'collections'), {
         userId: user.id,
         name: newCollectionName,
         description: newCollectionDesc,
+        iconUrl,
         assetIds: [],
         visibility: 'private',
         createdAt: new Date(),
@@ -74,6 +92,20 @@ export default function CollectionsPage() {
     } catch (error) {
       console.error('Error creating collection:', error);
       alert('Failed to create collection');
+    }
+  };
+
+  const handleDeleteCollection = async (collectionId: string, collectionName: string) => {
+    if (!confirm(`Are you sure you want to delete "${collectionName}"? This will only remove the collection, not the actual gallery items.`)) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'collections', collectionId));
+      loadCollections();
+    } catch (error) {
+      console.error('Error deleting collection:', error);
+      alert('Failed to delete collection');
     }
   };
 
@@ -207,11 +239,38 @@ export default function CollectionsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {collections.map((coll) => (
-              <Link key={coll.id} href={`/collections/${coll.id}`}>
-                <div className="metal-card rounded-lg overflow-hidden glow-hover cursor-pointer">
-                  {/* Cover Image */}
-                  <div className="aspect-square bg-salvage-rust flex items-center justify-center">
-                    <div className="text-6xl">📁</div>
+              <div key={coll.id} className="metal-card rounded-lg overflow-hidden glow-hover group relative">
+                {/* Delete Button */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDeleteCollection(coll.id, coll.name);
+                  }}
+                  className="absolute top-2 right-2 z-10 bg-red-500/80 hover:bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Delete collection"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+
+                <Link href={`/collections/${coll.id}`} className="block">
+                  {/* Cover Image or AI Icon */}
+                  <div className="aspect-square bg-gradient-to-br from-salvage-rust to-deep-space flex items-center justify-center relative overflow-hidden">
+                    {coll.iconUrl ? (
+                      <img
+                        src={coll.iconUrl}
+                        alt={coll.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="text-7xl">📁</div>
+                    )}
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                   </div>
 
                   {/* Info */}
@@ -235,8 +294,8 @@ export default function CollectionsPage() {
                       </span>
                     </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             ))}
           </div>
         )}

@@ -4,9 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs, arrayUnion } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { MediaAsset } from '@/types';
+import { MediaAsset, Collection } from '@/types';
 import Link from 'next/link';
 import { MintNFTModalHybrid } from '@/components/nft/MintNFTModalHybrid';
 
@@ -29,6 +29,9 @@ export default function AssetDetailPage() {
   const [generatingAI, setGeneratingAI] = useState(false);
   const [generatingCover, setGeneratingCover] = useState(false);
   const [nftData, setNftData] = useState<any>(null);
+  const [showCollectionModal, setShowCollectionModal] = useState(false);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [loadingCollections, setLoadingCollections] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -691,6 +694,32 @@ export default function AssetDetailPage() {
                     )}
                     
                     <Button
+                      className="w-full bg-gradient-to-r from-data-cyan to-quantum-blue hover:opacity-90 text-white font-semibold"
+                      onClick={async () => {
+                        setShowCollectionModal(true);
+                        setLoadingCollections(true);
+                        try {
+                          const collectionsQuery = query(
+                            collection(db, 'collections'),
+                            where('userId', '==', user!.id)
+                          );
+                          const snapshot = await getDocs(collectionsQuery);
+                          const collsData = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data(),
+                          })) as Collection[];
+                          setCollections(collsData);
+                        } catch (error) {
+                          console.error('Error loading collections:', error);
+                        } finally {
+                          setLoadingCollections(false);
+                        }
+                      }}
+                    >
+                      📁 Add to Collection
+                    </Button>
+                    
+                    <Button
                       variant="neon"
                       className="w-full"
                       onClick={() => setEditing(true)}
@@ -749,21 +778,113 @@ export default function AssetDetailPage() {
         </div>
       </main>
 
-      {/* Mint NFT Modal - HYBRID */}
-      {showMintModal && (
+      {/* Add to Collection Modal */}
+      {showCollectionModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="metal-card p-8 rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Add to Collection
+            </h2>
+
+            {loadingCollections ? (
+              <div className="text-center py-8 text-gray-400">
+                Loading collections...
+              </div>
+            ) : collections.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400 mb-4">
+                  You haven't created any collections yet
+                </p>
+                <Link href="/collections">
+                  <Button variant="neon">Create Collection</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-2 mb-6">
+                {collections.map((coll) => {
+                  const isInCollection = coll.assetIds.includes(assetId);
+                  return (
+                    <button
+                      key={coll.id}
+                      onClick={async () => {
+                        try {
+                          if (isInCollection) {
+                            // Remove from collection
+                            const updatedAssetIds = coll.assetIds.filter(id => id !== assetId);
+                            await updateDoc(doc(db, 'collections', coll.id), {
+                              assetIds: updatedAssetIds,
+                              updatedAt: new Date(),
+                            });
+                          } else {
+                            // Add to collection
+                            await updateDoc(doc(db, 'collections', coll.id), {
+                              assetIds: arrayUnion(assetId),
+                              updatedAt: new Date(),
+                            });
+                          }
+                          
+                          // Reload collections to update UI
+                          const collectionsQuery = query(
+                            collection(db, 'collections'),
+                            where('userId', '==', user!.id)
+                          );
+                          const snapshot = await getDocs(collectionsQuery);
+                          const collsData = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data(),
+                          })) as Collection[];
+                          setCollections(collsData);
+                        } catch (error) {
+                          console.error('Error updating collection:', error);
+                          alert('Failed to update collection');
+                        }
+                      }}
+                      className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                        isInCollection
+                          ? 'bg-terminal-green/10 border-terminal-green text-terminal-green'
+                          : 'bg-salvage-rust border-salvage-glow text-white hover:border-neon-cyan'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="font-bold">{coll.name}</div>
+                          <div className="text-xs opacity-70">
+                            {coll.assetIds.length} items
+                          </div>
+                        </div>
+                        {isInCollection && (
+                          <div className="text-2xl">✓</div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              onClick={() => setShowCollectionModal(false)}
+              className="w-full"
+            >
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Mint NFT Modal */}
+      {showMintModal && asset && (
         <MintNFTModalHybrid
-          assetId={assetId}
+          assetId={asset.id}
           assetName={asset.title || asset.filename}
-          assetDescription={asset.description}
-          aiAnalysis={asset.aiAnalysis}
-          onClose={() => setShowMintModal(false)}
-          onSuccess={(nftId) => {
+          assetDescription={asset.description || ''}
+          assetType={asset.type}
+          onClose={() => {
             setShowMintModal(false);
-            loadAsset(); // Reload to show NFT status
-            
-            // Navigate to NFT detail page
-            router.push(`/nft/${nftId}`);
+            loadAsset(); // Reload to show updated NFT status
           }}
+          aiAnalysis={asset.aiAnalysis}
         />
       )}
     </div>
