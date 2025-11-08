@@ -15,11 +15,16 @@ export interface User {
   stripeCustomerId?: string; // For subscriptions (buying)
   stripeSubscriptionId?: string;
   stripeSubscriptionStatus?: 'active' | 'canceled' | 'past_due' | 'trialing';
-  subscriptionTier: 'free' | 'creator' | 'pro' | 'studio'; // New subscription tiers
+  subscriptionTier: 'free' | 'beta' | 'creator' | 'pro' | 'studio'; // New subscription tiers
   plan: 'free' | 'pro'; // Legacy field, deprecated
-  isBetaUser?: boolean; // Beta users get everything free!
+  
+  // Beta Access System
+  isBetaUser?: boolean; // MAIN FLAG - Beta users get everything free!
+  betaAccess?: boolean; // Alternative flag name (same as isBetaUser)
   betaAccessGrantedBy?: string; // Admin who granted access
-  betaAccessGrantedAt?: Date;
+  betaAccessGrantedAt?: Date; // When beta was granted
+  betaReason?: string; // Why they have beta (e.g., 'seed_investor', 'early_supporter')
+  betaNotes?: string; // Optional notes about beta access
   
   // Usage tracking for monthly limits
   monthlyUsage: {

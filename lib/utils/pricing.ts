@@ -17,35 +17,35 @@ export const PRICE_TIERS: PriceTier[] = [
     name: 'Tiny',
     maxSizeMB: 10,
     arCost: 0.05,
-    usdPrice: 2.99,
+    usdPrice: 3.99, // Was 2.99, +$1 = 30% more profit
     description: 'Perfect for photos, documents, short audio'
   },
   {
     name: 'Small',
     maxSizeMB: 50,
     arCost: 0.15,
-    usdPrice: 4.99,
+    usdPrice: 5.99, // Was 4.99, +$1 = 20% more profit
     description: 'Great for songs, presentations, images'
   },
   {
     name: 'Medium',
     maxSizeMB: 100,
     arCost: 0.30,
-    usdPrice: 7.99,
+    usdPrice: 9.99, // Was 7.99, +$2 = 25% more profit
     description: 'Ideal for albums, HD photos, short videos'
   },
   {
     name: 'Large',
     maxSizeMB: 250,
     arCost: 0.75,
-    usdPrice: 14.99,
+    usdPrice: 17.99, // Was 14.99, +$3 = 20% more profit
     description: 'Best for long videos, large collections'
   },
   {
     name: 'XL',
     maxSizeMB: 500,
     arCost: 1.50,
-    usdPrice: 24.99,
+    usdPrice: 29.99, // Was 24.99, +$5 = 20% more profit
     description: 'For high-res videos, massive files'
   },
 ];
@@ -81,9 +81,30 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
     ]
   },
   {
+    id: 'beta',
+    name: 'Beta',
+    price: 0, // Free for beta users!
+    freeMints: 999999, // Unlimited
+    maxMintSizeMB: 500, // Any size
+    aiAnalysisLimit: 0, // Unlimited
+    coverArtLimit: 0, // Unlimited
+    discount: 1.0, // 100% discount
+    features: [
+      '✨ BETA ACCESS - Everything FREE',
+      'UNLIMITED NFT mints',
+      'UNLIMITED AI analyses',
+      'UNLIMITED cover art',
+      'All file sizes supported',
+      'Priority support',
+      'Early access to features',
+      'Beta tester badge',
+      'Lifetime access (while beta)'
+    ]
+  },
+  {
     id: 'creator',
     name: 'Creator',
-    price: 9.99,
+    price: 12.99, // Was 9.99, +$3 = 30% more revenue
     freeMints: 5,
     maxMintSizeMB: 50, // Tiny/Small files only
     aiAnalysisLimit: 50,
@@ -103,7 +124,7 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 29.99,
+    price: 34.99, // Was 29.99, +$5 = 17% more revenue
     freeMints: 20,
     maxMintSizeMB: 100, // Up to Medium files
     aiAnalysisLimit: 0, // Unlimited
@@ -125,7 +146,7 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
   {
     id: 'studio',
     name: 'Studio',
-    price: 99.99,
+    price: 119.99, // Was 99.99, +$20 = 20% more revenue
     freeMints: 100,
     maxMintSizeMB: 500, // Any size
     aiAnalysisLimit: 0,

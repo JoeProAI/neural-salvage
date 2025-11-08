@@ -72,7 +72,7 @@ export default function PricingPage() {
             Pay in USD with credit card • No crypto needed
           </p>
           <p className="text-sm text-gray-500">
-            File size-based pricing: $2.99-$24.99 per mint • Never pay more than your file needs
+            File size-based pricing: $3.99-$29.99 per mint • Never pay more than your file needs
           </p>
         </div>
 
@@ -114,7 +114,7 @@ export default function PricingPage() {
                 <span>Marketplace access</span>
               </li>
               <li className="flex items-start gap-2 text-gray-400 text-xs">
-                <span>💰 Pay per mint: $2.99-24.99</span>
+                <span>💰 Pay per mint: $3.99-29.99</span>
               </li>
             </ul>
 
@@ -131,7 +131,7 @@ export default function PricingPage() {
           <div className="metal-card p-6 rounded-lg border-2 border-retro-orange">
             <h3 className="text-xl font-bold text-retro-orange mb-2">Creator</h3>
             <div className="text-3xl font-bold text-white mb-4">
-              $9.99<span className="text-base text-gray-400">/mo</span>
+              $12.99<span className="text-base text-gray-400">/mo</span>
             </div>
             
             <ul className="space-y-2 mb-6 text-sm">
@@ -172,7 +172,7 @@ export default function PricingPage() {
             
             <h3 className="text-xl font-bold text-retro-purple mb-2">Pro</h3>
             <div className="text-3xl font-bold text-white mb-4">
-              $29.99<span className="text-base text-gray-400">/mo</span>
+              $34.99<span className="text-base text-gray-400">/mo</span>
             </div>
             
             <ul className="space-y-2 mb-6 text-sm">
@@ -215,7 +215,7 @@ export default function PricingPage() {
             
             <h3 className="text-xl font-bold text-neon-cyan mb-2">Studio</h3>
             <div className="text-3xl font-bold text-white mb-4">
-              $99.99<span className="text-base text-gray-400">/mo</span>
+              $119.99<span className="text-base text-gray-400">/mo</span>
             </div>
             
             <ul className="space-y-2 mb-6 text-sm">
@@ -260,33 +260,33 @@ export default function PricingPage() {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="bg-void-black/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-neon-cyan mb-1">$2.99</div>
+              <div className="text-2xl font-bold text-neon-cyan mb-1">$3.99</div>
               <div className="text-xs text-gray-400">0-10 MB</div>
               <div className="text-xs text-gray-500 mt-1">Photos, docs</div>
             </div>
             <div className="bg-void-black/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-neon-cyan mb-1">$4.99</div>
+              <div className="text-2xl font-bold text-neon-cyan mb-1">$5.99</div>
               <div className="text-xs text-gray-400">10-50 MB</div>
               <div className="text-xs text-gray-500 mt-1">Songs, images</div>
             </div>
             <div className="bg-void-black/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-neon-cyan mb-1">$7.99</div>
+              <div className="text-2xl font-bold text-neon-cyan mb-1">$9.99</div>
               <div className="text-xs text-gray-400">50-100 MB</div>
               <div className="text-xs text-gray-500 mt-1">Albums, HD</div>
             </div>
             <div className="bg-void-black/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-neon-cyan mb-1">$14.99</div>
+              <div className="text-2xl font-bold text-neon-cyan mb-1">$17.99</div>
               <div className="text-xs text-gray-400">100-250 MB</div>
               <div className="text-xs text-gray-500 mt-1">Long videos</div>
             </div>
             <div className="bg-void-black/50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-neon-cyan mb-1">$24.99</div>
+              <div className="text-2xl font-bold text-neon-cyan mb-1">$29.99</div>
               <div className="text-xs text-gray-400">250-500 MB</div>
               <div className="text-xs text-gray-500 mt-1">Massive files</div>
             </div>
           </div>
           <p className="text-xs text-gray-500 text-center mt-4">
-            Subscribers get discounts: Creator 15% off • Pro 25% off • Studio 40% off
+            Subscribers get discounts: Creator 15% off • Pro 25% off • Studio 40% off • Beta users: 100% FREE!
           </p>
         </div>
 
