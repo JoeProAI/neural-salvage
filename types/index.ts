@@ -15,15 +15,28 @@ export interface User {
   stripeCustomerId?: string; // For subscriptions (buying)
   stripeSubscriptionId?: string;
   stripeSubscriptionStatus?: 'active' | 'canceled' | 'past_due' | 'trialing';
-  plan: 'free' | 'pro';
+  subscriptionTier: 'free' | 'creator' | 'pro' | 'studio'; // New subscription tiers
+  plan: 'free' | 'pro'; // Legacy field, deprecated
   isBetaUser?: boolean; // Beta users get everything free!
   betaAccessGrantedBy?: string; // Admin who granted access
   betaAccessGrantedAt?: Date;
-  aiUsage: {
+  
+  // Usage tracking for monthly limits
+  monthlyUsage: {
+    period: string; // 'YYYY-MM' format
+    mintsUsed: number; // NFT mints this month
+    aiAnalysisUsed: number; // AI analyses this month
+    coverArtUsed: number; // Cover arts generated this month
+    resetDate: Date; // When monthly limits reset
+  };
+  
+  // Legacy AI usage (deprecated)
+  aiUsage?: {
     current: number;
     limit: number;
     resetDate: Date;
   };
+  
   createdAt: Date;
   updatedAt: Date;
 }

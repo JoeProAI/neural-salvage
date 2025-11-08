@@ -66,10 +66,13 @@ export default function PricingPage() {
       <main className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Choose Your Plan
+            Simple, Realistic Pricing
           </h2>
-          <p className="text-xl text-gray-400">
-            Start free, upgrade when you need more power
+          <p className="text-xl text-gray-400 mb-2">
+            Pay in USD with credit card • No crypto needed
+          </p>
+          <p className="text-sm text-gray-500">
+            File size-based pricing: $2.99-$24.99 per mint • Never pay more than your file needs
           </p>
         </div>
 
@@ -85,128 +88,206 @@ export default function PricingPage() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {/* Free Plan */}
-          <div className="metal-card p-8 rounded-lg border-2 border-salvage-glow">
-            <h3 className="text-2xl font-bold text-neon-cyan mb-2">Free</h3>
-            <div className="text-4xl font-bold text-white mb-6">
-              $0<span className="text-lg text-gray-400">/month</span>
+          <div className="metal-card p-6 rounded-lg border-2 border-salvage-glow">
+            <h3 className="text-xl font-bold text-neon-cyan mb-2">Free</h3>
+            <div className="text-3xl font-bold text-white mb-4">
+              $0<span className="text-base text-gray-400">/mo</span>
             </div>
             
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-2 mb-6 text-sm">
               <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-neon-cyan flex-shrink-0 mt-0.5" />
+                <Check className="w-4 h-4 text-neon-cyan flex-shrink-0 mt-0.5" />
                 <span>Unlimited uploads</span>
               </li>
               <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-neon-cyan flex-shrink-0 mt-0.5" />
-                <span>Unlimited storage</span>
+                <Check className="w-4 h-4 text-neon-cyan flex-shrink-0 mt-0.5" />
+                <span>10 AI analyses/mo</span>
               </li>
               <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-neon-cyan flex-shrink-0 mt-0.5" />
-                <span>Collections & gallery</span>
+                <Check className="w-4 h-4 text-neon-cyan flex-shrink-0 mt-0.5" />
+                <span>5 cover arts/mo</span>
               </li>
-              <li className="flex items-start gap-2 text-gray-400">
-                <span className="w-5 h-5 text-center flex-shrink-0">×</span>
-                <span>0 AI analyses</span>
+              <li className="flex items-start gap-2 text-gray-300">
+                <Check className="w-4 h-4 text-neon-cyan flex-shrink-0 mt-0.5" />
+                <span>Marketplace access</span>
               </li>
-              <li className="flex items-start gap-2 text-gray-400">
-                <span className="w-5 h-5 text-center flex-shrink-0">×</span>
-                <span>0 NFT mints</span>
+              <li className="flex items-start gap-2 text-gray-400 text-xs">
+                <span>💰 Pay per mint: $2.99-24.99</span>
               </li>
             </ul>
 
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full text-sm"
               disabled={user?.plan === 'free'}
             >
               {user?.plan === 'free' ? 'Current Plan' : 'Get Started'}
             </Button>
           </div>
 
-          {/* Pay-Per-Use Plan */}
-          <div className="metal-card p-8 rounded-lg border-2 border-retro-orange">
-            <h3 className="text-2xl font-bold text-retro-orange mb-2">Pay-Per-Use</h3>
-            <div className="text-4xl font-bold text-white mb-6">
-              As You Go
+          {/* Creator Plan */}
+          <div className="metal-card p-6 rounded-lg border-2 border-retro-orange">
+            <h3 className="text-xl font-bold text-retro-orange mb-2">Creator</h3>
+            <div className="text-3xl font-bold text-white mb-4">
+              $9.99<span className="text-base text-gray-400">/mo</span>
             </div>
             
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-2 mb-6 text-sm">
               <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-retro-orange flex-shrink-0 mt-0.5" />
-                <span>Everything in Free</span>
+                <Check className="w-4 h-4 text-retro-orange flex-shrink-0 mt-0.5" />
+                <span><strong>5 free mints</strong>/month</span>
               </li>
               <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-retro-orange flex-shrink-0 mt-0.5" />
-                <span>$1.99 per AI analysis</span>
+                <Check className="w-4 h-4 text-retro-orange flex-shrink-0 mt-0.5" />
+                <span>50 AI analyses/mo</span>
               </li>
               <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-retro-orange flex-shrink-0 mt-0.5" />
-                <span>$2.99 per NFT mint</span>
+                <Check className="w-4 h-4 text-retro-orange flex-shrink-0 mt-0.5" />
+                <span>25 cover arts/mo</span>
               </li>
               <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-retro-orange flex-shrink-0 mt-0.5" />
-                <span>No commitment</span>
+                <Check className="w-4 h-4 text-retro-orange flex-shrink-0 mt-0.5" />
+                <span>15% off extra mints</span>
               </li>
-              <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-retro-orange flex-shrink-0 mt-0.5" />
-                <span>Pay only for what you use</span>
-              </li>
-            </ul>
-
-            <Link href="/dashboard">
-              <Button
-                className="w-full bg-retro-orange hover:bg-retro-orange/90"
-              >
-                Start Using
-              </Button>
-            </Link>
-          </div>
-
-          {/* Pro Plan */}
-          <div className="metal-card p-8 rounded-lg border-2 border-retro-purple relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-retro-purple text-white px-4 py-1 text-sm font-bold transform rotate-12 translate-x-8 translate-y-4">
-              BEST VALUE
-            </div>
-            
-            <h3 className="text-2xl font-bold text-retro-purple mb-2">Pro</h3>
-            <div className="text-4xl font-bold text-neon-cyan mb-2">
-              $19.99
-              <span className="text-lg text-gray-400 font-normal">/month</span>
-            </div>
-            
-            <ul className="space-y-3 mb-8">
-              <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-retro-purple flex-shrink-0 mt-0.5" />
-                <span>Everything in Free</span>
-              </li>
-              <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-retro-purple flex-shrink-0 mt-0.5" />
-                <span><strong>Unlimited</strong> AI analyses</span>
-              </li>
-              <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-retro-purple flex-shrink-0 mt-0.5" />
-                <span><strong>30 free</strong> NFT mints/month</span>
-              </li>
-              <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-retro-purple flex-shrink-0 mt-0.5" />
-                <span>$1.49 per additional mint (50% off)</span>
-              </li>
-              <li className="flex items-start gap-2 text-gray-300">
-                <Check className="w-5 h-5 text-retro-purple flex-shrink-0 mt-0.5" />
-                <span>Priority support</span>
+              <li className="flex items-start gap-2 text-gray-400 text-xs">
+                <span>Perfect for artists</span>
               </li>
             </ul>
 
             <Button
               onClick={handleSubscribe}
-              className="w-full bg-retro-purple hover:bg-retro-purple/90"
-              disabled={user?.plan === 'pro' || user?.isBetaUser}
+              className="w-full bg-retro-orange hover:bg-retro-orange/90 text-sm"
             >
-              {user?.plan === 'pro' ? 'Current Plan' : user?.isBetaUser ? 'Beta User' : 'Upgrade to Pro'}
+              Subscribe
             </Button>
           </div>
+
+          {/* Pro Plan */}
+          <div className="metal-card p-6 rounded-lg border-2 border-retro-purple relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-retro-purple text-white px-3 py-1 text-xs font-bold transform rotate-12 translate-x-6 translate-y-2">
+              POPULAR
+            </div>
+            
+            <h3 className="text-xl font-bold text-retro-purple mb-2">Pro</h3>
+            <div className="text-3xl font-bold text-white mb-4">
+              $29.99<span className="text-base text-gray-400">/mo</span>
+            </div>
+            
+            <ul className="space-y-2 mb-6 text-sm">
+              <li className="flex items-start gap-2 text-gray-300">
+                <Check className="w-4 h-4 text-retro-purple flex-shrink-0 mt-0.5" />
+                <span><strong>20 free mints</strong>/month</span>
+              </li>
+              <li className="flex items-start gap-2 text-gray-300">
+                <Check className="w-4 h-4 text-retro-purple flex-shrink-0 mt-0.5" />
+                <span><strong>Unlimited</strong> AI analyses</span>
+              </li>
+              <li className="flex items-start gap-2 text-gray-300">
+                <Check className="w-4 h-4 text-retro-purple flex-shrink-0 mt-0.5" />
+                <span><strong>Unlimited</strong> cover art</span>
+              </li>
+              <li className="flex items-start gap-2 text-gray-300">
+                <Check className="w-4 h-4 text-retro-purple flex-shrink-0 mt-0.5" />
+                <span>25% off extra mints</span>
+              </li>
+              <li className="flex items-start gap-2 text-gray-300">
+                <Check className="w-4 h-4 text-retro-purple flex-shrink-0 mt-0.5" />
+                <span>Bulk tools + API</span>
+              </li>
+            </ul>
+
+            <Button
+              onClick={handleSubscribe}
+              className="w-full bg-retro-purple hover:bg-retro-purple/90 text-sm"
+              disabled={user?.plan === 'pro' || user?.isBetaUser}
+            >
+              {user?.plan === 'pro' ? 'Current Plan' : 'Subscribe'}
+            </Button>
+          </div>
+
+          {/* Studio Plan */}
+          <div className="metal-card p-6 rounded-lg border-2 border-neon-cyan relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-neon-cyan text-void-black px-3 py-1 text-xs font-bold transform rotate-12 translate-x-6 translate-y-2">
+              STUDIO
+            </div>
+            
+            <h3 className="text-xl font-bold text-neon-cyan mb-2">Studio</h3>
+            <div className="text-3xl font-bold text-white mb-4">
+              $99.99<span className="text-base text-gray-400">/mo</span>
+            </div>
+            
+            <ul className="space-y-2 mb-6 text-sm">
+              <li className="flex items-start gap-2 text-gray-300">
+                <Check className="w-4 h-4 text-neon-cyan flex-shrink-0 mt-0.5" />
+                <span><strong>100 free mints</strong>/month</span>
+              </li>
+              <li className="flex items-start gap-2 text-gray-300">
+                <Check className="w-4 h-4 text-neon-cyan flex-shrink-0 mt-0.5" />
+                <span><strong>Everything</strong> unlimited</span>
+              </li>
+              <li className="flex items-start gap-2 text-gray-300">
+                <Check className="w-4 h-4 text-neon-cyan flex-shrink-0 mt-0.5" />
+                <span>40% off extra mints</span>
+              </li>
+              <li className="flex items-start gap-2 text-gray-300">
+                <Check className="w-4 h-4 text-neon-cyan flex-shrink-0 mt-0.5" />
+                <span>Team collaboration</span>
+              </li>
+              <li className="flex items-start gap-2 text-gray-300">
+                <Check className="w-4 h-4 text-neon-cyan flex-shrink-0 mt-0.5" />
+                <span>Account manager</span>
+              </li>
+            </ul>
+
+            <Button
+              onClick={handleSubscribe}
+              className="w-full bg-neon-cyan text-void-black hover:bg-neon-cyan/90 text-sm font-bold"
+            >
+              Contact Sales
+            </Button>
+          </div>
+        </div>
+
+        {/* File Size Pricing Table */}
+        <div className="max-w-4xl mx-auto mt-16 bg-deep-space/60 border-2 border-data-cyan/30 rounded-lg p-8">
+          <h3 className="text-2xl font-bold text-white mb-4 text-center">
+            💰 Pay-Per-Mint Pricing (File Size Based)
+          </h3>
+          <p className="text-gray-400 text-center mb-6">
+            Only pay for what you need - larger files cost more to store permanently on blockchain
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-void-black/50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-neon-cyan mb-1">$2.99</div>
+              <div className="text-xs text-gray-400">0-10 MB</div>
+              <div className="text-xs text-gray-500 mt-1">Photos, docs</div>
+            </div>
+            <div className="bg-void-black/50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-neon-cyan mb-1">$4.99</div>
+              <div className="text-xs text-gray-400">10-50 MB</div>
+              <div className="text-xs text-gray-500 mt-1">Songs, images</div>
+            </div>
+            <div className="bg-void-black/50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-neon-cyan mb-1">$7.99</div>
+              <div className="text-xs text-gray-400">50-100 MB</div>
+              <div className="text-xs text-gray-500 mt-1">Albums, HD</div>
+            </div>
+            <div className="bg-void-black/50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-neon-cyan mb-1">$14.99</div>
+              <div className="text-xs text-gray-400">100-250 MB</div>
+              <div className="text-xs text-gray-500 mt-1">Long videos</div>
+            </div>
+            <div className="bg-void-black/50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-neon-cyan mb-1">$24.99</div>
+              <div className="text-xs text-gray-400">250-500 MB</div>
+              <div className="text-xs text-gray-500 mt-1">Massive files</div>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 text-center mt-4">
+            Subscribers get discounts: Creator 15% off • Pro 25% off • Studio 40% off
+          </p>
         </div>
 
         {/* FAQ Section */}
@@ -217,19 +298,49 @@ export default function PricingPage() {
           <div className="space-y-6">
             <div className="metal-card p-6 rounded-lg">
               <h4 className="text-lg font-bold text-neon-cyan mb-2">
-                What's the difference between pay-per-use and Pro?
+                How do I pay? Do I need cryptocurrency?
               </h4>
               <p className="text-gray-300">
-                Pay-per-use is great if you only occasionally need AI or NFTs. Pro is better value if you use AI more than 100 times/month or mint more than 10 NFTs/month.
+                <strong>No crypto needed!</strong> Pay with credit card (Stripe). We handle all the blockchain complexity behind the scenes. You just pay in USD, sign with your free ArConnect wallet to prove ownership, and get your NFT. That's it!
               </p>
             </div>
 
             <div className="metal-card p-6 rounded-lg">
               <h4 className="text-lg font-bold text-neon-cyan mb-2">
-                Can I cancel my Pro subscription anytime?
+                Why does a larger file cost more?
               </h4>
               <p className="text-gray-300">
-                Yes! Cancel anytime from your account settings. You'll keep Pro access until the end of your billing period.
+                Arweave charges based on data size for permanent blockchain storage. A 5 MB song costs ~$0.05 in AR to store forever, while a 200 MB video costs ~$1. We pass along the real cost plus a small platform fee. This keeps pricing fair and transparent.
+              </p>
+            </div>
+
+            <div className="metal-card p-6 rounded-lg">
+              <h4 className="text-lg font-bold text-neon-cyan mb-2">
+                Which plan should I choose?
+              </h4>
+              <p className="text-gray-300">
+                <strong>Free:</strong> Exploring the platform, casual use<br/>
+                <strong>Creator ($9.99/mo):</strong> Mint 5+ NFTs/month - saves $15-20+<br/>
+                <strong>Pro ($29.99/mo):</strong> Mint 10+ NFTs/month + unlimited AI - saves $60-100+<br/>
+                <strong>Studio ($99.99/mo):</strong> Professional teams minting 20+ NFTs/month - saves $300+
+              </p>
+            </div>
+
+            <div className="metal-card p-6 rounded-lg">
+              <h4 className="text-lg font-bold text-neon-cyan mb-2">
+                Are marketplace prices reasonable?
+              </h4>
+              <p className="text-gray-300">
+                You set your own prices! We suggest $5-50 for music, $10-200 for art, $25-500 for videos. The goal is to respect artists while staying accessible to collectors. Mint costs $2.99-24.99, so price accordingly to make profit!
+              </p>
+            </div>
+
+            <div className="metal-card p-6 rounded-lg">
+              <h4 className="text-lg font-bold text-neon-cyan mb-2">
+                Can I cancel my subscription anytime?
+              </h4>
+              <p className="text-gray-300">
+                Yes! Cancel anytime from your account settings. You'll keep access until the end of your billing period, and any unused free mints for that month are still yours to use.
               </p>
             </div>
 
@@ -238,7 +349,7 @@ export default function PricingPage() {
                 Are NFTs really permanent?
               </h4>
               <p className="text-gray-300">
-                Yes! We use Arweave blockchain which guarantees storage for 200+ years through economic incentives. Your NFTs will outlive you.
+                Yes! We use Arweave blockchain which guarantees storage for 200+ years through economic incentives. Your NFTs are stored across thousands of nodes worldwide. They will outlive all of us.
               </p>
             </div>
           </div>
