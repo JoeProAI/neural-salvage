@@ -5,6 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { UploadProgress } from '@/types';
+import { uploadFileDirectly, validateFileForUpload, getMediaType } from '@/lib/firebase/directUpload';
 
 interface MediaUploaderProps {
   onUploadComplete?: () => void;
@@ -33,7 +34,7 @@ export function MediaUploader({ onUploadComplete, onClose }: MediaUploaderProps)
       'audio/*': ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'],
       'application/pdf': ['.pdf'],
     },
-    maxSize: 50 * 1024 * 1024, // 50MB - Vercel hosting limit
+    maxSize: 500 * 1024 * 1024, // 500MB - Direct Firebase upload (no Vercel limit)
   });
 
   const handleUpload = async () => {
@@ -47,6 +48,12 @@ export function MediaUploader({ onUploadComplete, onClose }: MediaUploaderProps)
       if (upload.status === 'completed') continue;
 
       try {
+        // Validate file
+        const validation = validateFileForUpload(upload.file, 500);
+        if (!validation.valid) {
+          throw new Error(validation.error);
+        }
+
         // Update status to uploading
         setUploads((prev) =>
           prev.map((u, idx) =>
@@ -54,31 +61,38 @@ export function MediaUploader({ onUploadComplete, onClose }: MediaUploaderProps)
           )
         );
 
-        const formData = new FormData();
-        formData.append('file', upload.file);
-        formData.append('userId', user.id);
-        formData.append('visibility', 'private');
-
-        // Simulate progress (in real app, use XMLHttpRequest for progress tracking)
-        const progressInterval = setInterval(() => {
-          setUploads((prev) =>
-            prev.map((u, idx) =>
-              idx === i && u.progress < 90
-                ? { ...u, progress: u.progress + 10 }
-                : u
-            )
-          );
-        }, 200);
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
+        // Upload directly to Firebase Storage with real-time progress
+        const result = await uploadFileDirectly({
+          userId: user.id,
+          file: upload.file,
+          onProgress: (progress) => {
+            setUploads((prev) =>
+              prev.map((u, idx) =>
+                idx === i ? { ...u, progress: Math.round(progress.progress) } : u
+              )
+            );
+          },
         });
 
-        clearInterval(progressInterval);
+        console.log('[UPLOAD] Direct upload complete:', result);
+
+        // Save metadata to Firestore via API
+        const response = await fetch('/api/upload/metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            filename: upload.file.name,
+            url: result.url,
+            path: result.path,
+            size: upload.file.size,
+            type: getMediaType(upload.file.type),
+            mimeType: upload.file.type,
+          }),
+        });
 
         if (!response.ok) {
-          throw new Error('Upload failed');
+          throw new Error('Failed to save metadata');
         }
 
         const data = await response.json();
@@ -96,7 +110,7 @@ export function MediaUploader({ onUploadComplete, onClose }: MediaUploaderProps)
               : u
           )
         );
-      } catch (error) {
+      } catch (error: any) {
         console.error('Upload error:', error);
         setUploads((prev) =>
           prev.map((u, idx) =>
@@ -104,7 +118,7 @@ export function MediaUploader({ onUploadComplete, onClose }: MediaUploaderProps)
               ? {
                   ...u,
                   status: 'error',
-                  error: 'Upload failed',
+                  error: error.message || 'Upload failed',
                 }
               : u
           )
@@ -152,10 +166,10 @@ export function MediaUploader({ onUploadComplete, onClose }: MediaUploaderProps)
             : 'Drag & drop files here, or click to select'}
         </p>
         <p className="text-sm text-gray-400">
-          Supports images, videos, audio, and documents (max 50MB)
+          Supports images, videos, audio, and documents (max 500MB)
         </p>
-        <p className="text-xs text-archive-amber/70 mt-1">
-          💡 Tip: Compress large audio/video files before uploading
+        <p className="text-xs text-data-cyan/70 mt-1">
+          ⚡ Direct upload - No size restrictions!
         </p>
       </div>
 
