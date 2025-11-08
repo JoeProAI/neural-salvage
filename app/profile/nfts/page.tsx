@@ -134,6 +134,11 @@ export default function NFTGalleryPage() {
         if (cached) {
           // Merge: Use blockchain data but keep Firebase assetId/userId
           console.log('✅ [MERGE] Found in both - using blockchain data:', nftId.substring(0, 12) + '...');
+          
+          // Parse timestamp safely
+          const timestamp = blockchainNFT.timestamp ? blockchainNFT.timestamp * 1000 : Date.now();
+          const confirmedDate = new Date(timestamp);
+          
           merged.set(nftId, {
             ...cached,
             id: nftId, // Use blockchain ID for routing
@@ -146,20 +151,29 @@ export default function NFTGalleryPage() {
               ...cached.arweave,
               arweaveId: nftId,
               manifestId: nftId,
-              confirmedAt: new Date(blockchainNFT.timestamp * 1000),
+              confirmedAt: confirmedDate,
             } : {
               arweaveId: nftId,
               arweaveUrl: blockchainNFT.manifestUrl,
               manifestId: nftId,
               bundlrId: nftId,
               uploadCost: 0,
-              uploadedAt: new Date(blockchainNFT.timestamp * 1000),
-              confirmedAt: new Date(blockchainNFT.timestamp * 1000),
+              uploadedAt: confirmedDate,
+              confirmedAt: confirmedDate,
             },
           });
         } else {
           // New NFT found on blockchain but not in cache
           console.log('🆕 [MERGE] Found only on blockchain:', nftId.substring(0, 12) + '...');
+          
+          // Parse timestamp safely
+          const timestamp = blockchainNFT.timestamp ? blockchainNFT.timestamp * 1000 : Date.now();
+          const createdDate = new Date(timestamp);
+          
+          // Parse royalty safely
+          const royalty = blockchainNFT.royalty ? parseInt(blockchainNFT.royalty) : 3;
+          console.log(`💰 [MERGE] Royalty for ${nftId.substring(0, 12)}: ${royalty}% (raw: ${blockchainNFT.royalty})`);
+          
           merged.set(nftId, {
             id: nftId,
             assetId: '',
@@ -172,8 +186,8 @@ export default function NFTGalleryPage() {
               manifestId: nftId,
               bundlrId: nftId,
               uploadCost: 0,
-              uploadedAt: new Date(blockchainNFT.timestamp * 1000),
-              confirmedAt: new Date(blockchainNFT.timestamp * 1000),
+              uploadedAt: createdDate,
+              confirmedAt: createdDate,
             },
             metadata: {
               name: blockchainNFT.title || 'Untitled NFT',
@@ -184,11 +198,11 @@ export default function NFTGalleryPage() {
             metadataUri: blockchainNFT.metadataUrl || `${blockchainNFT.manifestUrl}/metadata.json`,
             currentOwner: blockchainNFT.owner,
             originalMinter: blockchainNFT.creator,
-            royaltyPercentage: parseInt(blockchainNFT.royalty) || 3,
+            royaltyPercentage: royalty,
             transfers: [],
             isVerified: true,
-            verifiedAt: new Date(blockchainNFT.timestamp * 1000),
-            createdAt: new Date(blockchainNFT.timestamp * 1000),
+            verifiedAt: createdDate,
+            createdAt: createdDate,
             updatedAt: new Date(),
           });
         }
@@ -379,7 +393,16 @@ export default function NFTGalleryPage() {
                   {nft.createdAt && (
                     <div className="mt-3 pt-3 border-t border-data-cyan/20">
                       <span className="text-xs text-ash-gray font-rajdhani">
-                        Minted {new Date(nft.createdAt).toLocaleDateString()}
+                        Minted {(() => {
+                          try {
+                            const date = nft.createdAt instanceof Date 
+                              ? nft.createdAt 
+                              : new Date(nft.createdAt);
+                            return isNaN(date.getTime()) ? 'Recently' : date.toLocaleDateString();
+                          } catch (e) {
+                            return 'Recently';
+                          }
+                        })()}
                       </span>
                     </div>
                   )}
