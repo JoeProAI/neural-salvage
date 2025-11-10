@@ -54,11 +54,12 @@ export function useArweaveWallet(): ArweaveWallet {
         throw new Error('ArConnect wallet not found. Please install ArConnect extension.');
       }
 
-      // Request permissions (including SIGNATURE for NFT minting)
+      // Request permissions (including DISPATCH for marketplace listings)
       await window.arweaveWallet.connect([
         'ACCESS_ADDRESS',
         'SIGN_TRANSACTION',
         'SIGNATURE', // Required for signing NFT ownership proof
+        'DISPATCH', // Required for submitting marketplace listings
       ]);
 
       // Get address

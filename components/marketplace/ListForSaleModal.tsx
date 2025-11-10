@@ -78,28 +78,31 @@ export function ListForSaleModal({
       setLoading(true);
       setError(null);
 
-      console.log('📝 [LIST] Creating blockchain listing for BazAR...', {
-        nftId,
-        priceUSD,
-        priceAR,
-        duration,
-      });
+      console.log('📝 [LIST] Starting blockchain listing process...');
+      console.log('📝 [LIST] NFT ID:', nftId);
+      console.log('📝 [LIST] Price USD:', priceUSD);
+      console.log('📝 [LIST] Price AR:', priceAR);
+      console.log('📝 [LIST] Duration:', duration);
+      console.log('📝 [LIST] Wallet address:', wallet.address);
 
       // Check if ArConnect is available
+      console.log('🔍 [LIST] Step 1: Checking ArConnect availability...');
       if (!window.arweaveWallet) {
         throw new Error('ArConnect wallet not found. Please install ArConnect extension.');
       }
+      console.log('✅ [LIST] ArConnect found');
 
       // Convert price to Winston (smallest AR unit)
+      console.log('💰 [LIST] Step 2: Converting price to Winston...');
       const priceInWinston = (parseFloat(priceAR) * 1e12).toString();
-      
-      console.log('💰 [LIST] Price conversion:', {
+      console.log('✅ [LIST] Price conversion complete:', {
         usd: priceUSD,
         ar: priceAR,
         winston: priceInWinston,
       });
 
       // Create listing data
+      console.log('📦 [LIST] Step 3: Preparing listing data...');
       const listingData = {
         assetId: nftId,
         price: priceInWinston,
@@ -107,16 +110,16 @@ export function ListForSaleModal({
         createdAt: Date.now(),
         expiresAt: duration > 0 ? Date.now() + (duration * 24 * 60 * 60 * 1000) : null,
       };
+      console.log('✅ [LIST] Listing data prepared:', listingData);
 
-      console.log('🔐 [LIST] Creating transaction with Arweave.js...');
-
+      console.log('🔐 [LIST] Step 4: Creating transaction with Arweave.js...');
       // Create transaction using Arweave.js (unsigned)
       const tx = await arweave.createTransaction({
         data: JSON.stringify(listingData),
       });
+      console.log('✅ [LIST] Transaction created:', tx.id);
 
-      console.log('🏷️ [LIST] Adding BazAR marketplace tags...');
-
+      console.log('🏷️ [LIST] Step 5: Adding BazAR marketplace tags...');
       // Add BazAR-compatible tags
       tx.addTag('App-Name', 'BazAR');
       tx.addTag('App-Version', '1.0');
@@ -131,13 +134,16 @@ export function ListForSaleModal({
         const expiresAt = Date.now() + (duration * 24 * 60 * 60 * 1000);
         tx.addTag('Expires-At', expiresAt.toString());
       }
+      console.log('✅ [LIST] Tags added. Transaction tags:', tx.tags);
 
-      console.log('✍️ [LIST] Requesting signature from wallet...');
-
+      console.log('✍️ [LIST] Step 6: Requesting signature from ArConnect wallet...');
+      console.log('⏳ [LIST] Waiting for user to approve transaction in ArConnect popup...');
+      
       // Sign and submit transaction with ArConnect
       const result = await window.arweaveWallet.dispatch(tx);
-      
-      console.log('✅ [LIST] Transaction signed and submitted!', result.id);
+      console.log('✅ [LIST] Transaction signed and dispatched!');
+      console.log('📋 [LIST] Result:', result);
+      console.log('✅ [LIST] Transaction ID:', result.id);
 
       // Save to Firebase for fast loading (optional)
       try {
@@ -162,14 +168,33 @@ export function ListForSaleModal({
       onSuccess(result.id);
     } catch (err: any) {
       console.error('❌ [LIST] Error:', err);
+      console.error('❌ [LIST] Error type:', typeof err);
+      console.error('❌ [LIST] Error message:', err.message);
+      console.error('❌ [LIST] Full error object:', JSON.stringify(err, null, 2));
       
-      if (err.message?.includes('User canceled') || err.message?.includes('rejected')) {
-        setError('You canceled the transaction. You must sign with your wallet to list your NFT.');
-      } else if (err.message?.includes('ArConnect')) {
-        setError('ArConnect wallet not found. Please install the ArConnect browser extension.');
-      } else {
-        setError(err.message || 'Failed to create listing');
+      // User-friendly error messages
+      let errorMessage = 'Failed to create listing';
+      
+      if (err.message?.includes('User canceled') || err.message?.includes('rejected') || err.message?.includes('cancel')) {
+        errorMessage = 'Transaction canceled. You must approve the transaction in ArConnect to list your NFT.';
+      } else if (err.message?.includes('ArConnect') || err.message?.includes('arweaveWallet')) {
+        errorMessage = 'ArConnect wallet not found. Please install ArConnect extension and connect your wallet.';
+      } else if (err.message?.includes('insufficient') || err.message?.includes('balance')) {
+        errorMessage = 'Insufficient AR balance. You need ~0.001 AR ($0.025) for gas fees. Fund your wallet and try again.';
+      } else if (err.message?.includes('permission') || err.message?.includes('DISPATCH')) {
+        errorMessage = 'Missing permissions. Please reconnect your wallet and approve all permissions.';
+      } else if (err.message) {
+        errorMessage = err.message;
       }
+      
+      setError(errorMessage);
+      
+      // Log helpful debug info
+      console.log('🔍 [DEBUG] To fix this:');
+      console.log('1. Check ArConnect is installed');
+      console.log('2. Check wallet is connected');
+      console.log('3. Check wallet has AR balance (need ~0.001 AR)');
+      console.log('4. Check browser console for detailed error');
     } finally {
       setLoading(false);
     }
