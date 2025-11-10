@@ -273,14 +273,33 @@ export default function NFTDetailPage() {
 
             {/* List for Sale - New Button */}
             {listingSuccess ? (
-              <div className="bg-terminal-green/10 border-2 border-terminal-green rounded-lg p-6 text-center">
-                <Check className="w-12 h-12 text-terminal-green mx-auto mb-3" />
-                <h3 className="text-terminal-green font-space-mono font-bold text-lg mb-2">
-                  Listed Successfully!
-                </h3>
-                <p className="text-ash-gray font-rajdhani text-sm">
-                  Your NFT is now for sale. It will appear on BazAR marketplace in 2-3 minutes.
-                </p>
+              <div className="bg-terminal-green/10 border-2 border-terminal-green rounded-lg p-6 text-center space-y-4">
+                <Check className="w-12 h-12 text-terminal-green mx-auto" />
+                <div>
+                  <h3 className="text-terminal-green font-space-mono font-bold text-lg mb-2">
+                    🎉 Listed Successfully!
+                  </h3>
+                  <p className="text-ash-gray font-rajdhani text-sm mb-3">
+                    Your NFT is now live on the Neural Salvage marketplace
+                  </p>
+                  <p className="text-ash-gray/60 font-rajdhani text-xs italic">
+                    (Internal marketplace only - not on external platforms yet)
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Link
+                    href="/marketplace/listed"
+                    className="flex-1 bg-data-cyan hover:bg-data-cyan/80 text-void-black font-space-mono font-bold py-3 px-4 rounded-lg transition-all uppercase tracking-wider text-sm"
+                  >
+                    View All Listings
+                  </Link>
+                  <button
+                    onClick={() => setListingSuccess(false)}
+                    className="flex-1 bg-void-black hover:bg-deep-space border-2 border-data-cyan/30 hover:border-data-cyan text-data-cyan font-rajdhani font-bold py-3 px-4 rounded-lg transition-all uppercase text-sm"
+                  >
+                    List Another
+                  </button>
+                </div>
               </div>
             ) : (
               <button
