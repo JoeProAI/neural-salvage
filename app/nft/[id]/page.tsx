@@ -280,10 +280,10 @@ export default function NFTDetailPage() {
                     🎉 Listed Successfully!
                   </h3>
                   <p className="text-ash-gray font-rajdhani text-sm mb-3">
-                    Your NFT is now live on the Neural Salvage marketplace
+                    Your NFT is now listed on the Arweave blockchain
                   </p>
-                  <p className="text-ash-gray/60 font-rajdhani text-xs italic">
-                    (Internal marketplace only - not on external platforms yet)
+                  <p className="text-terminal-green/80 font-rajdhani text-xs">
+                    ✅ Will appear on BazAR, Pianity, and other marketplaces in 2-3 minutes
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">

@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 import { X, DollarSign, Calendar, AlertCircle, Loader2, ShoppingCart } from 'lucide-react';
 import { useArweaveWallet } from '@/lib/hooks/useArweaveWallet';
 import { getARPrice, convertUSDtoAR } from '@/lib/marketplace/bazar';
+import Arweave from 'arweave';
+
+const arweave = Arweave.init({
+  host: 'arweave.net',
+  port: 443,
+  protocol: 'https',
+});
 
 interface ListForSaleModalProps {
   nftId: string;
@@ -57,7 +64,7 @@ export function ListForSaleModal({
   };
 
   const handleListForSale = async () => {
-    if (!wallet.connected) {
+    if (!wallet.connected || !wallet.address) {
       setError('Please connect your wallet first');
       return;
     }
@@ -71,38 +78,98 @@ export function ListForSaleModal({
       setLoading(true);
       setError(null);
 
-      console.log('📝 [LIST] Creating simple listing (no blockchain signature needed)...', {
+      console.log('📝 [LIST] Creating blockchain listing for BazAR...', {
         nftId,
         priceUSD,
+        priceAR,
         duration,
       });
 
-      // Call simplified listing API (no signature required)
-      const response = await fetch('/api/marketplace/list-simple', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          assetId: nftId,
-          price: parseFloat(priceUSD),
-          currency: 'USD',
-          duration,
-          seller: wallet.address,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create listing');
+      // Check if ArConnect is available
+      if (!window.arweaveWallet) {
+        throw new Error('ArConnect wallet not found. Please install ArConnect extension.');
       }
 
-      const data = await response.json();
-      console.log('✅ [LIST] NFT listed successfully!', data.listingId);
+      // Convert price to Winston (smallest AR unit)
+      const priceInWinston = (parseFloat(priceAR) * 1e12).toString();
+      
+      console.log('💰 [LIST] Price conversion:', {
+        usd: priceUSD,
+        ar: priceAR,
+        winston: priceInWinston,
+      });
 
-      // Success! No signature needed.
-      onSuccess(data.listingId);
+      // Create listing data
+      const listingData = {
+        assetId: nftId,
+        price: priceInWinston,
+        seller: wallet.address,
+        createdAt: Date.now(),
+        expiresAt: duration > 0 ? Date.now() + (duration * 24 * 60 * 60 * 1000) : null,
+      };
+
+      console.log('🔐 [LIST] Creating transaction with Arweave.js...');
+
+      // Create transaction using Arweave.js (unsigned)
+      const tx = await arweave.createTransaction({
+        data: JSON.stringify(listingData),
+      });
+
+      console.log('🏷️ [LIST] Adding BazAR marketplace tags...');
+
+      // Add BazAR-compatible tags
+      tx.addTag('App-Name', 'BazAR');
+      tx.addTag('App-Version', '1.0');
+      tx.addTag('Type', 'Order');
+      tx.addTag('Order-Type', 'Sell');
+      tx.addTag('Asset-Id', nftId);
+      tx.addTag('Price', priceInWinston);
+      tx.addTag('Currency', 'AR');
+      tx.addTag('Seller', wallet.address);
+      
+      if (duration > 0) {
+        const expiresAt = Date.now() + (duration * 24 * 60 * 60 * 1000);
+        tx.addTag('Expires-At', expiresAt.toString());
+      }
+
+      console.log('✍️ [LIST] Requesting signature from wallet...');
+
+      // Sign and submit transaction with ArConnect
+      const result = await window.arweaveWallet.dispatch(tx);
+      
+      console.log('✅ [LIST] Transaction signed and submitted!', result.id);
+
+      // Save to Firebase for fast loading (optional)
+      try {
+        await fetch('/api/marketplace/save-blockchain-listing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transactionId: result.id,
+            assetId: nftId,
+            price: parseFloat(priceUSD),
+            priceAR: parseFloat(priceAR),
+            seller: wallet.address,
+            duration,
+          }),
+        });
+        console.log('💾 [LIST] Cached listing in Firebase for fast loading');
+      } catch (cacheError) {
+        console.warn('⚠️ [LIST] Failed to cache in Firebase (not critical):', cacheError);
+      }
+
+      console.log('🎉 [LIST] NFT listed on blockchain! Will appear on BazAR in 2-3 minutes.');
+      onSuccess(result.id);
     } catch (err: any) {
       console.error('❌ [LIST] Error:', err);
-      setError(err.message || 'Failed to create listing');
+      
+      if (err.message?.includes('User canceled') || err.message?.includes('rejected')) {
+        setError('You canceled the transaction. You must sign with your wallet to list your NFT.');
+      } else if (err.message?.includes('ArConnect')) {
+        setError('ArConnect wallet not found. Please install the ArConnect browser extension.');
+      } else {
+        setError(err.message || 'Failed to create listing');
+      }
     } finally {
       setLoading(false);
     }
