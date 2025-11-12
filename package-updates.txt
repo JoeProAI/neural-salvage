@@ -1,0 +1,32 @@
+# Package Updates Needed for OpenSea Integration
+
+## Install these dependencies:
+
+```bash
+# Ethereum/Polygon tooling
+npm install ethers@^6.9.0
+npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox
+npm install @openzeppelin/contracts
+npm install dotenv
+
+# Verify installation
+npx hardhat --version
+```
+
+## After installation:
+
+1. Initialize Hardhat:
+```bash
+npx hardhat init
+# Choose: Create a JavaScript project
+# Accept defaults
+```
+
+2. The contracts/, scripts/, and hardhat.config.js are already created
+3. Deploy using: `npx hardhat run scripts/deploy.js --network polygon`
+
+## Note:
+- Some TypeScript errors exist in the integration code
+- These will be resolved during implementation
+- The core architecture is solid
+- Contract and deployment scripts are ready to use
