@@ -135,9 +135,15 @@ try:
         }],
         max_tokens=50
     )
-    nsfw_data = json.loads(nsfw_response.choices[0].message.content)
-    results["nsfw"] = nsfw_data.get("nsfw", False)
-    results["nsfwScore"] = nsfw_data.get("score", 0.0)
+    nsfw_content = nsfw_response.choices[0].message.content
+    try:
+        nsfw_data = json.loads(nsfw_content)
+        results["nsfw"] = nsfw_data.get("nsfw", False)
+        results["nsfwScore"] = nsfw_data.get("score", 0.0)
+    except json.JSONDecodeError:
+        # Fallback if JSON parsing fails
+        results["nsfw"] = False
+        results["nsfwScore"] = 0.0
 
     # 4. OCR Text Extraction
     ocr_response = client.chat.completions.create(
@@ -192,7 +198,15 @@ print(json.dumps(results))
         throw new Error(`Analysis failed: ${response.result}`);
       }
 
-      const result: AIAnalysisResult = JSON.parse(response.result);
+      // Parse JSON with error handling
+      let result: AIAnalysisResult;
+      try {
+        result = JSON.parse(response.result);
+      } catch (parseError) {
+        console.error('Failed to parse AI response as JSON:', response.result);
+        throw new Error(`AI generation failed: Invalid JSON response. Raw output: ${response.result?.substring(0, 200)}`);
+      }
+      
       return result;
     } finally {
       // Clean up sandbox
@@ -258,7 +272,12 @@ print(json.dumps(results))
         throw new Error(`Video analysis failed: ${response.result}`);
       }
 
-      return JSON.parse(response.result);
+      try {
+        return JSON.parse(response.result);
+      } catch (parseError) {
+        console.error('Failed to parse video analysis JSON:', response.result);
+        throw new Error(`Video analysis failed: Invalid JSON response`);
+      }
     } finally {
       await sandbox.delete();
     }
@@ -329,7 +348,12 @@ print(json.dumps(results))
         throw new Error(`Transcription failed: ${response.result}`);
       }
 
-      return JSON.parse(response.result);
+      try {
+        return JSON.parse(response.result);
+      } catch (parseError) {
+        console.error('Failed to parse transcription JSON:', response.result);
+        throw new Error(`Transcription failed: Invalid JSON response`);
+      }
     } finally {
       await sandbox.delete();
     }
@@ -423,8 +447,12 @@ Return as JSON with keys: summary, tags (array), keyTopics (array), documentType
         max_tokens=500
     )
     
-    analysis_result = json.loads(analysis_response.choices[0].message.content)
-    results.update(analysis_result)
+    try:
+        analysis_result = json.loads(analysis_response.choices[0].message.content)
+        results.update(analysis_result)
+    except json.JSONDecodeError:
+        # Fallback if JSON parsing fails - use text content
+        results["summary"] = analysis_response.choices[0].message.content
     
     # Ensure tags are lowercase
     if 'tags' in results:
@@ -448,10 +476,15 @@ print(json.dumps(results))
         return {
           tags: ['document'],
           caption: `Document uploaded (${mimeType})`,
-        };
+        }
       }
 
-      return JSON.parse(response.result);
+      try {
+        return JSON.parse(response.result);
+      } catch (parseError) {
+        console.error('Failed to parse document analysis JSON:', response.result);
+        throw new Error(`Document analysis failed: Invalid JSON response`);
+      }
     } finally {
       await sandbox.delete();
     }
@@ -494,8 +527,13 @@ except Exception as e:
         throw new Error(`Embedding generation failed: ${response.result}`);
       }
 
-      const result = JSON.parse(response.result);
-      return result.embedding;
+      try {
+        const result = JSON.parse(response.result);
+        return result.embedding;
+      } catch (parseError) {
+        console.error('Failed to parse embedding JSON:', response.result);
+        throw new Error(`Embedding generation failed: Invalid JSON response`);
+      }
     } finally {
       await sandbox.delete();
     }
