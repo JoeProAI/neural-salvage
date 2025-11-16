@@ -5,6 +5,16 @@ import { qdrantService } from '@/lib/vector/qdrant';
 import { checkAIUsageLimit } from '@/lib/access/checkAccess';
 import admin from 'firebase-admin';
 
+// Timeout wrapper for Daytona calls (30 second max to avoid Vercel timeout)
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 30000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => 
+      setTimeout(() => reject(new Error('AI analysis timeout - taking too long')), timeoutMs)
+    )
+  ]);
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { assetId, userId, imageUrl, type, mimeType } = await request.json();
@@ -69,36 +79,54 @@ export async function POST(request: NextRequest) {
     };
 
     try {
+      console.log(`🤖 [AI ANALYZE] Starting ${type} analysis with 30s timeout...`);
+      
       if (type === 'image') {
-        // Analyze image in Daytona sandbox - all operations in one call
-        const imageAnalysis = await daytonaService.analyzeImage(imageUrl);
+        // Analyze image with 30s timeout
+        const imageAnalysis = await withTimeout(
+          daytonaService.analyzeImage(imageUrl),
+          30000
+        );
         analysis = { ...analysis, ...imageAnalysis };
       } else if (type === 'video') {
-        // Analyze video in Daytona sandbox
-        const videoAnalysis = await daytonaService.analyzeVideo(imageUrl);
+        // Analyze video with 30s timeout
+        const videoAnalysis = await withTimeout(
+          daytonaService.analyzeVideo(imageUrl),
+          30000
+        );
         analysis = { ...analysis, ...videoAnalysis };
       } else if (type === 'audio') {
-        // Transcribe audio in Daytona sandbox
-        const audioAnalysis = await daytonaService.transcribeAudio(imageUrl);
+        // Transcribe audio with 30s timeout
+        const audioAnalysis = await withTimeout(
+          daytonaService.transcribeAudio(imageUrl),
+          30000
+        );
         analysis = { ...analysis, ...audioAnalysis };
       } else if (type === 'document') {
-        // Analyze document (PDF, TXT, etc.) in Daytona sandbox
-        const documentAnalysis = await daytonaService.analyzeDocument(imageUrl, mimeType || 'application/pdf');
+        // Analyze document with 30s timeout
+        const documentAnalysis = await withTimeout(
+          daytonaService.analyzeDocument(imageUrl, mimeType || 'application/pdf'),
+          30000
+        );
         analysis = { ...analysis, ...documentAnalysis };
       }
+      
+      console.log(`✅ [AI ANALYZE] ${type} analysis completed successfully`);
     } catch (analysisError: any) {
-      console.error('AI analysis failed:', analysisError);
+      console.error('❌ [AI ANALYZE] Analysis failed:', analysisError.message);
       
       // Provide basic fallback analysis
       analysis = {
         tags: [type || 'media'],
         caption: `${type || 'Media'} uploaded to Neural Salvage`,
         analyzedAt: new Date(),
-        error: 'AI analysis temporarily unavailable',
+        error: analysisError.message.includes('timeout') 
+          ? 'AI service timeout - using basic tags'
+          : 'AI analysis temporarily unavailable',
       };
       
       // Don't throw - return partial analysis instead
-      console.warn('Returning fallback analysis due to:', analysisError.message);
+      console.warn('⚠️ [AI ANALYZE] Returning fallback analysis');
     }
 
     // Generate embedding for semantic search (optional - skip if it fails)
@@ -115,24 +143,31 @@ export async function POST(request: NextRequest) {
         .filter(Boolean)
         .join(' ');
 
-      const embedding = await daytonaService.generateEmbedding(embeddingText);
+      console.log('🧠 [AI ANALYZE] Generating embedding with 15s timeout...');
+      const embedding = await withTimeout(
+        daytonaService.generateEmbedding(embeddingText),
+        15000  // 15s timeout for embeddings
+      );
       analysis.embedding = embedding;
 
       // Store in Qdrant for vector search (optional - skip if not configured)
       try {
-        await qdrantService.upsertVector(assetId, embedding, {
-          userId,
-          type: asset?.type || type,
-          tags: analysis.tags,
-          caption: analysis.caption,
-          forSale: asset?.forSale || false,
-        });
-      } catch (qdrantError) {
-        console.warn('Qdrant vector storage skipped (not configured):', qdrantError);
-        // Continue without Qdrant - it's only for similarity search
+        await withTimeout(
+          qdrantService.upsertVector(assetId, embedding, {
+            userId,
+            type: asset?.type || type,
+            tags: analysis.tags,
+            caption: analysis.caption,
+            forSale: asset?.forSale || false,
+          }),
+          10000  // 10s timeout for Qdrant
+        );
+        console.log('✅ [AI ANALYZE] Vector stored in Qdrant');
+      } catch (qdrantError: any) {
+        console.warn('⚠️ [AI ANALYZE] Qdrant skipped:', qdrantError.message);
       }
-    } catch (embeddingError) {
-      console.warn('Embedding generation skipped:', embeddingError);
+    } catch (embeddingError: any) {
+      console.warn('⚠️ [AI ANALYZE] Embedding skipped:', embeddingError.message);
       // Continue without embeddings - they're only for similarity search
     }
 
