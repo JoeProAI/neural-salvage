@@ -58,52 +58,72 @@ export async function POST(request: NextRequest) {
       analyzedAt: new Date(),
     };
 
-    if (type === 'image') {
-      // Analyze image in Daytona sandbox - all operations in one call
-      const imageAnalysis = await daytonaService.analyzeImage(imageUrl);
-      analysis = { ...analysis, ...imageAnalysis };
-    } else if (type === 'video') {
-      // Analyze video in Daytona sandbox
-      const videoAnalysis = await daytonaService.analyzeVideo(imageUrl);
-      analysis = { ...analysis, ...videoAnalysis };
-    } else if (type === 'audio') {
-      // Transcribe audio in Daytona sandbox
-      const audioAnalysis = await daytonaService.transcribeAudio(imageUrl);
-      analysis = { ...analysis, ...audioAnalysis };
-    } else if (type === 'document') {
-      // Analyze document (PDF, TXT, etc.) in Daytona sandbox
-      const documentAnalysis = await daytonaService.analyzeDocument(imageUrl, mimeType || 'application/pdf');
-      analysis = { ...analysis, ...documentAnalysis };
+    try {
+      if (type === 'image') {
+        // Analyze image in Daytona sandbox - all operations in one call
+        const imageAnalysis = await daytonaService.analyzeImage(imageUrl);
+        analysis = { ...analysis, ...imageAnalysis };
+      } else if (type === 'video') {
+        // Analyze video in Daytona sandbox
+        const videoAnalysis = await daytonaService.analyzeVideo(imageUrl);
+        analysis = { ...analysis, ...videoAnalysis };
+      } else if (type === 'audio') {
+        // Transcribe audio in Daytona sandbox
+        const audioAnalysis = await daytonaService.transcribeAudio(imageUrl);
+        analysis = { ...analysis, ...audioAnalysis };
+      } else if (type === 'document') {
+        // Analyze document (PDF, TXT, etc.) in Daytona sandbox
+        const documentAnalysis = await daytonaService.analyzeDocument(imageUrl, mimeType || 'application/pdf');
+        analysis = { ...analysis, ...documentAnalysis };
+      }
+    } catch (analysisError: any) {
+      console.error('AI analysis failed:', analysisError);
+      
+      // Provide basic fallback analysis
+      analysis = {
+        tags: [type || 'media'],
+        caption: `${type || 'Media'} uploaded to Neural Salvage`,
+        analyzedAt: new Date(),
+        error: 'AI analysis temporarily unavailable',
+      };
+      
+      // Don't throw - return partial analysis instead
+      console.warn('Returning fallback analysis due to:', analysisError.message);
     }
 
-    // Generate embedding for semantic search
-    const embeddingText = [
-      asset?.filename,
-      analysis.caption,
-      analysis.summary,
-      analysis.transcript,
-      analysis.extractedText,
-      ...(analysis.tags || []),
-      ...(analysis.keyTopics || []),
-    ]
-      .filter(Boolean)
-      .join(' ');
-
-    const embedding = await daytonaService.generateEmbedding(embeddingText);
-    analysis.embedding = embedding;
-
-    // Store in Qdrant for vector search (optional - skip if not configured)
+    // Generate embedding for semantic search (optional - skip if it fails)
     try {
-      await qdrantService.upsertVector(assetId, embedding, {
-        userId,
-        type: asset?.type || type,
-        tags: analysis.tags,
-        caption: analysis.caption,
-        forSale: asset?.forSale || false,
-      });
-    } catch (qdrantError) {
-      console.warn('Qdrant vector storage skipped (not configured):', qdrantError);
-      // Continue without Qdrant - it's only for similarity search
+      const embeddingText = [
+        asset?.filename,
+        analysis.caption,
+        analysis.summary,
+        analysis.transcript,
+        analysis.extractedText,
+        ...(analysis.tags || []),
+        ...(analysis.keyTopics || []),
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+      const embedding = await daytonaService.generateEmbedding(embeddingText);
+      analysis.embedding = embedding;
+
+      // Store in Qdrant for vector search (optional - skip if not configured)
+      try {
+        await qdrantService.upsertVector(assetId, embedding, {
+          userId,
+          type: asset?.type || type,
+          tags: analysis.tags,
+          caption: analysis.caption,
+          forSale: asset?.forSale || false,
+        });
+      } catch (qdrantError) {
+        console.warn('Qdrant vector storage skipped (not configured):', qdrantError);
+        // Continue without Qdrant - it's only for similarity search
+      }
+    } catch (embeddingError) {
+      console.warn('Embedding generation skipped:', embeddingError);
+      // Continue without embeddings - they're only for similarity search
     }
 
     // Update asset in Firestore

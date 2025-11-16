@@ -347,6 +347,19 @@ export async function mintArweaveNFT(
 export async function verifyNFT(txId: string): Promise<boolean> {
   try {
     const response = await fetch(`https://arweave.net/tx/${txId}/status`);
+    
+    // Check if response is OK before parsing JSON
+    if (!response.ok) {
+      console.warn(`NFT verification failed: ${response.status} ${response.statusText}`);
+      return false;
+    }
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('NFT verification response is not JSON');
+      return false;
+    }
+    
     const data = await response.json();
     return data.confirmed !== null;
   } catch (error) {
