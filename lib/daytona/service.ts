@@ -333,9 +333,6 @@ if not audio_url:
 
 log(f"Audio URL: {audio_url[:100]}...")
 
-# OpenAI Whisper limit is 25 MB
-WHISPER_MAX_SIZE = 25 * 1024 * 1024  # 25 MB in bytes
-
 results = {
     "transcript": "",
     "tags": []
@@ -353,42 +350,30 @@ try:
     with open(original_path, "wb") as f:
         f.write(audio_response.content)
     
-    # Check if file exceeds Whisper limit
-    final_path = original_path
-    if original_size > WHISPER_MAX_SIZE:
-        log(f"File exceeds 25 MB limit, compressing...")
-        try:
-            # Load audio
-            audio = AudioSegment.from_file(original_path)
-            
-            # Compress by reducing bitrate and converting to mono
-            compressed_path = "/tmp/audio_compressed.mp3"
-            audio = audio.set_channels(1)  # Convert to mono
-            audio.export(
-                compressed_path,
-                format="mp3",
-                bitrate="64k",  # Lower bitrate for smaller size
-                parameters=["-ac", "1"]  # Force mono
-            )
-            
-            # Check compressed size
-            compressed_size = os.path.getsize(compressed_path)
-            log(f"Compressed to {compressed_size:,} bytes ({compressed_size / (1024*1024):.2f} MB)")
-            
-            if compressed_size < WHISPER_MAX_SIZE:
-                final_path = compressed_path
-                log("Using compressed version for transcription")
-            else:
-                log("ERROR: File still too large after compression!")
-                results["error"] = f"Audio file is too large ({original_size / (1024*1024):.1f} MB). Maximum is 25 MB. Please upload a shorter audio file."
-                print(json.dumps(results))
-                sys.exit(0)
-                
-        except Exception as compress_error:
-            log(f"Compression failed: {str(compress_error)}")
-            results["error"] = f"Audio file is too large ({original_size / (1024*1024):.1f} MB) and compression failed. Maximum is 25 MB."
-            print(json.dumps(results))
-            sys.exit(0)
+    # Load audio and extract first 3 minutes for quick analysis
+    log("Loading audio for quick scan (first 3 minutes)...")
+    audio = AudioSegment.from_file(original_path)
+    duration_seconds = len(audio) / 1000.0
+    log(f"Total duration: {duration_seconds:.1f} seconds ({duration_seconds/60:.1f} minutes)")
+    
+    # Extract first 3 minutes (180 seconds) for analysis
+    sample_duration = min(180 * 1000, len(audio))  # 3 minutes or full duration
+    audio_sample = audio[:sample_duration]
+    
+    # Export as compressed mono for Whisper
+    sample_path = "/tmp/audio_sample.mp3"
+    audio_sample = audio_sample.set_channels(1)  # Mono
+    audio_sample.export(
+        sample_path,
+        format="mp3",
+        bitrate="64k",
+        parameters=["-ac", "1"]
+    )
+    
+    sample_size = os.path.getsize(sample_path)
+    log(f"Sample size: {sample_size:,} bytes ({sample_size / (1024*1024):.2f} MB) - {sample_duration/1000:.1f}s")
+    
+    final_path = sample_path
     
     # Transcribe with Whisper
     log("Transcribing with Whisper...")
