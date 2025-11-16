@@ -51,16 +51,29 @@ export default function AssetDetailPage() {
     const action = searchParams.get('action');
 
     if (payment === 'success' && asset && user) {
-      // Clean up URL
-      router.replace(`/gallery/${assetId}`);
+      console.log('✅ [GALLERY] Payment success detected, action:', action);
       
       if (action === 'analyze') {
-        // Auto-trigger AI analysis
-        triggerAIAnalysis();
+        // Auto-trigger AI analysis BEFORE cleaning URL
+        console.log('🤖 [GALLERY] Triggering AI analysis...');
+        triggerAIAnalysis().then(() => {
+          console.log('✅ [GALLERY] AI analysis complete, cleaning URL');
+          // Clean up URL after analysis completes
+          router.replace(`/gallery/${assetId}`);
+        }).catch((error) => {
+          console.error('❌ [GALLERY] AI analysis failed:', error);
+          // Clean up URL even on error
+          router.replace(`/gallery/${assetId}`);
+        });
       } else if (action === 'mint') {
         // Auto-open NFT mint modal (payment already complete, will auto-mint)
         setShowMintModal(true);
         console.log('✅ [GALLERY] Payment successful - opening mint modal to complete NFT');
+        // Clean up URL
+        router.replace(`/gallery/${assetId}`);
+      } else {
+        // Clean up URL for other cases
+        router.replace(`/gallery/${assetId}`);
       }
     }
   }, [searchParams, asset, user, assetId]);
