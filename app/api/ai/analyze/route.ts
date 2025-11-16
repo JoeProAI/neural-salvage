@@ -16,22 +16,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check AI usage limit (beta users bypass this)
-    const usageCheck = await checkAIUsageLimit(userId);
-    
-    if (!usageCheck.canUseAI) {
-      return NextResponse.json(
-        { 
-          error: 'AI analysis limit reached',
-          current: usageCheck.current,
-          limit: usageCheck.limit,
-          message: 'Upgrade to Pro for unlimited AI analyses or contact us about beta access'
-        },
-        { status: 402 } // 402 = Payment Required
-      );
-    }
-
-    // Get asset from Firestore
+    // Get asset from Firestore FIRST to check payment status
     const assetRef = adminDb().collection('assets').doc(assetId);
     const assetDoc = await assetRef.get();
 
@@ -50,6 +35,31 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized' },
         { status: 403 }
       );
+    }
+
+    // Check if AI analysis was already paid for (bypass quota check)
+    const alreadyPaidForAI = asset?.paidFeatures?.aiAnalysis === true || asset?.aiAnalysisPaid === true;
+    
+    let usageCheck;
+    if (alreadyPaidForAI) {
+      console.log('[PAYMENT] AI analysis already paid for, allowing free re-analysis');
+      // Set dummy usage info for paid users
+      usageCheck = { current: 0, limit: -1, canUseAI: true, isBetaUser: false };
+    } else {
+      // Check AI usage limit (beta users bypass this)
+      usageCheck = await checkAIUsageLimit(userId);
+      
+      if (!usageCheck.canUseAI) {
+        return NextResponse.json(
+          { 
+            error: 'AI analysis limit reached',
+            current: usageCheck.current,
+            limit: usageCheck.limit,
+            message: 'Upgrade to Pro for unlimited AI analyses or contact us about beta access'
+          },
+          { status: 402 } // 402 = Payment Required
+        );
+      }
     }
 
     // Perform AI analysis with Daytona based on type
@@ -132,12 +142,14 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     });
 
-    // Update AI usage for user (track for all, but beta users have no limits)
-    const userRef = adminDb().collection('users').doc(userId);
-    await userRef.update({
-      'aiUsage.current': admin.firestore.FieldValue.increment(1),
-      updatedAt: new Date(),
-    });
+    // Update AI usage for user (only increment if NOT already paid for)
+    if (!alreadyPaidForAI && !usageCheck.isBetaUser) {
+      const userRef = adminDb().collection('users').doc(userId);
+      await userRef.update({
+        'aiUsage.current': admin.firestore.FieldValue.increment(1),
+        updatedAt: new Date(),
+      });
+    }
 
     // Trigger cover art generation for audio/documents (background task)
     if ((type === 'audio' || type === 'document') && !asset?.thumbnailUrl) {
@@ -163,9 +175,10 @@ export async function POST(request: NextRequest) {
       success: true,
       analysis,
       usageInfo: {
-        current: usageCheck.current + 1,
+        current: alreadyPaidForAI ? usageCheck.current : usageCheck.current + 1,
         limit: usageCheck.limit,
-        isBetaUser: usageCheck.isBetaUser
+        isBetaUser: usageCheck.isBetaUser,
+        alreadyPaid: alreadyPaidForAI
       }
     });
   } catch (error: any) {
