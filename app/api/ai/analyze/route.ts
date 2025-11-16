@@ -138,10 +138,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Update asset in Firestore
+    console.log('💾 [AI ANALYZE] Saving to Firestore:', {
+      assetId,
+      hasCaption: !!analysis.caption,
+      hasTranscript: !!analysis.transcript,
+      hasTags: !!analysis.tags,
+      tagsCount: analysis.tags?.length || 0,
+      tags: analysis.tags,
+      captionLength: analysis.caption?.length || 0,
+      transcriptLength: analysis.transcript?.length || 0,
+    });
+    
     await assetRef.update({
       aiAnalysis: analysis,
       updatedAt: new Date(),
     });
+    
+    console.log('✅ [AI ANALYZE] Successfully saved to Firestore');
 
     // Update AI usage for user (only increment if NOT already paid for)
     if (!alreadyPaidForAI && !usageCheck.isBetaUser) {

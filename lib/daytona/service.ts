@@ -358,7 +358,15 @@ print(json.dumps(results))
       }
 
       try {
-        return JSON.parse(response.result);
+        const result = JSON.parse(response.result);
+        console.log('🎵 [DAYTONA] Audio transcription result:', {
+          hasTranscript: !!result.transcript,
+          hasTags: !!result.tags,
+          transcriptLength: result.transcript?.length || 0,
+          tagsCount: result.tags?.length || 0,
+          tags: result.tags,
+        });
+        return result;
       } catch (parseError) {
         console.error('Failed to parse transcription JSON:', response.result);
         throw new Error(`Transcription failed: Invalid JSON response`);
