@@ -307,11 +307,34 @@ print(json.dumps(results))
       const transcriptionCode = `
 import os
 import json
+import sys
 import requests
 from openai import OpenAI
+from pydub import AudioSegment
 
-client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
-audio_url = os.environ['AUDIO_URL']
+# Log to stderr for debugging
+def log(msg):
+    print(f"[AUDIO] {msg}", file=sys.stderr)
+
+log("Starting audio transcription...")
+
+client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', ''))
+audio_url = os.environ.get('AUDIO_URL', '')
+
+if not client.api_key:
+    log("ERROR: OPENAI_API_KEY is missing!")
+    print(json.dumps({"transcript": "", "tags": [], "error": "OPENAI_API_KEY is missing"}))
+    sys.exit(0)
+
+if not audio_url:
+    log("ERROR: AUDIO_URL is missing!")
+    print(json.dumps({"transcript": "", "tags": [], "error": "AUDIO_URL is missing"}))
+    sys.exit(0)
+
+log(f"Audio URL: {audio_url[:100]}...")
+
+# OpenAI Whisper limit is 25 MB
+WHISPER_MAX_SIZE = 25 * 1024 * 1024  # 25 MB in bytes
 
 results = {
     "transcript": "",
@@ -320,55 +343,130 @@ results = {
 
 try:
     # Download audio file
-    audio_response = requests.get(audio_url)
-    with open("/tmp/audio.mp3", "wb") as f:
+    log("Downloading audio file...")
+    audio_response = requests.get(audio_url, timeout=60)
+    audio_response.raise_for_status()
+    original_size = len(audio_response.content)
+    log(f"Downloaded {original_size:,} bytes ({original_size / (1024*1024):.2f} MB)")
+    
+    original_path = "/tmp/audio_original.mp3"
+    with open(original_path, "wb") as f:
         f.write(audio_response.content)
     
+    # Check if file exceeds Whisper limit
+    final_path = original_path
+    if original_size > WHISPER_MAX_SIZE:
+        log(f"File exceeds 25 MB limit, compressing...")
+        try:
+            # Load audio
+            audio = AudioSegment.from_file(original_path)
+            
+            # Compress by reducing bitrate and converting to mono
+            compressed_path = "/tmp/audio_compressed.mp3"
+            audio = audio.set_channels(1)  # Convert to mono
+            audio.export(
+                compressed_path,
+                format="mp3",
+                bitrate="64k",  # Lower bitrate for smaller size
+                parameters=["-ac", "1"]  # Force mono
+            )
+            
+            # Check compressed size
+            compressed_size = os.path.getsize(compressed_path)
+            log(f"Compressed to {compressed_size:,} bytes ({compressed_size / (1024*1024):.2f} MB)")
+            
+            if compressed_size < WHISPER_MAX_SIZE:
+                final_path = compressed_path
+                log("Using compressed version for transcription")
+            else:
+                log("ERROR: File still too large after compression!")
+                results["error"] = f"Audio file is too large ({original_size / (1024*1024):.1f} MB). Maximum is 25 MB. Please upload a shorter audio file."
+                print(json.dumps(results))
+                sys.exit(0)
+                
+        except Exception as compress_error:
+            log(f"Compression failed: {str(compress_error)}")
+            results["error"] = f"Audio file is too large ({original_size / (1024*1024):.1f} MB) and compression failed. Maximum is 25 MB."
+            print(json.dumps(results))
+            sys.exit(0)
+    
     # Transcribe with Whisper
-    with open("/tmp/audio.mp3", "rb") as audio_file:
+    log("Transcribing with Whisper...")
+    with open(final_path, "rb") as audio_file:
         transcript_response = client.audio.transcriptions.create(
             model="whisper-1",
             file=audio_file
         )
         results["transcript"] = transcript_response.text
+        log(f"Transcript length: {len(results['transcript'])} chars")
     
     # Generate tags from transcript
     if results["transcript"]:
+        log("Generating tags from transcript...")
         tags_response = client.chat.completions.create(
             model="gpt-4o",
             messages=[{
                 "role": "user",
-                "content": f"Based on this audio transcript: '{results['transcript']}', generate 10-15 relevant tags. Return only the tags as a comma-separated list."
+                "content": f"Based on this audio transcript: '{results['transcript'][:500]}', generate 10-15 relevant tags. Return only the tags as a comma-separated list."
             }],
             max_tokens=150
         )
         tags_text = tags_response.choices[0].message.content
         results["tags"] = [tag.strip().lower() for tag in tags_text.split(",") if tag.strip()]
+        log(f"Generated {len(results['tags'])} tags")
+    else:
+        log("WARNING: No transcript generated!")
+        results["error"] = "No transcript generated - audio may be silent or invalid"
 
 except Exception as e:
-    results["error"] = str(e)
+    error_msg = str(e)
+    log(f"ERROR: {error_msg}")
+    results["error"] = error_msg
+    # Don't return empty - return the error
+    print(json.dumps(results))
+    sys.exit(1)  # Exit with error code so we catch it
 
+log("Transcription complete!")
 print(json.dumps(results))
 `;
 
       const response = await sandbox.process.codeRun(transcriptionCode);
 
+      console.log('🎵 [DAYTONA] Audio transcription raw response:', {
+        exitCode: response.exitCode,
+        resultLength: response.result?.length || 0,
+        result: response.result?.substring(0, 500),
+      });
+
       if (response.exitCode !== 0) {
+        console.error('❌ [DAYTONA] Transcription failed with exit code:', response.exitCode);
         throw new Error(`Transcription failed: ${response.result}`);
       }
 
       try {
         const result = JSON.parse(response.result);
+        
+        if (result.error) {
+          console.error('❌ [DAYTONA] Audio analysis returned error:', result.error);
+          throw new Error(`Audio analysis error: ${result.error}`);
+        }
+        
         console.log('🎵 [DAYTONA] Audio transcription result:', {
           hasTranscript: !!result.transcript,
           hasTags: !!result.tags,
           transcriptLength: result.transcript?.length || 0,
           tagsCount: result.tags?.length || 0,
           tags: result.tags,
+          hasError: !!result.error,
         });
+        
+        if (!result.transcript || result.transcript.length === 0) {
+          console.warn('⚠️ [DAYTONA] Transcript is empty!');
+        }
+        
         return result;
       } catch (parseError) {
-        console.error('Failed to parse transcription JSON:', response.result);
+        console.error('❌ [DAYTONA] Failed to parse transcription JSON:', response.result);
         throw new Error(`Transcription failed: Invalid JSON response`);
       }
     } finally {

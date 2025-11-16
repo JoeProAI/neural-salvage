@@ -79,6 +79,12 @@ service cloud.firestore {
       allow create: if isAuthenticated();
     }
     
+    // Pending Analyses
+    match /pending_analyses/{assetId} {
+      allow read, write: if isAuthenticated() && isOwner(resource.data.userId);
+      allow create: if isAuthenticated();
+    }
+    
     // Sales
     match /sales/{saleId} {
       allow read: if isOwner(resource.data.sellerId) || isOwner(resource.data.buyerId);
