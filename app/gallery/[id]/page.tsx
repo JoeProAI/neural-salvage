@@ -212,8 +212,8 @@ export default function AssetDetailPage() {
 
       const paymentData = await paymentResponse.json();
 
-      // Beta users and Pro users get free AI
-      if (paymentData.isBetaUser || paymentData.isPro) {
+      // Beta users, Pro users, and already-paid users get free AI
+      if (paymentData.isBetaUser || paymentData.isPro || paymentData.freeMintUsed) {
         // Proceed directly to AI analysis
         const response = await fetch('/api/ai/analyze', {
           method: 'POST',
@@ -252,7 +252,9 @@ export default function AssetDetailPage() {
 
         const message = paymentData.isBetaUser 
           ? '✨ AI analysis complete! (Beta user - free)' 
-          : '✨ AI analysis complete! (Pro plan - included)';
+          : paymentData.isPro
+          ? '✨ AI analysis complete! (Pro plan - included)'
+          : '✨ AI analysis re-generated! (Already paid)';
         alert(message);
       } else if (paymentData.checkoutUrl) {
         // Redirect to payment
