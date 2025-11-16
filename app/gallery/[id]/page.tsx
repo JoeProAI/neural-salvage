@@ -84,16 +84,35 @@ export default function AssetDetailPage() {
       
       if (assetDoc.exists()) {
         const assetData = { id: assetDoc.id, ...assetDoc.data() } as MediaAsset;
+        
+        console.log('🔍 [GALLERY] Loading asset:', {
+          id: assetData.id,
+          filename: assetData.filename,
+          type: assetData.type,
+          hasAiAnalysis: !!assetData.aiAnalysis,
+          aiAnalysis: assetData.aiAnalysis
+        });
+        
         setAsset(assetData);
         setTitle(assetData.title || assetData.filename);
         // For audio files, check transcript field; for others use caption
         const aiDescription = assetData.description || 
                             assetData.aiAnalysis?.caption || 
                             assetData.aiAnalysis?.transcript || '';
+        
+        console.log('📝 [GALLERY] Setting description:', {
+          fromDatabase: assetData.description,
+          fromCaption: assetData.aiAnalysis?.caption,
+          fromTranscript: assetData.aiAnalysis?.transcript,
+          final: aiDescription
+        });
+        
         setDescription(aiDescription);
         setForSale(assetData.forSale);
         setPrice(assetData.price?.toString() || '');
-        setNewTags(assetData.aiAnalysis?.tags?.join(', ') || '');
+        const tagsString = assetData.aiAnalysis?.tags?.join(', ') || '';
+        console.log('🏷️ [GALLERY] Setting tags:', assetData.aiAnalysis?.tags, '→', tagsString);
+        setNewTags(tagsString);
         
         // Load NFT data if asset is minted
         if (assetData.isNFT && assetData.nftId) {
