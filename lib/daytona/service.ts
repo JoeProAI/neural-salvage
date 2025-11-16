@@ -46,12 +46,15 @@ export class DaytonaService {
    * Analyze image with AI in Daytona sandbox
    */
   async analyzeImage(imageUrl: string): Promise<AIAnalysisResult> {
-    const sandbox = await this.daytona.create({
-      envVars: {
-        OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
-        IMAGE_URL: imageUrl,
+    const sandbox = await this.daytona.create(
+      {
+        envVars: {
+          OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+          IMAGE_URL: imageUrl,
+        },
       },
-    });
+      { timeout: 0 } // Disable timeout - let analysis complete
+    );
 
     try {
       // Python code for comprehensive image analysis
@@ -218,12 +221,15 @@ print(json.dumps(results))
    * Analyze video (extract keyframes and analyze)
    */
   async analyzeVideo(videoUrl: string): Promise<AIAnalysisResult> {
-    const sandbox = await this.daytona.create({
-      envVars: {
-        OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
-        VIDEO_URL: videoUrl,
+    const sandbox = await this.daytona.create(
+      {
+        envVars: {
+          OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+          VIDEO_URL: videoUrl,
+        },
       },
-    });
+      { timeout: 0 }
+    );
 
     try {
       const analysisCode = `
@@ -287,12 +293,15 @@ print(json.dumps(results))
    * Transcribe audio with Whisper
    */
   async transcribeAudio(audioUrl: string): Promise<AIAnalysisResult> {
-    const sandbox = await this.daytona.create({
-      envVars: {
-        OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
-        AUDIO_URL: audioUrl,
+    const sandbox = await this.daytona.create(
+      {
+        envVars: {
+          OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+          AUDIO_URL: audioUrl,
+        },
       },
-    });
+      { timeout: 0 }
+    );
 
     try {
       const transcriptionCode = `
@@ -363,13 +372,16 @@ print(json.dumps(results))
    * Analyze document (PDF, TXT, etc.) with AI
    */
   async analyzeDocument(documentUrl: string, mimeType: string): Promise<AIAnalysisResult> {
-    const sandbox = await this.daytona.create({
-      envVars: {
-        OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
-        DOCUMENT_URL: documentUrl,
-        MIME_TYPE: mimeType,
+    const sandbox = await this.daytona.create(
+      {
+        envVars: {
+          OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+          DOCUMENT_URL: documentUrl,
+          MIME_TYPE: mimeType,
+        },
       },
-    });
+      { timeout: 0 }
+    );
 
     try {
       const analysisCode = `
@@ -494,12 +506,15 @@ print(json.dumps(results))
    * Generate text embedding for semantic search
    */
   async generateEmbedding(text: string): Promise<number[]> {
-    const sandbox = await this.daytona.create({
-      envVars: {
-        OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
-        TEXT_INPUT: text,
+    const sandbox = await this.daytona.create(
+      {
+        envVars: {
+          OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+          TEXT_INPUT: text,
+        },
       },
-    });
+      { timeout: 0 }
+    );
 
     try {
       const embeddingCode = `

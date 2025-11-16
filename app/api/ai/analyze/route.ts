@@ -5,16 +5,6 @@ import { qdrantService } from '@/lib/vector/qdrant';
 import { checkAIUsageLimit } from '@/lib/access/checkAccess';
 import admin from 'firebase-admin';
 
-// Timeout wrapper for Daytona calls (30 second max to avoid Vercel timeout)
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 30000): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => 
-      setTimeout(() => reject(new Error('AI analysis timeout - taking too long')), timeoutMs)
-    )
-  ]);
-}
-
 export async function POST(request: NextRequest) {
   try {
     const { assetId, userId, imageUrl, type, mimeType } = await request.json();
@@ -79,35 +69,19 @@ export async function POST(request: NextRequest) {
     };
 
     try {
-      console.log(`🤖 [AI ANALYZE] Starting ${type} analysis with 30s timeout...`);
+      console.log(`🤖 [AI ANALYZE] Starting ${type} analysis (no timeout - let Daytona complete)...`);
       
       if (type === 'image') {
-        // Analyze image with 30s timeout
-        const imageAnalysis = await withTimeout(
-          daytonaService.analyzeImage(imageUrl),
-          30000
-        );
+        const imageAnalysis = await daytonaService.analyzeImage(imageUrl);
         analysis = { ...analysis, ...imageAnalysis };
       } else if (type === 'video') {
-        // Analyze video with 30s timeout
-        const videoAnalysis = await withTimeout(
-          daytonaService.analyzeVideo(imageUrl),
-          30000
-        );
+        const videoAnalysis = await daytonaService.analyzeVideo(imageUrl);
         analysis = { ...analysis, ...videoAnalysis };
       } else if (type === 'audio') {
-        // Transcribe audio with 30s timeout
-        const audioAnalysis = await withTimeout(
-          daytonaService.transcribeAudio(imageUrl),
-          30000
-        );
+        const audioAnalysis = await daytonaService.transcribeAudio(imageUrl);
         analysis = { ...analysis, ...audioAnalysis };
       } else if (type === 'document') {
-        // Analyze document with 30s timeout
-        const documentAnalysis = await withTimeout(
-          daytonaService.analyzeDocument(imageUrl, mimeType || 'application/pdf'),
-          30000
-        );
+        const documentAnalysis = await daytonaService.analyzeDocument(imageUrl, mimeType || 'application/pdf');
         analysis = { ...analysis, ...documentAnalysis };
       }
       
@@ -120,9 +94,7 @@ export async function POST(request: NextRequest) {
         tags: [type || 'media'],
         caption: `${type || 'Media'} uploaded to Neural Salvage`,
         analyzedAt: new Date(),
-        error: analysisError.message.includes('timeout') 
-          ? 'AI service timeout - using basic tags'
-          : 'AI analysis temporarily unavailable',
+        error: 'AI analysis temporarily unavailable',
       };
       
       // Don't throw - return partial analysis instead
@@ -143,25 +115,19 @@ export async function POST(request: NextRequest) {
         .filter(Boolean)
         .join(' ');
 
-      console.log('🧠 [AI ANALYZE] Generating embedding with 15s timeout...');
-      const embedding = await withTimeout(
-        daytonaService.generateEmbedding(embeddingText),
-        15000  // 15s timeout for embeddings
-      );
+      console.log('🧠 [AI ANALYZE] Generating embedding...');
+      const embedding = await daytonaService.generateEmbedding(embeddingText);
       analysis.embedding = embedding;
 
       // Store in Qdrant for vector search (optional - skip if not configured)
       try {
-        await withTimeout(
-          qdrantService.upsertVector(assetId, embedding, {
-            userId,
-            type: asset?.type || type,
-            tags: analysis.tags,
-            caption: analysis.caption,
-            forSale: asset?.forSale || false,
-          }),
-          10000  // 10s timeout for Qdrant
-        );
+        await qdrantService.upsertVector(assetId, embedding, {
+          userId,
+          type: asset?.type || type,
+          tags: analysis.tags,
+          caption: analysis.caption,
+          forSale: asset?.forSale || false,
+        });
         console.log('✅ [AI ANALYZE] Vector stored in Qdrant');
       } catch (qdrantError: any) {
         console.warn('⚠️ [AI ANALYZE] Qdrant skipped:', qdrantError.message);
