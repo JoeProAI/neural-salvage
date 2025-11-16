@@ -62,3 +62,8 @@ scripts/platform-wallet.json
 # Any backup files with keys
 *-backup.json
 *-keys.json
+
+# Hardhat
+artifacts/
+cache/
+typechain-types/
