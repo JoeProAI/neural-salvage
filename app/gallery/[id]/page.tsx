@@ -86,7 +86,11 @@ export default function AssetDetailPage() {
         const assetData = { id: assetDoc.id, ...assetDoc.data() } as MediaAsset;
         setAsset(assetData);
         setTitle(assetData.title || assetData.filename);
-        setDescription(assetData.description || assetData.aiAnalysis?.caption || '');
+        // For audio files, check transcript field; for others use caption
+        const aiDescription = assetData.description || 
+                            assetData.aiAnalysis?.caption || 
+                            assetData.aiAnalysis?.transcript || '';
+        setDescription(aiDescription);
         setForSale(assetData.forSale);
         setPrice(assetData.price?.toString() || '');
         setNewTags(assetData.aiAnalysis?.tags?.join(', ') || '');
@@ -181,18 +185,27 @@ export default function AssetDetailPage() {
       // Update local state with AI results
       const aiAnalysis = data.analysis;
       
-      // Generate smart title from caption (first sentence or first 50 chars)
+      // For audio, use transcript as the description
+      const aiDescription = aiAnalysis.caption || aiAnalysis.transcript || '';
+      
+      // Generate smart title from description (first sentence or first 50 chars)
       let smartTitle = title;
-      if (aiAnalysis.caption && (!title || title === asset.filename)) {
-        const firstSentence = aiAnalysis.caption.split('.')[0];
+      if (aiDescription && (!title || title === asset.filename)) {
+        const firstSentence = aiDescription.split('.')[0];
         smartTitle = firstSentence.length > 50 
           ? firstSentence.substring(0, 47) + '...'
           : firstSentence;
       }
       
       setTitle(smartTitle);
-      setDescription(aiAnalysis.caption || description);
+      setDescription(aiDescription);
       setNewTags(aiAnalysis.tags?.join(', ') || newTags);
+      
+      console.log('✅ [GALLERY] Updated UI with:', {
+        title: smartTitle,
+        description: aiDescription,
+        tags: aiAnalysis.tags
+      });
 
       await loadAsset();
 
