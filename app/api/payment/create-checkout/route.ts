@@ -9,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { type, assetId, userId, couponCode } = body;
+    const { type, assetId, userId } = body;
     let price = body.price;
 
     if (!type || !assetId || !userId) {
@@ -126,28 +126,8 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    // Validate and retrieve coupon if provided
-    let validatedCoupon = null;
-    if (couponCode) {
-      try {
-        console.log('🎟️ [PAYMENT] Validating coupon code:', couponCode);
-        validatedCoupon = await stripe.coupons.retrieve(couponCode);
-        console.log('🎟️ [PAYMENT] Coupon valid:', {
-          id: validatedCoupon.id,
-          percentOff: validatedCoupon.percent_off,
-          amountOff: validatedCoupon.amount_off,
-        });
-      } catch (error: any) {
-        console.error('🎟️ [PAYMENT] Invalid coupon code:', couponCode, error.message);
-        return NextResponse.json(
-          { error: `Invalid coupon code: ${couponCode}` },
-          { status: 400 }
-        );
-      }
-    }
-
     // Create Stripe Checkout Session
-    const sessionConfig: any = {
+    const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [
         {
@@ -173,20 +153,10 @@ export async function POST(request: NextRequest) {
         assetId: assetId || '',
         userId,
       },
+      allow_promotion_codes: true, // Enable Stripe's built-in promotion code field
       success_url: successUrl,
       cancel_url: cancelUrl,
-    };
-
-    // Add validated coupon to session
-    if (validatedCoupon) {
-      sessionConfig.discounts = [
-        {
-          coupon: validatedCoupon.id,
-        },
-      ];
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionConfig);
+    });
 
     return NextResponse.json({
       success: true,
