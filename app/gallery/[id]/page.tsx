@@ -32,6 +32,7 @@ export default function AssetDetailPage() {
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loadingCollections, setLoadingCollections] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -290,6 +291,7 @@ export default function AssetDetailPage() {
           assetId: asset.id,
           userId: user.id,
           price,
+          couponCode: couponCode || undefined,
         }),
       });
 
@@ -759,6 +761,19 @@ export default function AssetDetailPage() {
                         )}
                       </div>
                     )}
+                    
+                    {/* Coupon Code Input */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-gray-400">Coupon Code (optional)</label>
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder="Enter coupon code"
+                        className="w-full px-4 py-2 bg-cyber-dark/50 border border-data-cyan/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-data-cyan"
+                      />
+                    </div>
+                    
                     <Button
                       className="w-full bg-retro-orange hover:bg-retro-orange/90 text-white font-semibold"
                       onClick={handleGenerateAI}

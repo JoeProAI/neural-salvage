@@ -9,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { type, assetId, userId } = body;
+    const { type, assetId, userId, couponCode } = body;
     let price = body.price;
 
     if (!type || !assetId || !userId) {
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig: any = {
       mode: 'payment',
       line_items: [
         {
@@ -155,7 +155,18 @@ export async function POST(request: NextRequest) {
       },
       success_url: successUrl,
       cancel_url: cancelUrl,
-    });
+    };
+
+    // Add coupon code if provided
+    if (couponCode) {
+      sessionConfig.discounts = [
+        {
+          coupon: couponCode,
+        },
+      ];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return NextResponse.json({
       success: true,
