@@ -35,6 +35,18 @@ export interface User {
     resetDate: Date; // When monthly limits reset
   };
   
+  // Storage quotas
+  quotas: {
+    salvage: {
+      used: number; // Current salvage items
+      limit: number; // Max salvage items (20 free, 200 pro, unlimited enterprise)
+    };
+    nft: {
+      used: number; // Current NFT slots used
+      limit: number; // Max NFT slots (5 free, 50 pro, unlimited enterprise)
+    };
+  };
+  
   // Legacy AI usage (deprecated)
   aiUsage?: {
     current: number;
@@ -68,6 +80,13 @@ export interface MediaAsset {
   duration?: number; // for video/audio
   uploadedAt: Date;
   updatedAt: Date;
+  
+  // Space allocation (NEW!)
+  space: 'salvage' | 'nft' | 'gallery'; // Where this item lives
+  // 'salvage' = rough/flawed, subscriber-only
+  // 'nft' = polished, minted or mint-ready
+  // 'gallery' = default public gallery (legacy)
+  spaceMovedAt?: Date; // When it was moved to current space
   
   // AI Analysis
   aiAnalysis?: {

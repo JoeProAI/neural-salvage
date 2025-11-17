@@ -8,6 +8,7 @@ import { collection, query, where, getDocs, orderBy, limit } from 'firebase/fire
 import { db } from '@/lib/firebase/config';
 import { MediaAsset } from '@/types';
 import Link from 'next/link';
+import { QuotaDisplay } from '@/components/quotas/QuotaDisplay';
 
 export default function DashboardPage() {
   const { user, loading, signOut } = useAuth();
@@ -194,6 +195,14 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Storage Quotas */}
+        {user && user.quotas && (
+          <div className="mb-8">
+            <h3 className="text-xl font-bold text-white mb-4">Storage Quotas</h3>
+            <QuotaDisplay user={user} />
+          </div>
+        )}
+
         {/* Recent Assets */}
         <div>
           <div className="flex items-center justify-between mb-4">
@@ -247,29 +256,31 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* AI Usage */}
-        <div className="mt-8 metal-card p-6 rounded-lg">
-          <h3 className="text-lg font-bold text-white mb-4">AI Usage</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Current Usage</span>
-              <span className="text-white">
-                {user.aiUsage.current} / {user.aiUsage.limit}
-              </span>
-            </div>
-            <div className="w-full bg-salvage-rust rounded-full h-2">
-              <div
-                className="bg-neon-cyan h-2 rounded-full transition-all"
-                style={{
-                  width: `${(user.aiUsage.current / user.aiUsage.limit) * 100}%`,
-                }}
-              />
-            </div>
-            <div className="text-xs text-gray-500">
-              Resets on {new Date(user.aiUsage.resetDate).toLocaleDateString()}
+        {/* AI Usage (Legacy - Optional) */}
+        {user.aiUsage && (
+          <div className="mt-8 metal-card p-6 rounded-lg">
+            <h3 className="text-lg font-bold text-white mb-4">AI Usage</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Current Usage</span>
+                <span className="text-white">
+                  {user.aiUsage.current} / {user.aiUsage.limit}
+                </span>
+              </div>
+              <div className="w-full bg-salvage-rust rounded-full h-2">
+                <div
+                  className="bg-neon-cyan h-2 rounded-full transition-all"
+                  style={{
+                    width: `${(user.aiUsage.current / user.aiUsage.limit) * 100}%`,
+                  }}
+                />
+              </div>
+              <div className="text-xs text-gray-500">
+                Resets on {new Date(user.aiUsage.resetDate).toLocaleDateString()}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
