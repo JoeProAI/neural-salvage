@@ -297,12 +297,14 @@ print(json.dumps(results))
   async transcribeAudio(audioUrl: string): Promise<AIAnalysisResult> {
     console.log('🎵 [DAYTONA] Starting audio transcription:', {
       url: audioUrl.substring(0, 100),
+      hasDeepgramKey: !!process.env.DEEPGRAM_API_KEY,
       hasOpenAIKey: !!process.env.OPENAI_API_KEY,
     });
 
     const sandbox = await this.daytona.create(
       {
         envVars: {
+          DEEPGRAM_API_KEY: process.env.DEEPGRAM_API_KEY || '',
           OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
           AUDIO_URL: audioUrl,
         },
@@ -324,14 +326,15 @@ from openai import OpenAI
 def log(msg):
     print(f"[AUDIO] {msg}", file=sys.stderr)
 
-log("Starting audio transcription...")
+log("Starting audio transcription with Deepgram...")
 
-client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', ''))
+deepgram_key = os.environ.get('DEEPGRAM_API_KEY', '')
+openai_key = os.environ.get('OPENAI_API_KEY', '')
 audio_url = os.environ.get('AUDIO_URL', '')
 
-if not client.api_key:
-    log("ERROR: OPENAI_API_KEY is missing!")
-    print(json.dumps({"transcript": "", "tags": [], "error": "OPENAI_API_KEY is missing"}))
+if not deepgram_key:
+    log("ERROR: DEEPGRAM_API_KEY is missing!")
+    print(json.dumps({"transcript": "", "tags": [], "error": "DEEPGRAM_API_KEY is missing"}))
     sys.exit(0)
 
 if not audio_url:
@@ -341,73 +344,57 @@ if not audio_url:
 
 log(f"Audio URL: {audio_url[:100]}...")
 
-# Only download first 20 MB for quick analysis (enough for ~5-10 minutes of audio)
-SAMPLE_SIZE = 20 * 1024 * 1024  # 20 MB
-
 results = {
     "transcript": "",
     "tags": []
 }
 
 try:
-    # Download full audio file (Firebase Storage might not support range requests reliably)
-    log("Downloading audio file...")
-    audio_response = requests.get(audio_url, timeout=90)
-    audio_response.raise_for_status()
+    # Use Deepgram's URL-based transcription (no download needed!)
+    log("Transcribing with Deepgram (URL-based, no size limit)...")
     
-    file_size = len(audio_response.content)
-    log(f"Downloaded {file_size:,} bytes ({file_size / (1024*1024):.2f} MB)")
+    deepgram_url = "https://api.deepgram.com/v1/listen"
+    headers = {
+        "Authorization": f"Token {deepgram_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "url": audio_url
+    }
+    params = {
+        "model": "nova-2",
+        "smart_format": "true",
+        "punctuate": "true",
+        "diarize": "false"
+    }
     
-    # Save full file
-    full_path = "/tmp/audio_full.mp3"
-    with open(full_path, "wb") as f:
-        f.write(audio_response.content)
+    response = requests.post(
+        deepgram_url,
+        headers=headers,
+        json=payload,
+        params=params,
+        timeout=120
+    )
+    response.raise_for_status()
     
-    # If file is too large, skip it and return basic info
-    if file_size > SAMPLE_SIZE:
-        log(f"File is large ({file_size / (1024*1024):.1f} MB), using filename for tags")
-        # Extract info from filename instead of transcribing
-        import re
-        filename = audio_url.split('/')[-1].split('?')[0]
-        filename_clean = re.sub(r'[^a-zA-Z0-9\s]', ' ', filename)
-        words = [w.lower() for w in filename_clean.split() if len(w) > 2]
-        results["tags"] = ["audio", "music"] + words[:8]
-        results["transcript"] = f"Large audio file: {filename}"
-        log(f"Generated tags from filename: {results['tags']}")
+    data = response.json()
+    transcript = data.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("transcript", "")
+    
+    if transcript:
+        results["transcript"] = transcript
+        log(f"Deepgram transcript length: {len(transcript)} chars")
+    else:
+        log("No transcript returned from Deepgram")
+        results["error"] = "No audio detected or transcription failed"
+        results["tags"] = ["audio"]
         print(json.dumps(results))
         sys.exit(0)
     
-    audio_path = full_path
-    
-    # Transcribe with Whisper
-    log("Transcribing with Whisper...")
-    try:
-        with open(audio_path, "rb") as audio_file:
-            transcript_response = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio_file
-            )
-            results["transcript"] = transcript_response.text
-            log(f"Transcript length: {len(results['transcript'])} chars")
-    except Exception as whisper_error:
-        error_str = str(whisper_error)
-        log(f"Whisper error: {error_str}")
-        
-        # Check for size-related errors
-        if "413" in error_str or "size" in error_str.lower() or "limit" in error_str.lower():
-            results["error"] = f"Audio file exceeds OpenAI's 25 MB limit. Please upload a shorter or compressed version."
-            results["tags"] = ["audio", "file-too-large"]
-        else:
-            results["error"] = f"Transcription failed: {error_str}"
-            results["tags"] = ["audio"]
-        
-        print(json.dumps(results))
-        sys.exit(0)
-    
-    # Generate tags from transcript
-    if results["transcript"]:
-        log("Generating tags from transcript...")
+    # Generate tags from transcript using OpenAI
+    if results["transcript"] and openai_key:
+        log("Generating tags from transcript with GPT-4o...")
         try:
+            client = OpenAI(api_key=openai_key)
             tags_response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{
@@ -423,8 +410,9 @@ try:
             log(f"Tag generation failed: {str(tag_error)}")
             results["tags"] = ["audio", "transcribed"]
     else:
-        log("WARNING: No transcript generated!")
-        results["tags"] = ["audio"]
+        if not openai_key:
+            log("No OpenAI key for tag generation, using basic tags")
+        results["tags"] = ["audio", "transcribed"]
 
 except Exception as e:
     error_msg = str(e)
