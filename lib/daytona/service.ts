@@ -334,8 +334,8 @@ if not audio_url:
 
 log(f"Audio URL: {audio_url[:100]}...")
 
-# OpenAI Whisper has a 25 MB limit
-MAX_SIZE = 25 * 1024 * 1024
+# Only download first 20 MB for quick analysis (enough for ~5-10 minutes of audio)
+SAMPLE_SIZE = 20 * 1024 * 1024  # 20 MB
 
 results = {
     "transcript": "",
@@ -343,23 +343,19 @@ results = {
 }
 
 try:
-    # Download audio file
-    log("Downloading audio file...")
-    audio_response = requests.get(audio_url, timeout=60)
-    audio_response.raise_for_status()
-    file_size = len(audio_response.content)
-    log(f"Downloaded {file_size:,} bytes ({file_size / (1024*1024):.2f} MB)")
+    # Download only the beginning of the audio file using range request
+    log("Downloading first 20 MB of audio for quick analysis...")
+    headers = {"Range": f"bytes=0-{SAMPLE_SIZE-1}"}
+    audio_response = requests.get(audio_url, headers=headers, timeout=60)
     
-    # Check file size
-    if file_size > MAX_SIZE:
-        size_mb = file_size / (1024*1024)
-        log(f"ERROR: File too large ({size_mb:.1f} MB)")
-        results["error"] = f"Audio file is too large ({size_mb:.1f} MB). OpenAI Whisper has a 25 MB limit. Please upload a shorter or compressed audio file."
-        results["tags"] = ["audio", "large-file"]
-        print(json.dumps(results))
-        sys.exit(0)
+    # Accept both 206 (partial) and 200 (full file if smaller than range)
+    if audio_response.status_code not in [200, 206]:
+        audio_response.raise_for_status()
     
-    audio_path = "/tmp/audio.mp3"
+    sample_size = len(audio_response.content)
+    log(f"Downloaded {sample_size:,} bytes ({sample_size / (1024*1024):.2f} MB) for analysis")
+    
+    audio_path = "/tmp/audio_sample.mp3"
     with open(audio_path, "wb") as f:
         f.write(audio_response.content)
     
