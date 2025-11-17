@@ -87,18 +87,23 @@ export async function POST(request: NextRequest) {
       
       console.log(`✅ [AI ANALYZE] ${type} analysis completed successfully`);
     } catch (analysisError: any) {
-      console.error('❌ [AI ANALYZE] Analysis failed:', analysisError.message);
+      console.error('❌ [AI ANALYZE] Analysis failed:', {
+        message: analysisError.message,
+        stack: analysisError.stack,
+        name: analysisError.name,
+        cause: analysisError.cause,
+      });
       
       // Provide basic fallback analysis
       analysis = {
         tags: [type || 'media'],
         caption: `${type || 'Media'} uploaded to Neural Salvage`,
         analyzedAt: new Date(),
-        error: 'AI analysis temporarily unavailable',
+        error: analysisError.message || 'AI analysis temporarily unavailable',
       };
       
       // Don't throw - return partial analysis instead
-      console.warn('⚠️ [AI ANALYZE] Returning fallback analysis');
+      console.warn('⚠️ [AI ANALYZE] Returning fallback analysis due to error');
     }
 
     // Generate embedding for semantic search (optional - skip if it fails)

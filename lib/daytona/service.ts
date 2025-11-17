@@ -295,6 +295,11 @@ print(json.dumps(results))
    * Transcribe audio with Whisper
    */
   async transcribeAudio(audioUrl: string): Promise<AIAnalysisResult> {
+    console.log('🎵 [DAYTONA] Starting audio transcription:', {
+      url: audioUrl.substring(0, 100),
+      hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+    });
+
     const sandbox = await this.daytona.create(
       {
         envVars: {
@@ -304,6 +309,8 @@ print(json.dumps(results))
       },
       { timeout: 0 }
     );
+
+    console.log('🎵 [DAYTONA] Sandbox created successfully');
 
     try {
       const transcriptionCode = `
