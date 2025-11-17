@@ -49,15 +49,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if already has thumbnail
+    // Check if already has thumbnail or embedded album art
     if (asset.thumbnailUrl) {
+      console.log('✅ [COVER ART] Asset already has thumbnail/album art, skipping generation');
       return NextResponse.json(
         { message: 'Asset already has a thumbnail', thumbnailUrl: asset.thumbnailUrl },
         { status: 200 }
       );
     }
 
-    console.log('🎨 [COVER ART] Generating for asset:', assetId);
+    console.log('🎨 [COVER ART] No existing cover, generating for asset:', assetId);
 
     // Generate cover art with AI
     const { imageUrl, prompt } = await generateCoverArt({

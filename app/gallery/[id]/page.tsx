@@ -520,6 +520,16 @@ export default function AssetDetailPage() {
               {/* AI Analysis */}
               {asset.aiAnalysis && (
                 <div className="space-y-4 mb-6">
+                  {/* AI Summary (for audio/video) */}
+                  {asset.aiAnalysis.summary && (
+                    <div>
+                      <h3 className="text-sm font-bold text-neon-cyan mb-2">
+                        AI Summary
+                      </h3>
+                      <p className="text-gray-300 leading-relaxed">{asset.aiAnalysis.summary}</p>
+                    </div>
+                  )}
+
                   {asset.aiAnalysis.caption && (
                     <div>
                       <h3 className="text-sm font-bold text-neon-cyan mb-2">

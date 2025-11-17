@@ -91,6 +91,7 @@ export interface MediaAsset {
   // AI Analysis
   aiAnalysis?: {
     caption?: string;
+    summary?: string; // 2-3 sentence summary (for audio/video)
     tags: string[];
     colors?: string[];
     nsfw?: boolean;

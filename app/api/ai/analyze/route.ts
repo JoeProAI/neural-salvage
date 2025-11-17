@@ -172,19 +172,26 @@ export async function POST(request: NextRequest) {
 
     // Trigger cover art generation for audio/documents (background task)
     if ((type === 'audio' || type === 'document') && !asset?.thumbnailUrl) {
-      const baseUrl = process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}`
-        : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      // Use same domain as current request to avoid auth issues
+      const host = request.headers.get('host');
+      const protocol = request.headers.get('x-forwarded-proto') || 'https';
+      const baseUrl = host ? `${protocol}://${host}` : 'http://localhost:3000';
+      
+      console.log('🎨 [AI ANALYZE] Triggering cover art generation on:', baseUrl);
       
       fetch(`${baseUrl}/api/ai/generate-cover`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          // Pass along auth context if needed
+        },
         body: JSON.stringify({
           assetId,
           userId,
         }),
       }).catch(error => {
         console.error('[AI ANALYZE] Failed to trigger cover art generation:', error);
+        // Non-blocking - continue even if cover generation fails
       });
       
       console.log('🎨 [AI ANALYZE] Cover art generation triggered in background');
