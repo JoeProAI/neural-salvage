@@ -478,7 +478,16 @@ print(json.dumps(results))
       }
 
       try {
-        const result = JSON.parse(response.result);
+        // Extract JSON from output (logs may be mixed in)
+        const lines = response.result.split('\n');
+        const jsonLine = lines.find(line => line.trim().startsWith('{') && line.trim().endsWith('}'));
+        
+        if (!jsonLine) {
+          console.error('❌ [DAYTONA] No valid JSON line found in output');
+          throw new Error('No valid JSON in transcription output');
+        }
+        
+        const result = JSON.parse(jsonLine);
         
         console.log('🎵 [DAYTONA] Audio transcription result:', {
           hasTranscript: !!result.transcript,
