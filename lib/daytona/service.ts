@@ -309,8 +309,8 @@ import os
 import json
 import sys
 import requests
+import subprocess
 from openai import OpenAI
-from pydub import AudioSegment
 
 # Log to stderr for debugging
 def log(msg):
@@ -350,28 +350,31 @@ try:
     with open(original_path, "wb") as f:
         f.write(audio_response.content)
     
-    # Load audio and extract first 3 minutes for quick analysis
-    log("Loading audio for quick scan (first 3 minutes)...")
-    audio = AudioSegment.from_file(original_path)
-    duration_seconds = len(audio) / 1000.0
-    log(f"Total duration: {duration_seconds:.1f} seconds ({duration_seconds/60:.1f} minutes)")
-    
-    # Extract first 3 minutes (180 seconds) for analysis
-    sample_duration = min(180 * 1000, len(audio))  # 3 minutes or full duration
-    audio_sample = audio[:sample_duration]
-    
-    # Export as compressed mono for Whisper
+    # Use ffmpeg to extract first 3 minutes and compress
+    log("Extracting first 3 minutes with ffmpeg...")
     sample_path = "/tmp/audio_sample.mp3"
-    audio_sample = audio_sample.set_channels(1)  # Mono
-    audio_sample.export(
-        sample_path,
-        format="mp3",
-        bitrate="64k",
-        parameters=["-ac", "1"]
-    )
     
-    sample_size = os.path.getsize(sample_path)
-    log(f"Sample size: {sample_size:,} bytes ({sample_size / (1024*1024):.2f} MB) - {sample_duration/1000:.1f}s")
+    # Extract first 180 seconds, convert to mono, reduce bitrate
+    ffmpeg_cmd = [
+        "ffmpeg", "-y",
+        "-i", original_path,
+        "-t", "180",  # First 180 seconds (3 minutes)
+        "-ac", "1",   # Convert to mono
+        "-ab", "64k", # 64kbps bitrate
+        "-ar", "16000", # 16kHz sample rate (good for speech)
+        sample_path
+    ]
+    
+    result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        log(f"ffmpeg warning: {result.stderr}")
+    
+    if not os.path.exists(sample_path):
+        log("ffmpeg failed, using original file (may exceed limit)")
+        sample_path = original_path
+    else:
+        sample_size = os.path.getsize(sample_path)
+        log(f"Sample size: {sample_size:,} bytes ({sample_size / (1024*1024):.2f} MB)")
     
     final_path = sample_path
     
