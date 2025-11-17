@@ -22,6 +22,54 @@ interface CoverArtParams {
 }
 
 /**
+ * Determine art style based on content themes and genre
+ */
+function determineArtStyle(tags: string[], context: string): string {
+  const tagsLower = tags.join(' ').toLowerCase();
+  const contentLower = context.toLowerCase();
+  
+  // Hip-hop / Rap
+  if (tagsLower.match(/rap|hip-hop|urban|street|beats/)) {
+    return `Bold urban hip-hop aesthetic with graffiti art, street culture vibes, and raw energy. Think golden age hip-hop album covers meets modern street art. Gritty, authentic, powerful.`;
+  }
+  
+  // Rock / Punk / Metal
+  if (tagsLower.match(/rock|punk|metal|guitar|grunge/)) {
+    return `Raw punk rock aesthetic with DIY zine vibes, distressed textures, and rebellious energy. Think 80s/90s underground album covers. Edgy, loud, unapologetic.`;
+  }
+  
+  // Electronic / Dance / Techno
+  if (tagsLower.match(/electronic|techno|house|dance|edm|synth/)) {
+    return `Futuristic electronic music aesthetic with geometric shapes, neon colors, and abstract patterns. Think rave culture meets digital art. Vibrant, hypnotic, modern.`;
+  }
+  
+  // Jazz / Blues / Soul
+  if (tagsLower.match(/jazz|blues|soul|funk|r&b/)) {
+    return `Smooth vintage aesthetic with art deco influences, warm colors, and sophisticated vibes. Think Blue Note Records meets modern design. Classy, moody, timeless.`;
+  }
+  
+  // Folk / Acoustic / Indie
+  if (tagsLower.match(/folk|acoustic|indie|singer-songwriter/)) {
+    return `Indie folk aesthetic with hand-drawn elements, earthy tones, and organic textures. Think independent label album art. Intimate, artistic, authentic.`;
+  }
+  
+  // Comedy / Spoken Word / Podcast
+  if (tagsLower.match(/comedy|funny|humor|podcast|spoken/)) {
+    return `Bold comedy aesthetic with satirical illustrations, pop art influences, and playful design. Think Adult Swim meets underground comedy. Witty, irreverent, eye-catching.`;
+  }
+  
+  // Default: Dynamic based on mood from content
+  if (contentLower.match(/dark|serious|heavy|struggle/)) {
+    return `Dark, dramatic aesthetic with moody lighting, bold contrasts, and intense imagery. Cinematic and powerful.`;
+  } else if (contentLower.match(/happy|upbeat|fun|party/)) {
+    return `Vibrant, energetic aesthetic with bold colors, dynamic composition, and playful elements. Fun and eye-catching.`;
+  } else {
+    // Fallback: Edgy modern style (not always cyberpunk)
+    return `Contemporary edgy aesthetic with bold visual storytelling, striking composition, and artistic flair. Modern, memorable, and genre-appropriate.`;
+  }
+}
+
+/**
  * Generate edgy, funny cover art prompt based on content
  */
 function generateCoverArtPrompt(params: CoverArtParams): string {
@@ -39,59 +87,49 @@ function generateCoverArtPrompt(params: CoverArtParams): string {
   // Build context
   const context = [caption, transcript].filter(Boolean).join(' ');
   
-  // Base style for all covers - edgy, funny, adult humor
-  const baseStyle = `
-    Cyberpunk art style with dark humor and edgy aesthetics.
-    Bold colors (neon cyan, electric purple, hot pink, acid green).
-    Retro-futuristic vibe with glitch effects and VHS aesthetics.
-    Slightly absurd, provocative, and fun.
-    Think Adult Swim meets cyberpunk meets underground album art.
-  `.trim();
+  // Determine style based on content instead of hardcoding
+  const dynamicStyle = determineArtStyle(themes, context);
   
   let prompt = '';
   
   if (type === 'audio') {
-    // Generate edgy album/track cover art
+    // Generate album/track cover art with dynamic style
     prompt = `
-      Create an edgy, funny, adult-humor album cover for a track titled "${title}".
+      Create album cover art for a track titled "${title}".
       
       ${context ? `Context: ${context}` : ''}
       ${themes.length > 0 ? `Themes: ${themes.join(', ')}` : ''}
       
-      Style: ${baseStyle}
+      Art Style: ${dynamicStyle}
       
-      Visual elements:
-      - Surreal, absurdist imagery
-      - Dark comedy and social commentary
-      - Underground hip-hop / punk / electronic aesthetic  
-      - Vintage technology meets futuristic chaos
-      - Provocative but artistic
-      - Graffiti-inspired typography
+      Requirements:
+      - Visually striking and memorable
+      - Genre-appropriate and authentic to the music
+      - Professional album cover quality
+      - Artistic and creative
+      - No text on the image except subtle title integration if it fits naturally
       
-      No text on the image except stylized title integration.
-      Make it memorable, controversial, and badass.
+      Make it stand out and capture the essence of the music.
     `.trim();
   } else {
-    // Generate edgy document cover art
+    // Generate document cover art
     const docType = aiAnalysis?.documentType || 'document';
     
     prompt = `
-      Create an edgy, funny, satirical cover art for a ${docType} titled "${title}".
+      Create cover art for a ${docType} titled "${title}".
       
       ${context ? `Context: ${context}` : ''}
       ${themes.length > 0 ? `Themes: ${themes.join(', ')}` : ''}
       
-      Style: ${baseStyle}
+      Art Style: ${dynamicStyle}
       
-      Visual elements:
-      - Satirical take on corporate/academic aesthetics
-      - Dystopian bureaucracy meets cyberpunk
-      - Absurdist office humor or academic parody
-      - Vintage technical manuals meets glitch art
-      - Tongue-in-cheek, subversive, clever
+      Requirements:
+      - Professional and polished design
+      - Appropriate to the document's content and tone
+      - Creative and eye-catching
+      - No text on the image except subtle title integration if it fits naturally
       
-      No text on the image except stylized title integration.
-      Make it ironic, witty, and visually striking.
+      Make it visually compelling and relevant to the content.
     `.trim();
   }
   

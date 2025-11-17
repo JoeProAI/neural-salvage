@@ -428,11 +428,25 @@ try:
             print(json.dumps(results))
             sys.exit(0)
     
-    # Generate tags from transcript using OpenAI
+    # Generate summary and tags from transcript using OpenAI
     if results["transcript"] and openai_key:
-        log("Generating tags from transcript with GPT-4o...")
+        log("Generating summary and tags from transcript with GPT-4o...")
         try:
             client = OpenAI(api_key=openai_key)
+            
+            # Generate summary
+            summary_response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{
+                    "role": "user",
+                    "content": f"Summarize this audio in 2-3 sentences, capturing the main theme, mood, and message:\n\n{results['transcript'][:2000]}"
+                }],
+                max_tokens=200
+            )
+            results["summary"] = summary_response.choices[0].message.content.strip()
+            log(f"Generated summary: {len(results['summary'])} chars")
+            
+            # Generate tags
             tags_response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{
@@ -445,12 +459,14 @@ try:
             results["tags"] = [tag.strip().lower() for tag in tags_text.split(",") if tag.strip()]
             log(f"Generated {len(results['tags'])} tags")
         except Exception as tag_error:
-            log(f"Tag generation failed: {str(tag_error)}")
+            log(f"Tag/summary generation failed: {str(tag_error)}")
             results["tags"] = ["audio", "transcribed"]
+            results["summary"] = ""
     else:
         if not openai_key:
             log("No OpenAI key for tag generation, using basic tags")
         results["tags"] = ["audio", "transcribed"]
+        results["summary"] = ""
 
 except Exception as e:
     error_msg = str(e)
