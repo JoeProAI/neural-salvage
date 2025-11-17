@@ -126,6 +126,26 @@ export async function POST(request: NextRequest) {
         );
     }
 
+    // Validate and retrieve coupon if provided
+    let validatedCoupon = null;
+    if (couponCode) {
+      try {
+        console.log('🎟️ [PAYMENT] Validating coupon code:', couponCode);
+        validatedCoupon = await stripe.coupons.retrieve(couponCode);
+        console.log('🎟️ [PAYMENT] Coupon valid:', {
+          id: validatedCoupon.id,
+          percentOff: validatedCoupon.percent_off,
+          amountOff: validatedCoupon.amount_off,
+        });
+      } catch (error: any) {
+        console.error('🎟️ [PAYMENT] Invalid coupon code:', couponCode, error.message);
+        return NextResponse.json(
+          { error: `Invalid coupon code: ${couponCode}` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Create Stripe Checkout Session
     const sessionConfig: any = {
       mode: 'payment',
@@ -157,11 +177,11 @@ export async function POST(request: NextRequest) {
       cancel_url: cancelUrl,
     };
 
-    // Add coupon code if provided
-    if (couponCode) {
+    // Add validated coupon to session
+    if (validatedCoupon) {
       sessionConfig.discounts = [
         {
-          coupon: couponCode,
+          coupon: validatedCoupon.id,
         },
       ];
     }
