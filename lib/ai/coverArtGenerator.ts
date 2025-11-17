@@ -22,51 +22,87 @@ interface CoverArtParams {
 }
 
 /**
- * Determine art style based on content themes and genre
+ * Determine art style based on content themes and genre with variety
  */
 function determineArtStyle(tags: string[], context: string): string {
   const tagsLower = tags.join(' ').toLowerCase();
   const contentLower = context.toLowerCase();
   
-  // Hip-hop / Rap
+  // Hip-hop / Rap - Multiple style variations
   if (tagsLower.match(/rap|hip-hop|urban|street|beats/)) {
-    return `Bold urban hip-hop aesthetic with graffiti art, street culture vibes, and raw energy. Think golden age hip-hop album covers meets modern street art. Gritty, authentic, powerful.`;
+    const hipHopStyles = [
+      `Bold graffiti art with spray paint textures, street culture vibes, and urban energy. Raw, authentic, powerful.`,
+      `90s golden age hip-hop aesthetic with retro typography, boom box culture, and nostalgic vibes. Classic and iconic.`,
+      `Modern trap aesthetic with dark moody tones, luxury elements, and street sophistication. Sleek and contemporary.`,
+      `Underground hip-hop style with DIY collage art, rough textures, and rebellious energy. Gritty and independent.`,
+      `Abstract hip-hop art with bold geometric shapes, vibrant colors, and dynamic composition. Artistic and modern.`,
+      `Photography-based street culture with urban landscapes, city life, and authentic moments. Cinematic and real.`,
+    ];
+    return hipHopStyles[Math.floor(Math.random() * hipHopStyles.length)];
   }
   
-  // Rock / Punk / Metal
+  // Rock / Punk / Metal - Multiple variations
   if (tagsLower.match(/rock|punk|metal|guitar|grunge/)) {
-    return `Raw punk rock aesthetic with DIY zine vibes, distressed textures, and rebellious energy. Think 80s/90s underground album covers. Edgy, loud, unapologetic.`;
+    const rockStyles = [
+      `Raw punk zine aesthetic with cut-and-paste collage, distressed textures, and DIY energy. Rebellious and loud.`,
+      `Psychedelic rock art with surreal imagery, flowing shapes, and vibrant colors. Trippy and artistic.`,
+      `Heavy metal darkness with gothic elements, dramatic lighting, and intense imagery. Powerful and ominous.`,
+      `Grunge aesthetic with gritty photography, muted tones, and raw authenticity. Moody and real.`,
+      `Classic rock poster style with bold typography, vintage vibes, and iconic imagery. Timeless and cool.`,
+      `Alternative rock minimalism with clean design, conceptual art, and modern edge. Sophisticated and artistic.`,
+    ];
+    return rockStyles[Math.floor(Math.random() * rockStyles.length)];
   }
   
-  // Electronic / Dance / Techno
+  // Electronic / Dance - Multiple variations
   if (tagsLower.match(/electronic|techno|house|dance|edm|synth/)) {
-    return `Futuristic electronic music aesthetic with geometric shapes, neon colors, and abstract patterns. Think rave culture meets digital art. Vibrant, hypnotic, modern.`;
+    const electronicStyles = [
+      `Futuristic digital art with geometric shapes, neon colors, and glitch effects. Vibrant and hypnotic.`,
+      `Retro synthwave aesthetic with 80s vibes, purple/pink gradients, and nostalgic future. Cool and dreamy.`,
+      `Minimal techno design with abstract patterns, monochrome palette, and clean composition. Sophisticated and modern.`,
+      `Rave culture explosion with colorful chaos, psychedelic patterns, and energetic vibes. Wild and fun.`,
+      `Ambient electronic art with soft gradients, organic shapes, and ethereal atmosphere. Calm and beautiful.`,
+      `Cyberpunk aesthetic with neon cityscapes, dark tones, and futuristic edge. Edgy and immersive.`,
+    ];
+    return electronicStyles[Math.floor(Math.random() * electronicStyles.length)];
   }
   
-  // Jazz / Blues / Soul
+  // Jazz / Blues / Soul - Multiple variations
   if (tagsLower.match(/jazz|blues|soul|funk|r&b/)) {
-    return `Smooth vintage aesthetic with art deco influences, warm colors, and sophisticated vibes. Think Blue Note Records meets modern design. Classy, moody, timeless.`;
+    const jazzStyles = [
+      `Blue Note Records style with art deco elements, sophisticated design, and warm tones. Classic and timeless.`,
+      `Vintage jazz club aesthetic with smoky atmosphere, moody lighting, and noir vibes. Classy and mysterious.`,
+      `Modern R&B minimalism with clean design, bold typography, and contemporary edge. Sleek and stylish.`,
+      `Funk explosion with vibrant colors, groovy patterns, and playful energy. Fun and dynamic.`,
+      `Soul music warmth with retro photography, rich tones, and emotional depth. Intimate and powerful.`,
+      `Abstract jazz art with improvised shapes, flowing lines, and artistic freedom. Creative and expressive.`,
+    ];
+    return jazzStyles[Math.floor(Math.random() * jazzStyles.length)];
   }
   
-  // Folk / Acoustic / Indie
+  // Folk / Acoustic / Indie - Multiple variations
   if (tagsLower.match(/folk|acoustic|indie|singer-songwriter/)) {
-    return `Indie folk aesthetic with hand-drawn elements, earthy tones, and organic textures. Think independent label album art. Intimate, artistic, authentic.`;
+    const indieStyles = [
+      `Hand-drawn illustration with earthy tones, organic textures, and intimate vibes. Artistic and personal.`,
+      `Indie folk photography with natural landscapes, soft lighting, and authentic moments. Calm and beautiful.`,
+      `Watercolor art with flowing colors, delicate details, and dreamy atmosphere. Gentle and artistic.`,
+      `Vintage aesthetic with aged textures, warm tones, and nostalgic charm. Timeless and cozy.`,
+      `Modern indie minimalism with clean design, conceptual imagery, and subtle sophistication. Contemporary and thoughtful.`,
+      `Collage art with mixed media, layered textures, and creative composition. Unique and expressive.`,
+    ];
+    return indieStyles[Math.floor(Math.random() * indieStyles.length)];
   }
   
-  // Comedy / Spoken Word / Podcast
-  if (tagsLower.match(/comedy|funny|humor|podcast|spoken/)) {
-    return `Bold comedy aesthetic with satirical illustrations, pop art influences, and playful design. Think Adult Swim meets underground comedy. Witty, irreverent, eye-catching.`;
-  }
-  
-  // Default: Dynamic based on mood from content
-  if (contentLower.match(/dark|serious|heavy|struggle/)) {
-    return `Dark, dramatic aesthetic with moody lighting, bold contrasts, and intense imagery. Cinematic and powerful.`;
-  } else if (contentLower.match(/happy|upbeat|fun|party/)) {
-    return `Vibrant, energetic aesthetic with bold colors, dynamic composition, and playful elements. Fun and eye-catching.`;
-  } else {
-    // Fallback: Edgy modern style (not always cyberpunk)
-    return `Contemporary edgy aesthetic with bold visual storytelling, striking composition, and artistic flair. Modern, memorable, and genre-appropriate.`;
-  }
+  // Default: Random artistic style
+  const generalStyles = [
+    `Contemporary artistic design with bold visual storytelling and striking composition. Modern and memorable.`,
+    `Abstract expressionism with dynamic shapes, vibrant colors, and emotional energy. Powerful and unique.`,
+    `Minimalist approach with clean lines, negative space, and sophisticated restraint. Elegant and impactful.`,
+    `Surrealist imagery with dreamlike scenes, unexpected juxtapositions, and artistic vision. Imaginative and captivating.`,
+    `Pop art influence with bold colors, graphic elements, and contemporary culture. Eye-catching and fun.`,
+    `Atmospheric photography with dramatic lighting, rich textures, and cinematic quality. Professional and stunning.`,
+  ];
+  return generalStyles[Math.floor(Math.random() * generalStyles.length)];
 }
 
 /**
