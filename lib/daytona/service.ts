@@ -18,6 +18,8 @@ interface AIAnalysisResult {
   keyTopics?: string[];
   documentType?: string;
   extractedText?: string;
+  error?: string;
+  analyzedAt?: Date;
 }
 
 export class DaytonaService {
@@ -309,7 +311,6 @@ import os
 import json
 import sys
 import requests
-import subprocess
 from openai import OpenAI
 
 # Log to stderr for debugging
@@ -333,6 +334,9 @@ if not audio_url:
 
 log(f"Audio URL: {audio_url[:100]}...")
 
+# OpenAI Whisper has a 25 MB limit
+MAX_SIZE = 25 * 1024 * 1024
+
 results = {
     "transcript": "",
     "tags": []
@@ -343,76 +347,76 @@ try:
     log("Downloading audio file...")
     audio_response = requests.get(audio_url, timeout=60)
     audio_response.raise_for_status()
-    original_size = len(audio_response.content)
-    log(f"Downloaded {original_size:,} bytes ({original_size / (1024*1024):.2f} MB)")
+    file_size = len(audio_response.content)
+    log(f"Downloaded {file_size:,} bytes ({file_size / (1024*1024):.2f} MB)")
     
-    original_path = "/tmp/audio_original.mp3"
-    with open(original_path, "wb") as f:
+    # Check file size
+    if file_size > MAX_SIZE:
+        size_mb = file_size / (1024*1024)
+        log(f"ERROR: File too large ({size_mb:.1f} MB)")
+        results["error"] = f"Audio file is too large ({size_mb:.1f} MB). OpenAI Whisper has a 25 MB limit. Please upload a shorter or compressed audio file."
+        results["tags"] = ["audio", "large-file"]
+        print(json.dumps(results))
+        sys.exit(0)
+    
+    audio_path = "/tmp/audio.mp3"
+    with open(audio_path, "wb") as f:
         f.write(audio_response.content)
-    
-    # Use ffmpeg to extract first 3 minutes and compress
-    log("Extracting first 3 minutes with ffmpeg...")
-    sample_path = "/tmp/audio_sample.mp3"
-    
-    # Extract first 180 seconds, convert to mono, reduce bitrate
-    ffmpeg_cmd = [
-        "ffmpeg", "-y",
-        "-i", original_path,
-        "-t", "180",  # First 180 seconds (3 minutes)
-        "-ac", "1",   # Convert to mono
-        "-ab", "64k", # 64kbps bitrate
-        "-ar", "16000", # 16kHz sample rate (good for speech)
-        sample_path
-    ]
-    
-    result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        log(f"ffmpeg warning: {result.stderr}")
-    
-    if not os.path.exists(sample_path):
-        log("ffmpeg failed, using original file (may exceed limit)")
-        sample_path = original_path
-    else:
-        sample_size = os.path.getsize(sample_path)
-        log(f"Sample size: {sample_size:,} bytes ({sample_size / (1024*1024):.2f} MB)")
-    
-    final_path = sample_path
     
     # Transcribe with Whisper
     log("Transcribing with Whisper...")
-    with open(final_path, "rb") as audio_file:
-        transcript_response = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=audio_file
-        )
-        results["transcript"] = transcript_response.text
-        log(f"Transcript length: {len(results['transcript'])} chars")
+    try:
+        with open(audio_path, "rb") as audio_file:
+            transcript_response = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file
+            )
+            results["transcript"] = transcript_response.text
+            log(f"Transcript length: {len(results['transcript'])} chars")
+    except Exception as whisper_error:
+        error_str = str(whisper_error)
+        log(f"Whisper error: {error_str}")
+        
+        # Check for size-related errors
+        if "413" in error_str or "size" in error_str.lower() or "limit" in error_str.lower():
+            results["error"] = f"Audio file exceeds OpenAI's 25 MB limit. Please upload a shorter or compressed version."
+            results["tags"] = ["audio", "file-too-large"]
+        else:
+            results["error"] = f"Transcription failed: {error_str}"
+            results["tags"] = ["audio"]
+        
+        print(json.dumps(results))
+        sys.exit(0)
     
     # Generate tags from transcript
     if results["transcript"]:
         log("Generating tags from transcript...")
-        tags_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{
-                "role": "user",
-                "content": f"Based on this audio transcript: '{results['transcript'][:500]}', generate 10-15 relevant tags. Return only the tags as a comma-separated list."
-            }],
-            max_tokens=150
-        )
-        tags_text = tags_response.choices[0].message.content
-        results["tags"] = [tag.strip().lower() for tag in tags_text.split(",") if tag.strip()]
-        log(f"Generated {len(results['tags'])} tags")
+        try:
+            tags_response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{
+                    "role": "user",
+                    "content": f"Based on this audio transcript: '{results['transcript'][:1000]}', generate 10-15 relevant tags describing the content, topics, genre, and mood. Return only the tags as a comma-separated list."
+                }],
+                max_tokens=150
+            )
+            tags_text = tags_response.choices[0].message.content
+            results["tags"] = [tag.strip().lower() for tag in tags_text.split(",") if tag.strip()]
+            log(f"Generated {len(results['tags'])} tags")
+        except Exception as tag_error:
+            log(f"Tag generation failed: {str(tag_error)}")
+            results["tags"] = ["audio", "transcribed"]
     else:
         log("WARNING: No transcript generated!")
-        results["error"] = "No transcript generated - audio may be silent or invalid"
+        results["tags"] = ["audio"]
 
 except Exception as e:
     error_msg = str(e)
     log(f"ERROR: {error_msg}")
     results["error"] = error_msg
-    # Don't return empty - return the error
+    results["tags"] = ["audio", "error"]
     print(json.dumps(results))
-    sys.exit(1)  # Exit with error code so we catch it
+    sys.exit(1)
 
 log("Transcription complete!")
 print(json.dumps(results))
@@ -434,11 +438,6 @@ print(json.dumps(results))
       try {
         const result = JSON.parse(response.result);
         
-        if (result.error) {
-          console.error('❌ [DAYTONA] Audio analysis returned error:', result.error);
-          throw new Error(`Audio analysis error: ${result.error}`);
-        }
-        
         console.log('🎵 [DAYTONA] Audio transcription result:', {
           hasTranscript: !!result.transcript,
           hasTags: !!result.tags,
@@ -446,7 +445,20 @@ print(json.dumps(results))
           tagsCount: result.tags?.length || 0,
           tags: result.tags,
           hasError: !!result.error,
+          error: result.error || null,
         });
+        
+        // Return result even if there's an error - let the UI handle it
+        if (result.error) {
+          console.warn('⚠️ [DAYTONA] Audio analysis has error:', result.error);
+          // Still return with tags and error message for user feedback
+          return {
+            transcript: '',
+            tags: result.tags || ['audio'],
+            error: result.error,
+            analyzedAt: new Date(),
+          };
+        }
         
         if (!result.transcript || result.transcript.length === 0) {
           console.warn('⚠️ [DAYTONA] Transcript is empty!');
