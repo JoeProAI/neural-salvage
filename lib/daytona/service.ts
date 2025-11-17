@@ -350,21 +350,34 @@ results = {
 }
 
 try:
-    # Download only the beginning of the audio file using range request
-    log("Downloading first 20 MB of audio for quick analysis...")
-    headers = {"Range": f"bytes=0-{SAMPLE_SIZE-1}"}
-    audio_response = requests.get(audio_url, headers=headers, timeout=60)
+    # Download full audio file (Firebase Storage might not support range requests reliably)
+    log("Downloading audio file...")
+    audio_response = requests.get(audio_url, timeout=90)
+    audio_response.raise_for_status()
     
-    # Accept both 206 (partial) and 200 (full file if smaller than range)
-    if audio_response.status_code not in [200, 206]:
-        audio_response.raise_for_status()
+    file_size = len(audio_response.content)
+    log(f"Downloaded {file_size:,} bytes ({file_size / (1024*1024):.2f} MB)")
     
-    sample_size = len(audio_response.content)
-    log(f"Downloaded {sample_size:,} bytes ({sample_size / (1024*1024):.2f} MB) for analysis")
-    
-    audio_path = "/tmp/audio_sample.mp3"
-    with open(audio_path, "wb") as f:
+    # Save full file
+    full_path = "/tmp/audio_full.mp3"
+    with open(full_path, "wb") as f:
         f.write(audio_response.content)
+    
+    # If file is too large, skip it and return basic info
+    if file_size > SAMPLE_SIZE:
+        log(f"File is large ({file_size / (1024*1024):.1f} MB), using filename for tags")
+        # Extract info from filename instead of transcribing
+        import re
+        filename = audio_url.split('/')[-1].split('?')[0]
+        filename_clean = re.sub(r'[^a-zA-Z0-9\s]', ' ', filename)
+        words = [w.lower() for w in filename_clean.split() if len(w) > 2]
+        results["tags"] = ["audio", "music"] + words[:8]
+        results["transcript"] = f"Large audio file: {filename}"
+        log(f"Generated tags from filename: {results['tags']}")
+        print(json.dumps(results))
+        sys.exit(0)
+    
+    audio_path = full_path
     
     # Transcribe with Whisper
     log("Transcribing with Whisper...")
