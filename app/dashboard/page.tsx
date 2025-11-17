@@ -225,7 +225,8 @@ export default function DashboardPage() {
               {assets.map((asset) => (
                 <Link key={asset.id} href={`/gallery/${asset.id}`}>
                   <div className="metal-card rounded-lg overflow-hidden glow-hover cursor-pointer aspect-square">
-                    {asset.type === 'image' ? (
+                    {/* Show thumbnailUrl/generated cover if available, otherwise fallback to URL or emoji */}
+                    {asset.thumbnailUrl || (asset.type === 'image' && asset.url) ? (
                       <img
                         src={asset.thumbnailUrl || asset.url}
                         alt={asset.filename}
