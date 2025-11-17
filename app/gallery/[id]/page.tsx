@@ -249,20 +249,37 @@ export default function AssetDetailPage() {
       if (asset.type === 'audio') {
         // Get file size for tiered pricing
         try {
-          const headResponse = await fetch(asset.url, { method: 'HEAD' });
-          const fileSize = parseInt(headResponse.headers.get('content-length') || '0');
-          const sizeMB = fileSize / (1024 * 1024);
+          console.log('💰 [PRICING] Checking audio file size for tiered pricing...');
+          console.log('💰 [PRICING] Asset size from metadata:', asset.size);
+          
+          // Use size from asset metadata if available
+          let sizeMB = 0;
+          if (asset.size) {
+            sizeMB = asset.size / (1024 * 1024);
+            console.log('💰 [PRICING] Using metadata size:', sizeMB.toFixed(2), 'MB');
+          } else {
+            // Fallback to HEAD request
+            const headResponse = await fetch(asset.url, { method: 'HEAD' });
+            const fileSize = parseInt(headResponse.headers.get('content-length') || '0');
+            sizeMB = fileSize / (1024 * 1024);
+            console.log('💰 [PRICING] Using HEAD request size:', sizeMB.toFixed(2), 'MB');
+          }
           
           if (sizeMB > 100) {
             price = 5.99; // $5.99 for very large files (100+ MB)
+            console.log('💰 [PRICING] Very large file (>100MB), price: $5.99');
           } else if (sizeMB > 25) {
             price = 3.99; // $3.99 for large files (25-100 MB, uses Deepgram)
+            console.log('💰 [PRICING] Large file (25-100MB), price: $3.99');
+          } else {
+            console.log('💰 [PRICING] Small file (<25MB), price: $1.99');
           }
-          // else: $1.99 for small files (< 25 MB, uses Whisper)
         } catch (e) {
-          console.warn('Could not determine file size, using default price');
+          console.warn('💰 [PRICING] Could not determine file size, using default price:', e);
         }
       }
+      
+      console.log('💰 [PRICING] Final price:', price);
 
       // Check if payment is required
       const paymentResponse = await fetch('/api/payment/create-checkout', {
