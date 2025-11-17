@@ -307,20 +307,25 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
   const handleMint = async (userSignature: { signature: string; message: string; timestamp: number }) => {
     try {
       setStep('minting');
-      console.log('🎨 [NFT MINT] Starting mint with signature...');
+      console.log('🎨 [NFT MINT] Starting DUAL-CHAIN mint with signature...');
 
-      const response = await fetch('/api/nft/mint', {
+      const response = await fetch('/api/nft/mint-dual-chain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           assetId,
-          blockchain: 'arweave',
+          userId: user?.id || '',
           metadata: {
             name: nftName,
             description: nftDescription,
+            image: '', // Will be set by backend from asset data
+            attributes: aiAnalysis?.tags?.map(tag => ({
+              trait_type: 'Tag',
+              value: tag,
+            })) || [],
+            external_url: `${window.location.origin}/gallery/${assetId}`,
           },
-          royaltyPercentage: 10,
-          walletAddress: wallet.address,
+          userWalletAddress: wallet.address,
           userSignature,
         }),
       });
@@ -331,18 +336,15 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
         throw new Error(data.error || 'Failed to mint NFT');
       }
 
-      console.log('🎉 [NFT MINT] SUCCESS!');
+      console.log('🎉 [NFT MINT] DUAL-CHAIN SUCCESS!');
       console.log('📊 [NFT MINT] Mint Result:', {
         nftId: data.nft.id,
-        arweaveId: data.nft.arweaveId,
-        arweaveUrl: data.nft.arweaveUrl,
-        metadataUrl: data.nft.metadataUrl,
-        assetUrl: data.nft.assetUrl,
-        cost: data.nft.cost
+        arweave: data.nft.arweave,
+        polygon: data.nft.polygon,
       });
-      console.log('🔗 [NFT MINT] View on Arweave:', data.nft.arweaveUrl);
-      console.log('🔗 [NFT MINT] View Asset:', data.nft.assetUrl);
-      console.log('🔗 [NFT MINT] View Metadata:', data.nft.metadataUrl);
+      console.log('🔗 [ARWEAVE] View Transaction:', data.nft.arweave.url);
+      console.log('🔗 [POLYGON] View on OpenSea:', data.nft.polygon.openseaUrl);
+      console.log('🔗 [POLYGON] Transaction:', data.nft.polygon.transactionHash);
       
       onSuccess(data.nft.id);
     } catch (err: any) {
@@ -455,7 +457,11 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
                   <span className="text-pure-white font-space-mono font-bold">$4.99</span>
                 </div>
                 <div className="flex justify-between items-center text-lg">
-                  <span className="text-ash-gray font-rajdhani font-medium">Blockchain Storage:</span>
+                  <span className="text-ash-gray font-rajdhani font-medium">Arweave Storage:</span>
+                  <span className="text-terminal-green font-space-mono font-bold">✓ Included</span>
+                </div>
+                <div className="flex justify-between items-center text-lg">
+                  <span className="text-ash-gray font-rajdhani font-medium">Polygon Mint:</span>
                   <span className="text-terminal-green font-space-mono font-bold">✓ Included</span>
                 </div>
                 <div className="border-t-2 border-archive-amber/30 pt-3 mt-3 flex justify-between items-center">
@@ -463,18 +469,22 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
                   <span className="text-archive-amber font-space-mono font-bold text-2xl" style={{ textShadow: '0 0 15px #E8A55C' }}>$4.99</span>
                 </div>
                 <p className="text-xs text-ash-gray/70 mt-2 font-rajdhani text-center">
-                  We cover all blockchain fees (~$0.05 AR) • 200+ year storage guaranteed
+                  Minted on 2 chains • Arweave (storage) + Polygon (OpenSea)
                 </p>
               </div>
             </div>
 
             {/* Benefits */}
             <div className="bg-data-cyan/5 border-2 border-data-cyan/30 rounded-lg p-5">
-              <h3 className="text-lg font-space-mono font-bold text-data-cyan mb-4 uppercase tracking-wider">Why This is Special</h3>
+              <h3 className="text-lg font-space-mono font-bold text-data-cyan mb-4 uppercase tracking-wider">Multichain Benefits</h3>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3 text-sm font-rajdhani">
                   <Check className="w-5 h-5 text-terminal-green flex-shrink-0 mt-0.5" />
-                  <span className="text-pure-white">No crypto needed - we cover blockchain fees</span>
+                  <span className="text-pure-white"><strong>Arweave:</strong> Permanent storage for 200+ years</span>
+                </li>
+                <li className="flex items-start gap-3 text-sm font-rajdhani">
+                  <Check className="w-5 h-5 text-terminal-green flex-shrink-0 mt-0.5" />
+                  <span className="text-pure-white"><strong>Polygon:</strong> Instant listing on OpenSea & Rarible</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm font-rajdhani">
                   <Shield className="w-5 h-5 text-data-cyan flex-shrink-0 mt-0.5" />
@@ -482,11 +492,11 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
                 </li>
                 <li className="flex items-start gap-3 text-sm font-rajdhani">
                   <Check className="w-5 h-5 text-terminal-green flex-shrink-0 mt-0.5" />
-                  <span className="text-pure-white">Permanent storage - 200+ years on Arweave</span>
+                  <span className="text-pure-white">No crypto needed - we cover all blockchain fees</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm font-rajdhani">
                   <Check className="w-5 h-5 text-terminal-green flex-shrink-0 mt-0.5" />
-                  <span className="text-pure-white">Sell on external marketplaces (BazAR, Pianity)</span>
+                  <span className="text-pure-white">Sell globally on multiple marketplaces</span>
                 </li>
               </ul>
             </div>
