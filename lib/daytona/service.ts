@@ -326,16 +326,11 @@ from openai import OpenAI
 def log(msg):
     print(f"[AUDIO] {msg}", file=sys.stderr)
 
-log("Starting audio transcription with Deepgram...")
+log("Starting audio transcription...")
 
 deepgram_key = os.environ.get('DEEPGRAM_API_KEY', '')
 openai_key = os.environ.get('OPENAI_API_KEY', '')
 audio_url = os.environ.get('AUDIO_URL', '')
-
-if not deepgram_key:
-    log("ERROR: DEEPGRAM_API_KEY is missing!")
-    print(json.dumps({"transcript": "", "tags": [], "error": "DEEPGRAM_API_KEY is missing"}))
-    sys.exit(0)
 
 if not audio_url:
     log("ERROR: AUDIO_URL is missing!")
@@ -344,51 +339,94 @@ if not audio_url:
 
 log(f"Audio URL: {audio_url[:100]}...")
 
+# Whisper limit is 25 MB
+WHISPER_LIMIT = 25 * 1024 * 1024
+
 results = {
     "transcript": "",
     "tags": []
 }
 
 try:
-    # Use Deepgram's URL-based transcription (no download needed!)
-    log("Transcribing with Deepgram (URL-based, no size limit)...")
+    # Check file size first
+    log("Checking file size...")
+    head_response = requests.head(audio_url, timeout=10)
+    file_size = int(head_response.headers.get('content-length', 0))
+    log(f"File size: {file_size:,} bytes ({file_size / (1024*1024):.2f} MB)")
     
-    deepgram_url = "https://api.deepgram.com/v1/listen"
-    headers = {
-        "Authorization": f"Token {deepgram_key}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "url": audio_url
-    }
-    params = {
-        "model": "nova-2",
-        "smart_format": "true",
-        "punctuate": "true",
-        "diarize": "false"
-    }
+    # Use Whisper for small files, Deepgram for large files
+    if file_size > 0 and file_size <= WHISPER_LIMIT:
+        # Small file: Use OpenAI Whisper (better quality, cheaper)
+        log(f"Using OpenAI Whisper for small file...")
+        
+        if not openai_key:
+            log("ERROR: OPENAI_API_KEY is missing!")
+            print(json.dumps({"transcript": "", "tags": [], "error": "OPENAI_API_KEY is missing"}))
+            sys.exit(0)
+        
+        # Download file
+        audio_response = requests.get(audio_url, timeout=60)
+        audio_response.raise_for_status()
+        
+        audio_path = "/tmp/audio.mp3"
+        with open(audio_path, "wb") as f:
+            f.write(audio_response.content)
+        
+        # Transcribe with Whisper
+        client = OpenAI(api_key=openai_key)
+        with open(audio_path, "rb") as audio_file:
+            transcript_response = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file
+            )
+            results["transcript"] = transcript_response.text
+            log(f"Whisper transcript length: {len(results['transcript'])} chars")
     
-    response = requests.post(
-        deepgram_url,
-        headers=headers,
-        json=payload,
-        params=params,
-        timeout=120
-    )
-    response.raise_for_status()
-    
-    data = response.json()
-    transcript = data.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("transcript", "")
-    
-    if transcript:
-        results["transcript"] = transcript
-        log(f"Deepgram transcript length: {len(transcript)} chars")
     else:
-        log("No transcript returned from Deepgram")
-        results["error"] = "No audio detected or transcription failed"
-        results["tags"] = ["audio"]
-        print(json.dumps(results))
-        sys.exit(0)
+        # Large file: Use Deepgram (handles any size via URL)
+        log(f"Large file ({file_size / (1024*1024):.1f} MB), using Deepgram...")
+        
+        if not deepgram_key:
+            log("ERROR: DEEPGRAM_API_KEY is missing for large file!")
+            print(json.dumps({"transcript": "", "tags": [], "error": "DEEPGRAM_API_KEY required for large audio files"}))
+            sys.exit(0)
+        
+        deepgram_url = "https://api.deepgram.com/v1/listen"
+        headers = {
+            "Authorization": f"Token {deepgram_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "url": audio_url
+        }
+        params = {
+            "model": "nova-2",
+            "smart_format": "true",
+            "punctuate": "true",
+            "diarize": "false"
+        }
+        
+        response = requests.post(
+            deepgram_url,
+            headers=headers,
+            json=payload,
+            params=params,
+            timeout=120
+        )
+        response.raise_for_status()
+        
+        data = response.json()
+        transcript = data.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("transcript", "")
+        
+        if transcript:
+            results["transcript"] = transcript
+            log(f"Deepgram transcript length: {len(transcript)} chars")
+        else:
+            log("No transcript returned from Deepgram")
+            results["error"] = "No audio detected or transcription failed"
+            results["tags"] = ["audio"]
+            print(json.dumps(results))
+            sys.exit(0)
     
     # Generate tags from transcript using OpenAI
     if results["transcript"] and openai_key:

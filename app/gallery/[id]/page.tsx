@@ -243,6 +243,27 @@ export default function AssetDetailPage() {
     try {
       setGeneratingAI(true);
 
+      // Determine price based on file size (for audio files)
+      let price = 1.99; // Default: $1.99 (images, videos < 25MB)
+      
+      if (asset.type === 'audio') {
+        // Get file size for tiered pricing
+        try {
+          const headResponse = await fetch(asset.url, { method: 'HEAD' });
+          const fileSize = parseInt(headResponse.headers.get('content-length') || '0');
+          const sizeMB = fileSize / (1024 * 1024);
+          
+          if (sizeMB > 100) {
+            price = 5.99; // $5.99 for very large files (100+ MB)
+          } else if (sizeMB > 25) {
+            price = 3.99; // $3.99 for large files (25-100 MB, uses Deepgram)
+          }
+          // else: $1.99 for small files (< 25 MB, uses Whisper)
+        } catch (e) {
+          console.warn('Could not determine file size, using default price');
+        }
+      }
+
       // Check if payment is required
       const paymentResponse = await fetch('/api/payment/create-checkout', {
         method: 'POST',
@@ -251,7 +272,7 @@ export default function AssetDetailPage() {
           type: 'ai_analysis',
           assetId: asset.id,
           userId: user.id,
-          price: 1.99,
+          price,
         }),
       });
 
