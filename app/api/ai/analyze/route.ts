@@ -170,31 +170,78 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Trigger cover art generation for audio/documents (background task)
+    // Trigger album art extraction or cover generation for audio/documents (background task)
     if ((type === 'audio' || type === 'document') && !asset?.thumbnailUrl) {
       // Use same domain as current request to avoid auth issues
       const host = request.headers.get('host');
       const protocol = request.headers.get('x-forwarded-proto') || 'https';
       const baseUrl = host ? `${protocol}://${host}` : 'http://localhost:3000';
       
-      console.log('🎨 [AI ANALYZE] Triggering cover art generation on:', baseUrl);
-      
-      fetch(`${baseUrl}/api/ai/generate-cover`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          // Pass along auth context if needed
-        },
-        body: JSON.stringify({
-          assetId,
-          userId,
-        }),
-      }).catch(error => {
-        console.error('[AI ANALYZE] Failed to trigger cover art generation:', error);
-        // Non-blocking - continue even if cover generation fails
-      });
-      
-      console.log('🎨 [AI ANALYZE] Cover art generation triggered in background');
+      // For audio: Try extracting embedded album art first
+      if (type === 'audio') {
+        console.log('🎵 [AI ANALYZE] Attempting to extract embedded album art...');
+        
+        fetch(`${baseUrl}/api/audio/extract-album-art`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            assetId,
+            userId,
+          }),
+        }).then(async (response) => {
+          const result = await response.json();
+          
+          // If no album art found, generate AI cover art
+          if (!result.extracted) {
+            console.log('🎨 [AI ANALYZE] No album art found, generating AI cover...');
+            
+            return fetch(`${baseUrl}/api/ai/generate-cover`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                assetId,
+                userId,
+              }),
+            });
+          } else {
+            console.log('✅ [AI ANALYZE] Album art extracted successfully');
+          }
+        }).catch(error => {
+          console.error('[AI ANALYZE] Album art extraction failed, will try AI generation:', error);
+          
+          // Fallback to AI generation
+          fetch(`${baseUrl}/api/ai/generate-cover`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              assetId,
+              userId,
+            }),
+          }).catch(e => console.error('[AI ANALYZE] Cover generation also failed:', e));
+        });
+      } else {
+        // For documents: Generate AI cover art directly
+        console.log('🎨 [AI ANALYZE] Generating AI cover art for document...');
+        
+        fetch(`${baseUrl}/api/ai/generate-cover`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            assetId,
+            userId,
+          }),
+        }).catch(error => {
+          console.error('[AI ANALYZE] Failed to trigger cover art generation:', error);
+        });
+      }
     }
 
     return NextResponse.json({

@@ -110,6 +110,14 @@ export interface MediaAsset {
     generator: string;
   };
   
+  // Extracted Album Art (from audio metadata)
+  albumArt?: {
+    url: string;
+    extractedAt: Date;
+    format?: string;
+    description?: string;
+  };
+  
   // Organization
   collectionIds: string[];
   visibility: 'private' | 'public';
