@@ -315,169 +315,33 @@ print(json.dumps(results))
     console.log('🎵 [DAYTONA] Sandbox created successfully');
 
     try {
-      const transcriptionCode = `
-import os
-import json
-import sys
-import requests
-from openai import OpenAI
-
-# Log to stderr for debugging
-def log(msg):
-    print(f"[AUDIO] {msg}", file=sys.stderr)
-
-log("Starting audio transcription...")
-
-deepgram_key = os.environ.get('DEEPGRAM_API_KEY', '')
-openai_key = os.environ.get('OPENAI_API_KEY', '')
-audio_url = os.environ.get('AUDIO_URL', '')
-
-if not audio_url:
-    log("ERROR: AUDIO_URL is missing!")
-    print(json.dumps({"transcript": "", "tags": [], "error": "AUDIO_URL is missing"}))
-    sys.exit(0)
-
-log(f"Audio URL: {audio_url[:100]}...")
-
-# Whisper limit is 25 MB
-WHISPER_LIMIT = 25 * 1024 * 1024
-
-results = {
-    "transcript": "",
-    "tags": []
-}
-
+      const transcriptionCode = `import os,json,sys,requests;from openai import OpenAI
+def log(m):print(f"[AUDIO] {m}",file=sys.stderr)
+log("Starting transcription")
+dk,ok,au=os.environ.get('DEEPGRAM_API_KEY',''),os.environ.get('OPENAI_API_KEY',''),os.environ.get('AUDIO_URL','')
+if not au:print(json.dumps({"transcript":"","tags":[],"error":"Missing URL"}));sys.exit(0)
+log(f"URL: {au[:50]}")
+WL=25*1024*1024
+r={"transcript":"","tags":[]}
 try:
-    # Check file size first
-    log("Checking file size...")
-    head_response = requests.head(audio_url, timeout=10)
-    file_size = int(head_response.headers.get('content-length', 0))
-    log(f"File size: {file_size:,} bytes ({file_size / (1024*1024):.2f} MB)")
-    
-    # Use Whisper for small files, Deepgram for large files
-    if file_size > 0 and file_size <= WHISPER_LIMIT:
-        # Small file: Use OpenAI Whisper (better quality, cheaper)
-        log(f"Using OpenAI Whisper for small file...")
-        
-        if not openai_key:
-            log("ERROR: OPENAI_API_KEY is missing!")
-            print(json.dumps({"transcript": "", "tags": [], "error": "OPENAI_API_KEY is missing"}))
-            sys.exit(0)
-        
-        # Download file
-        audio_response = requests.get(audio_url, timeout=60)
-        audio_response.raise_for_status()
-        
-        audio_path = "/tmp/audio.mp3"
-        with open(audio_path, "wb") as f:
-            f.write(audio_response.content)
-        
-        # Transcribe with Whisper
-        client = OpenAI(api_key=openai_key)
-        with open(audio_path, "rb") as audio_file:
-            transcript_response = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio_file
-            )
-            results["transcript"] = transcript_response.text
-            log(f"Whisper transcript length: {len(results['transcript'])} chars")
-    
-    else:
-        # Large file: Use Deepgram (handles any size via URL)
-        log(f"Large file ({file_size / (1024*1024):.1f} MB), using Deepgram...")
-        
-        if not deepgram_key:
-            log("ERROR: DEEPGRAM_API_KEY is missing for large file!")
-            print(json.dumps({"transcript": "", "tags": [], "error": "DEEPGRAM_API_KEY required for large audio files"}))
-            sys.exit(0)
-        
-        deepgram_url = "https://api.deepgram.com/v1/listen"
-        headers = {
-            "Authorization": f"Token {deepgram_key}",
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "url": audio_url
-        }
-        params = {
-            "model": "nova-2",
-            "smart_format": "true",
-            "punctuate": "true",
-            "diarize": "false"
-        }
-        
-        response = requests.post(
-            deepgram_url,
-            headers=headers,
-            json=payload,
-            params=params,
-            timeout=120
-        )
-        response.raise_for_status()
-        
-        data = response.json()
-        transcript = data.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("transcript", "")
-        
-        if transcript:
-            results["transcript"] = transcript
-            log(f"Deepgram transcript length: {len(transcript)} chars")
-        else:
-            log("No transcript returned from Deepgram")
-            results["error"] = "No audio detected or transcription failed"
-            results["tags"] = ["audio"]
-            print(json.dumps(results))
-            sys.exit(0)
-    
-    # Generate summary and tags from transcript using OpenAI
-    if results["transcript"] and openai_key:
-        log("Generating summary and tags from transcript with GPT-4o...")
-        try:
-            client = OpenAI(api_key=openai_key)
-            
-            # Generate summary
-            summary_response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[{
-                    "role": "user",
-                    "content": f"Summarize this audio in 2-3 sentences, capturing the main theme, mood, and message:\n\n{results['transcript'][:2000]}"
-                }],
-                max_tokens=200
-            )
-            results["summary"] = summary_response.choices[0].message.content.strip()
-            log(f"Generated summary: {len(results['summary'])} chars")
-            
-            # Generate tags
-            tags_response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[{
-                    "role": "user",
-                    "content": f"Based on this audio transcript: '{results['transcript'][:1000]}', generate 10-15 relevant tags describing the content, topics, genre, and mood. Return only the tags as a comma-separated list."
-                }],
-                max_tokens=150
-            )
-            tags_text = tags_response.choices[0].message.content
-            results["tags"] = [tag.strip().lower() for tag in tags_text.split(",") if tag.strip()]
-            log(f"Generated {len(results['tags'])} tags")
-        except Exception as tag_error:
-            log(f"Tag/summary generation failed: {str(tag_error)}")
-            results["tags"] = ["audio", "transcribed"]
-            results["summary"] = ""
-    else:
-        if not openai_key:
-            log("No OpenAI key for tag generation, using basic tags")
-        results["tags"] = ["audio", "transcribed"]
-        results["summary"] = ""
-
-except Exception as e:
-    error_msg = str(e)
-    log(f"ERROR: {error_msg}")
-    results["error"] = error_msg
-    results["tags"] = ["audio", "error"]
-    print(json.dumps(results))
-    sys.exit(1)
-
-log("Transcription complete!")
-print(json.dumps(results))
+ log("Checking size");hr=requests.head(au,timeout=10);fs=int(hr.headers.get('content-length',0));log(f"Size: {fs/(1024*1024):.1f}MB")
+ if fs>0 and fs<=WL:
+  log("Using Whisper");c=OpenAI(api_key=ok);ar=requests.get(au,timeout=60);ar.raise_for_status();ap="/tmp/a.mp3"
+  with open(ap,"wb") as f:f.write(ar.content)
+  with open(ap,"rb") as af:tr=c.audio.transcriptions.create(model="whisper-1",file=af);r["transcript"]=tr.text;log(f"Got {len(r['transcript'])} chars")
+ else:
+  log("Using Deepgram");dr=requests.post("https://api.deepgram.com/v1/listen",headers={"Authorization":f"Token {dk}","Content-Type":"application/json"},json={"url":au},params={"model":"nova-2","smart_format":"true","punctuate":"true"},timeout=120);dr.raise_for_status();d=dr.json();t=d.get("results",{}).get("channels",[{}])[0].get("alternatives",[{}])[0].get("transcript","")
+  if t:r["transcript"]=t;log(f"Got {len(t)} chars")
+  else:log("No transcript");r["error"]="No audio";r["tags"]=["audio"];print(json.dumps(r));sys.exit(0)
+ if r["transcript"] and ok:
+  log("Generating summary+tags");c=OpenAI(api_key=ok)
+  try:
+   sr=c.chat.completions.create(model="gpt-4o",messages=[{"role":"user","content":f"Summarize this audio in 2-3 sentences:\\n\\n{r['transcript'][:2000]}"}],max_tokens=200);r["summary"]=sr.choices[0].message.content.strip();log(f"Summary: {len(r['summary'])} chars")
+   tgr=c.chat.completions.create(model="gpt-4o",messages=[{"role":"user","content":f"Based on: '{r['transcript'][:1000]}', generate 10-15 tags (genre,mood,topics). Return comma-separated."}],max_tokens=150);tt=tgr.choices[0].message.content;r["tags"]=[t.strip().lower() for t in tt.split(",") if t.strip()];log(f"Tags: {len(r['tags'])}")
+  except Exception as te:log(f"Tag fail: {te}");r["tags"]=["audio","transcribed"];r["summary"]=""
+ else:r["tags"]=["audio","transcribed"];r["summary"]=""
+except Exception as e:log(f"ERROR: {e}");r["error"]=str(e);r["tags"]=["audio","error"];print(json.dumps(r));sys.exit(1)
+log("Done");print(json.dumps(r))
 `;
 
       const response = await sandbox.process.codeRun(transcriptionCode);
