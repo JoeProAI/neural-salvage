@@ -222,44 +222,62 @@ export function MintNFTModalHybrid({ assetId, assetName, assetDescription, aiAna
 
       console.log('📝 [NFT MINT] Message to sign:', message);
 
-      // Request signature from ArConnect using simpler signMessage API with timeout
+      // Request signature from ArConnect - try multiple methods
       let signatureBase64: string;
       
-      // Create a promise with timeout
+      console.log('🔐 [NFT MINT] Requesting signature from ArConnect...');
+      
+      // Convert message to Uint8Array
+      const messageBytes = new TextEncoder().encode(message);
+      
+      // Try different ArConnect signature methods
       const signaturePromise = new Promise<string>(async (resolve, reject) => {
         try {
-          console.log('🔐 [NFT MINT] Requesting signature from ArConnect...');
+          const arWallet = (window as any).arweaveWallet;
           
-          // Try the newer signMessage API first
-          const signatureResult = await (window as any).arweaveWallet.signMessage(
-            new TextEncoder().encode(message)
-          );
-          
-          // Convert to base64
-          if (typeof signatureResult === 'string') {
-            resolve(signatureResult);
-          } else {
-            resolve(btoa(String.fromCharCode(...new Uint8Array(signatureResult))));
+          // Method 1: Try signMessage (newer API)
+          if (typeof arWallet.signMessage === 'function') {
+            try {
+              console.log('📝 Trying signMessage...');
+              const sig = await arWallet.signMessage(messageBytes);
+              const base64 = typeof sig === 'string' ? sig : btoa(String.fromCharCode(...new Uint8Array(sig)));
+              console.log('✅ Signature via signMessage');
+              return resolve(base64);
+            } catch (e) {
+              console.log('⚠️ signMessage failed:', e);
+            }
           }
           
-          console.log('✅ [NFT MINT] Signature obtained via signMessage');
-        } catch (signError) {
-          console.log('⚠️ [NFT MINT] signMessage failed, trying signature API...', signError);
-          
-          try {
-            // Fallback to older signature API
-            const signature = await (window as any).arweaveWallet.signature(
-              new TextEncoder().encode(message),
-              {
-                name: 'RSA-PSS',
-                saltLength: 32,
-              }
-            );
-            resolve(btoa(String.fromCharCode(...new Uint8Array(signature))));
-            console.log('✅ [NFT MINT] Signature obtained via signature API');
-          } catch (fallbackError) {
-            reject(fallbackError);
+          // Method 2: Try signature (older API)
+          if (typeof arWallet.signature === 'function') {
+            try {
+              console.log('📝 Trying signature...');
+              const sig = await arWallet.signature(messageBytes, { name: 'RSA-PSS', saltLength: 32 });
+              const base64 = btoa(String.fromCharCode(...new Uint8Array(sig)));
+              console.log('✅ Signature via signature');
+              return resolve(base64);
+            } catch (e) {
+              console.log('⚠️ signature failed:', e);
+            }
           }
+          
+          // Method 3: Try sign (alternative API)
+          if (typeof arWallet.sign === 'function') {
+            try {
+              console.log('📝 Trying sign...');
+              const tx = { data: message };
+              const sig = await arWallet.sign(tx);
+              const base64 = typeof sig === 'string' ? sig : btoa(String.fromCharCode(...new Uint8Array(sig)));
+              console.log('✅ Signature via sign');
+              return resolve(base64);
+            } catch (e) {
+              console.log('⚠️ sign failed:', e);
+            }
+          }
+          
+          reject(new Error('No signature method available. Please update ArConnect extension.'));
+        } catch (err) {
+          reject(err);
         }
       });
 
