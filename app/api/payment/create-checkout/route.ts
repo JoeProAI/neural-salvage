@@ -103,10 +103,10 @@ export async function POST(request: NextRequest) {
 
     switch (type) {
       case 'nft_mint':
-        productName = 'NFT Mint on Arweave';
-        productDescription = 'Mint your asset as a permanent blockchain NFT';
-        // Enforce Stripe minimum of $0.50, default to $2.99
-        amount = Math.max(price || 2.99, 0.50);
+        productName = 'NFT Mint - Dual Chain (Arweave + Polygon)';
+        productDescription = 'Mint your asset as a permanent blockchain NFT on both Arweave and Polygon with OpenSea listing';
+        // Enforce Stripe minimum of $0.50, default to $4.99 (hybrid minting model)
+        amount = Math.max(price || 4.99, 0.50);
         successUrl = `${appUrl}/api/payment/success?type=nft_mint&assetId=${assetId}&session_id={CHECKOUT_SESSION_ID}`;
         cancelUrl = `${appUrl}/gallery/${assetId}`;
         break;
