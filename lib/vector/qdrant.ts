@@ -4,20 +4,36 @@ const COLLECTION_NAME = 'neural_salvage_assets';
 const VECTOR_SIZE = 1536; // text-embedding-3-small dimension
 
 class QdrantService {
-  private client: QdrantClient;
+  private client: QdrantClient | null = null;
   private initialized: boolean = false;
+  private initializationFailed: boolean = false;
 
   constructor() {
-    this.client = new QdrantClient({
-      url: process.env.QDRANT_URL,
-      apiKey: process.env.QDRANT_API_KEY,
-    });
+    // Only create client if environment variables are set
+    if (process.env.QDRANT_URL && process.env.QDRANT_API_KEY) {
+      try {
+        this.client = new QdrantClient({
+          url: process.env.QDRANT_URL,
+          apiKey: process.env.QDRANT_API_KEY,
+        });
+        console.log('✅ [QDRANT] Client created');
+      } catch (error) {
+        console.warn('⚠️ [QDRANT] Failed to create client:', error);
+        this.initializationFailed = true;
+      }
+    } else {
+      console.log('ℹ️ [QDRANT] Not configured (QDRANT_URL or QDRANT_API_KEY missing)');
+      this.initializationFailed = true;
+    }
   }
 
   async initialize() {
-    if (this.initialized) return;
+    if (this.initialized) return true;
+    if (this.initializationFailed || !this.client) return false;
 
     try {
+      console.log('🔄 [QDRANT] Initializing...');
+      
       // Check if collection exists
       const collections = await this.client.getCollections();
       const exists = collections.collections.some(
@@ -25,6 +41,7 @@ class QdrantService {
       );
 
       if (!exists) {
+        console.log('📦 [QDRANT] Creating collection...');
         // Create collection
         await this.client.createCollection(COLLECTION_NAME, {
           vectors: {
@@ -32,13 +49,17 @@ class QdrantService {
             distance: 'Cosine',
           },
         });
-        console.log('Qdrant collection created');
+        console.log('✅ [QDRANT] Collection created successfully');
+      } else {
+        console.log('✅ [QDRANT] Collection already exists');
       }
 
       this.initialized = true;
-    } catch (error) {
-      console.error('Qdrant initialization error:', error);
-      throw error;
+      return true;
+    } catch (error: any) {
+      console.error('❌ [QDRANT] Initialization failed:', error.message);
+      this.initializationFailed = true;
+      return false;
     }
   }
 
@@ -53,7 +74,11 @@ class QdrantService {
       forSale?: boolean;
     }
   ) {
-    await this.initialize();
+    const initialized = await this.initialize();
+    if (!initialized || !this.client) {
+      console.log('ℹ️ [QDRANT] Skipping upsert - not initialized');
+      return;
+    }
 
     try {
       await this.client.upsert(COLLECTION_NAME, {
@@ -66,8 +91,9 @@ class QdrantService {
           },
         ],
       });
-    } catch (error) {
-      console.error('Vector upsert error:', error);
+      console.log('✅ [QDRANT] Vector upserted');
+    } catch (error: any) {
+      console.error('❌ [QDRANT] Upsert error:', error.message);
       throw error;
     }
   }
@@ -82,7 +108,11 @@ class QdrantService {
     },
     limit: number = 20
   ) {
-    await this.initialize();
+    const initialized = await this.initialize();
+    if (!initialized || !this.client) {
+      console.log('ℹ️ [QDRANT] Skipping search - not initialized');
+      return [];
+    }
 
     try {
       const filter: any = {};
@@ -135,28 +165,37 @@ class QdrantService {
         score: result.score,
         metadata: result.payload,
       }));
-    } catch (error) {
-      console.error('Vector search error:', error);
+    } catch (error: any) {
+      console.error('❌ [QDRANT] Search error:', error.message);
       throw error;
     }
   }
 
   async deleteVector(assetId: string) {
-    await this.initialize();
+    const initialized = await this.initialize();
+    if (!initialized || !this.client) {
+      console.log('ℹ️ [QDRANT] Skipping delete - not initialized');
+      return;
+    }
 
     try {
       await this.client.delete(COLLECTION_NAME, {
         wait: true,
         points: [assetId],
       });
-    } catch (error) {
-      console.error('Vector delete error:', error);
+      console.log('✅ [QDRANT] Vector deleted');
+    } catch (error: any) {
+      console.error('❌ [QDRANT] Delete error:', error.message);
       throw error;
     }
   }
 
   async getSimilar(assetId: string, limit: number = 10) {
-    await this.initialize();
+    const initialized = await this.initialize();
+    if (!initialized || !this.client) {
+      console.log('ℹ️ [QDRANT] Skipping similar search - not initialized');
+      return [];
+    }
 
     try {
       const results = await this.client.recommend(COLLECTION_NAME, {
@@ -170,8 +209,8 @@ class QdrantService {
         score: result.score,
         metadata: result.payload,
       }));
-    } catch (error) {
-      console.error('Similar search error:', error);
+    } catch (error: any) {
+      console.error('❌ [QDRANT] Similar search error:', error.message);
       throw error;
     }
   }
